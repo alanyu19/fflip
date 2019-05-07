@@ -1,0 +1,9 @@
+numpy>=1.12
+pandas
+nbsphinx
+sphinx_click
+alabaster
+packaging
+scipy>=1.0.0
+openmm>=7.3.0
+matplotlib

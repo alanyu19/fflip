@@ -1,0 +1,10 @@
+README.rst
+setup.cfg
+setup.py
+fflop.egg-info/PKG-INFO
+fflop.egg-info/SOURCES.txt
+fflop.egg-info/dependency_links.txt
+fflop.egg-info/entry_points.txt
+fflop.egg-info/not-zip-safe
+fflop.egg-info/requires.txt
+fflop.egg-info/top_level.txt
