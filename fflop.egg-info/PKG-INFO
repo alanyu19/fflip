@@ -1,6 +1,6 @@
 Metadata-Version: 1.1
 Name: fflop
-Version: 0+untagged.1.g9833330
+Version: 0.0.1+0.g8582588.dirty
 Summary: Force Field of Lipids Optimization Package
 Home-page: https://github.com/alanyu19/fflop
 Author: Yalun Yu
@@ -14,7 +14,7 @@ Description: .. README for Gitlab
         
         
         =====
-        fflop
+        fflip
         =====
         
         
@@ -35,9 +35,9 @@ Description: .. README for Gitlab
         
         .. see https://anaconda.org/conda-forge/plotly/badges for conda badges
         
-        Comprehensive Optimization Force Field Environment
+        Force Field of Lipids Parametrization
         
-        A Python package for automation of molecular simulations and optimization of force field parameters.
+        A Python package for automation of molecular simulations and optimization of lipid force field parameters.
         
         * Free software: GNU General Public License v3
         
@@ -138,7 +138,7 @@ Description: .. README for Gitlab
         History
         =======
         
-        0.1.0 (2017-10-26)
+        0.1.0 (2019-05-07)
         ------------------
         
         * First pre-release version.

@@ -6,7 +6,7 @@
 
 
 =====
-fflop
+fflip
 =====
 
 
@@ -27,9 +27,9 @@ fflop
 
 .. see https://anaconda.org/conda-forge/plotly/badges for conda badges
 
-Comprehensive Optimization Force Field Environment
+Force Field of Lipids Parametrization
 
-A Python package for automation of molecular simulations and optimization of force field parameters.
+A Python package for automation of molecular simulations and optimization of lipid force field parameters.
 
 * Free software: GNU General Public License v3
 
