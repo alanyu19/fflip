@@ -65,8 +65,8 @@ In order to use program-specific functions, these programs have to be installed.
 
 1) CHARMM (optional): Required for everything in fflip/tail
    Make sure the command *charmm* can be called from a terminal.
-2) OpenMM (optional): Required for everything in fflip/tail
-3) openmmtools (optional): Required for everything in fflip/tail
+2) OpenMM (optional): Required for everything in fflip/tail.
+3) openmmtools (optional): Required for everything in fflip/tail.
 #It is absolutely not necessary to have all of these programs installed to benefit from fflip.
 #(In most cases you will use only one simulation program anyway.) fflip will (currently not) notify you, if you hit
 #a dependency that is not installed on your system.
@@ -77,24 +77,18 @@ In order to use program-specific functions, these programs have to be installed.
 Tutorials
 ---------
 
--  Using coffe with Gromacs:
+-  Using fflip with CHARMM (and OpenMM):
 
    1) Creating boxes using Gromacs: Tutorial1_.
    2) Running Gromacs simulations: Tutorial2_.
    3) Full Gromacs workflow on cluster: Tutorial3_.
    4) Full Gromacs two-phase simulation: Tutorial4_.
 
-.. _Tutorial1: examples/01_creating_boxes_using_gmx/boxes.ipynb
-.. _Tutorial2: examples/02_running_gmx/gmx.ipynb
-.. _Tutorial3: examples/03_full_gmx_sim_on_cluster/gmx_advanced.ipynb
-.. _Tutorial4: examples/04_full_simulation_twophase_box/twophase_boxes.ipynb
+.. _Tutorial1: examples/01_building_alkane_system/placeholder1.ipynb
+.. _Tutorial2: examples/02_01_charmm_sim/placeholder2.ipynb
+.. _Tutorial3: examples/02_02_openmm_sim/placeholder3.ipynb
+.. _Tutorial4: examples/03_getting_properties/placeholder4.ipynb
 
-
--  Using coffe with Amber:
-
-   1) Running Amber simulations: Tutorial12_.
-
-.. _Tutorial12: examples/12_running_amber/amb.ipynb
 
 Developers' Guide
 -----------------
@@ -113,9 +107,7 @@ Developers' Guide
 Related Work
 ------------
 
-The docker images for the continuous integration framework are hosted on `this github page`_.
-
-.. _this github page: https://github.com/olllom/docker_coffe
+Currently none.
 
 
 Credits
