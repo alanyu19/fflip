@@ -79,10 +79,10 @@ Tutorials
 
 -  Using fflip with CHARMM (and OpenMM):
 
-   1) Creating boxes using Gromacs: Tutorial1_.
-   2) Running Gromacs simulations: Tutorial2_.
-   3) Full Gromacs workflow on cluster: Tutorial3_.
-   4) Full Gromacs two-phase simulation: Tutorial4_.
+   1) Building alkane/alkene systems: Tutorial1_.
+   2) Running CHARMM simulations: Tutorial2_.
+   3) Running OpenMM simulations: Tutorial3_.
+   4) Extract information from simulations: Tutorial4_.
 
 .. _Tutorial1: examples/01_building_alkane_system/placeholder1.ipynb
 .. _Tutorial2: examples/02_01_charmm_sim/placeholder2.ipynb
