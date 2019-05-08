@@ -15,7 +15,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://gitlab.com/alanyu/fflop/issues.
+Report bugs at https://gitlab.com/alanyu/fflip/issues.
 
 If you are reporting a bug, please include:
 

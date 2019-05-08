@@ -19,7 +19,8 @@ Development Lead
 Core Developers
 ---------------
 
-* Andreas Krämer, NIH NHLBI, Bethesda, MD, USA 
+* Jeffery Klauda, UMD, College Park, MD, USA
+* Andreas Krämer, NIH NHLBI, Bethesda, MD, USA
 
 
 Contributors
