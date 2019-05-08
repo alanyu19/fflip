@@ -10,12 +10,12 @@ fflip
 =====
 
 
-.. image:: https://gitlab.com/Olllom/coffe/badges/master/build.svg
-        :target: https://gitlab.com/Olllom/coffe/pipelines
+.. image:: https://gitlab.com/alanyu/fflop/badges/master/build.svg
+        :target: https://gitlab.com/alanyu/fflop/pipelines
         :alt: Continuous Integration
 
-.. image:: https://img.shields.io/pypi/v/coffe.svg
-        :target: https://pypi.python.org/pypi/coffe#
+.. image:: https://img.shields.io/pypi/v/fflip.svg
+        :target: https://pypi.python.org/pypi/fflop#
         :alt: pypi
 
 .. image https://img.shields.io/travis/Olllom/coffe.svg
@@ -33,7 +33,7 @@ A Python package for automation of molecular simulations and optimization of lip
 
 * Free software: GNU General Public License v3
 
-* Documentation: https://coffe.readthedocs.io.
+* Documentation: https://fflop.readthedocs.io.
 
 
 Features
