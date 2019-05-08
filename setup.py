@@ -33,6 +33,7 @@ requirements = [
     'packaging',
     'scipy>=1.0.0',
     'openmm>=7.3.0',
+    'MDAnalysis',
     # put package requirements here
 ]
 
@@ -52,24 +53,24 @@ test_requirements = [
 ]
 
 setup(
-    name='fflop',
+    name='fflip',
     version=versioneer.get_version(),
     description="Force Field of Lipids Optimization Package",
     long_description=readme + '\n\n' + history,
     author="Yalun Yu",
     author_email='yalun.research@gmail.com',
-    url='https://github.com/alanyu19/fflop',
+    url='https://github.com/alanyu19/fflip',
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'fflop=fflop.cli:main'
+            'fflip=fflip.cli:main'
         ]
     },
     include_package_data=True,
     install_requires=requirements,
     license="GNU General Public License v3",
     zip_safe=False,
-    keywords='fflop',
+    keywords='fflip',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',

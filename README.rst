@@ -63,12 +63,12 @@ The following third-party software is **not** required to install coffe.
 However, a lot of coffe's functionality depends on molecular simulation packages.
 In order to use program-specific functions, these programs have to be installed.
 
-1) CHARMM (optional): Required for everything in fflop/chm.
+1) CHARMM (optional): Required for everything in fflip/tail
    Make sure the command *charmm* can be called from a terminal.
-2) OpenMM (optional): Required for everything in fflop/chm
-
-#It is absolutely not necessary to have all of these programs installed to benefit from fflop.
-#(In most cases you will use only one simulation program anyway.) fflop will notify you, if you hit
+2) OpenMM (optional): Required for everything in fflip/tail
+3) openmmtools (optional): Required for everything in fflip/tail
+#It is absolutely not necessary to have all of these programs installed to benefit from fflip.
+#(In most cases you will use only one simulation program anyway.) fflip will (currently not) notify you, if you hit
 #a dependency that is not installed on your system.
 
 

@@ -3,7 +3,7 @@
 from __future__ import division, print_function
 
 
-from TrainingTarget import TrainingTarget
+from fflip.tail.TrainingTarget import TrainingTarget
 # Taken from ForceBalance
 
 driver_path = "/lustre/alanyu17/optim/unsat/v2/"
