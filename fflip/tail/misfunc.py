@@ -25,14 +25,14 @@ def bzavg(obs,boltz):
     else:
         raise Exception('The number of dimensions can only be 1 or 2!')
 
+
 def calc_kappa(b=None, **kwargs):
-    #global kT
-    #global nframes
     if b is None: b = np.ones(kwargs["nframes"], dtype=float)
     if 'v_' in kwargs:
         v_ = kwargs['v_']
         # return bar_unit / kT * (bzavg(v_**2,b)-bzavg(v_,b)**2)/bzavg(v_,b)
         return (bzavg(v_**2,b)-bzavg(v_,b)**2)/bzavg(v_,b)*1.0e-30/ kwargs["kT"]
+
 
 def replace(source_file_path, linen, substring):  # replace the target line with the given substring
     fh, target_file_path = tempfile.mkstemp()
@@ -45,6 +45,7 @@ def replace(source_file_path, linen, substring):  # replace the target line with
                     target_file.write(line.replace(line, line))
     os.rename(source_file_path, source_file_path + "-last")
     shutil.move(target_file_path, source_file_path) # move the temprary to the source file path
+
 
 def fit_dihedral(dp, substringch2, substringch3):
     # if we stream the torsion parameters independently, we might want to delete info in the above stream file.

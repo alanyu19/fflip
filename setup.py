@@ -28,7 +28,7 @@ requirements = [
     'numpy>=1.12',
     'pandas',
     'nbsphinx', # sphinx documentation for jupyter notebooks
-    'sphinx_click', # sphinx documentation for click
+    'sphinx-click', # sphinx documentation for click
     'alabaster', # alabaster theme for documentation
     'packaging',
     'scipy>=1.0.0',
