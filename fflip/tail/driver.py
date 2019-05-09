@@ -3,109 +3,120 @@
 from __future__ import division, print_function
 
 import nlopt
-import numpy as np
-import MDAnalysis as mda
-import pandas as pd
-
-import os
-import time
-import tempfile
-import shutil
-import sys
 import copy
-from TrainingTarget import *
-from misfunc import *
-from targets import *
 
-def objfunc(x, grad):
-    global objfunc_counter
-    global lower_bounds
-    global upper_bounds
-    global y
-    global driver_path
-    global kT
-    global nframes
+from fflip.tail.misfunc import *
+from fflip.tail.TrainingTarget import *
 
-    objfunc_counter += 1
-    print("objfunc_counter: ", objfunc_counter)
+# the targets should be user defined, like:
+# from targets import *
 
-    a, b = copy.deepcopy(x)
-    #d = c/1.05
-    
-    # Make Changes to Stream Files
-    substringch1 = "CH1E\t0.0\t%.4f\t%.3f\n" % (a, b)
-    os.chdir(driver_path + "toppar")        
-    replace(driver_path+"toppar/c36ua.str", 1038, substringch1)  # check line number
+class objective_function(object):
 
-    previous_counter = objfunc_counter - 1
-    fit_dihedral_2d(driver_path, substringch1, previous_counter)
-    
-    for system in syslist:
-        system.CleanUpPreviousIteration()
-        system.Simulate()
-        system.dic["CH1E_sigma"] = [a]
-        system.dic["CH1E_epsilon"] = [b]
-        
-    for system in syslist:
-        system.GetDensitykappa(objfunc_counter)
-                    
-    for system in syslist:
-        system.Unfold_and_Gas(objfunc_counter)
-        
-    for system in syslist:
-        system.GetHeatofVaporization(objfunc_counter)
-        
-    # Diffusion (continued)    
-    for system in syslist:
-        system.GetDiffusionConstant(objfunc_counter)
+    def __init__(self, targets):
 
-    for system in syslist:
-        system.AssertDiffusionIsDone(objfunc_counter)
-        
-    # Heat of Vaporization (continued)
-    for system in syslist:
-        system.AsserthovIsDone(objfunc_counter)
-              
-    # Start to Gather the Simulated/Calculated Results
-    ssr_sum = 0
-    for system in syslist:
-        # Is there any counter here?
-        ssr = system.GetSSR(objfunc_counter)
-        ssr_sum += ssr
-    
-    for system in syslist:
-        system.dic["ssr_sum"] = [ssr_sum]
-        system.WriteInfoToTable(driver_path, objfunc_counter)
-    
-    return ssr_sum
+        self.targets = targets
+        self.objfunc_counter = 0
+        self.driver_path = os.path.dirname(os.path.abspath(__file__))
+        global kT
+        global nframes
+
+    def __call__(self, x, grad):
+
+        self.objfunc_counter += 1
+        print("objfunc_counter: ", self.objfunc_counter)
+
+        a, b = copy.deepcopy(x)
+
+        substringch_1 = "CH1E\t0.0\t%.4f\t%.3f\n" % (a, b)
+        os.chdir(self.driver_path + "toppar")
+        # The line number here should be found by the program
+        replace(self.driver_path + "toppar/c36ua.str", 1038, substringch_1)
+
+        previous_counter = self.objfunc_counter - 1
+        fit_dihedral_2d(self.driver_path, substringch_1, previous_counter)
+
+        for target in self.targets:
+            target.CleanUpPreviousIteration()
+            target.Simulate()
+            target.dic["CH1E_sigma"] = [a]
+            target.dic["CH1E_epsilon"] = [b]
+
+        for target in self.targets:
+            target.GetDensitykappa(self.objfunc_counter)
+
+        for target in self.targets:
+            target.Unfold_and_Gas(self.objfunc_counter)
+
+        for target in self.targets:
+            target.GetHeatofVaporization(self.objfunc_counter)
+
+        # Diffusion (continued)
+        for target in self.targets:
+            target.GetDiffusionConstant(self.objfunc_counter)
+
+        for target in self.targets:
+            target.AssertDiffusionIsDone(self.objfunc_counter)
+
+        # Heat of Vaporization (continued)
+        for target in self.targets:
+            target.AsserthovIsDone(self.objfunc_counter)
+
+        # Start to Gather the Simulated/Calculated Results
+        ssr_sum = 0
+        for target in self.targets:
+            # Is there any counter here?
+            ssr = target.GetSSR(self.objfunc_counter)
+            ssr_sum += ssr
+
+        for target in self.targets:
+            target.dic["ssr_sum"] = [ssr_sum]
+            target.WriteInfoToTable(self.driver_path, self.objfunc_counter)
+
+        return ssr_sum
 
 
 # global variables
-startpars = [-0.115, 2.133]
-#driver_path = "/u/alanyu/optim/trial_1/"
+class optimize(object):
+    """
+    NLOPT optimizer to find the best parameter set
+    """
+    def __init__(self, targets, obj_func, startpars, lower_bounds, upper_bounds, algorithm = nlopt.LN_SBPLX):
+        self.targets = targets
+        self.obj_func = obj_func
+        self.startpars = startpars
+        self.lower_bounds = lower_bounds
+        self.upper_bounds = upper_bounds
+        self.algorithm = algorithm
+        assert len(list(self.lower_bounds)) == len(list(self.upper_bounds)) == len(list(startpars)),\
+            "Optimizer error: lower bounds dimension doesn't match upper bounds!"
+        self.dimension = len(list(self.lower_bounds))
+
+    def __call__(self, **kwargs):
+        for t in self.targets:
+            t.CreateTableWithExp()
+        opt = nlopt.opt(self.algorithm, self.dimension)
+        opt.set_lower_bounds(self.lower_bounds)
+        opt.set_upper_bounds(self.upper_bounds)
+        opt.set_min_objective(self.obj_func)
+        if "xtol_rel" in kwargs:
+            opt.set_xtol_rel(kwargs["xtol_rel"])
+        else:
+            opt.set_xtol_rel(0.0001)
+        x = opt.optimize(startpars)
+        minf = opt.last_optimum_value()
+        # print(x, minf)
+        return x, minf
+
+
+startpars = [-0.118, 2.192, -0.175, 2.192, -0.115, 2.133]
+
+#####################################################################################
+# CH1E      0.0       -0.115    2.133     0.0   0.0   2.133   ! CH  (sp2) but-2-ene #
+# CH2E      0.0       -0.118    2.192     0.0   0.0   2.192   ! CH2 (sp3) butane    #
+# CH3E      0.0       -0.175    2.192     0.0   0.0   2.192   ! CH3 (sp3) butane    #
+#####################################################################################
+
 objfunc_counter = 0
-lower_bounds = [-0.15, 1.800]
-upper_bounds = [-0.08, 2.450]
-#initial_steps = [0.1, 0.1, 0.007, 0.007]
-
-# CH1E      0.0       -0.115    2.133     0.0   0.0   2.133   ! CH  (sp2) but-2-ene
-# CH2E      0.0       -0.118    2.192     0.0   0.0   2.192   ! CH2 (sp3) butane
-# CH3E      0.0       -0.175    2.192     0.0   0.0   2.192   ! CH3 (sp3) butane
-opt = nlopt.opt(nlopt.LN_SBPLX, 2)
-opt.set_lower_bounds(lower_bounds)
-opt.set_upper_bounds(upper_bounds)
-#opt.set_initial_step(initial_steps)
-opt.set_min_objective(objfunc)
-opt.set_xtol_rel(0.0002)
-#opt.set_maxeval(1)
-
-
-# create empty (but containing exp data) csv
-for system in syslist:
-    system.CreateTableWithExp()
-
-x = opt.optimize(startpars)
-minf = opt.last_optimum_value()
-print(x, minf)
-
-# end of script
+lower_bounds = []
+upper_bounds = []

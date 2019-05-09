@@ -2,7 +2,6 @@
 
 from __future__ import division, print_function
 
-
 import numpy as np
 import MDAnalysis as mda
 import pandas as pd
@@ -11,31 +10,7 @@ import os
 import time
 import sys
 
-
-def bzavg(obs,boltz):
-    # Get the Boltzmann average of an observable.
-    if obs.ndim == 2:          # ndim is the dimension of data set, a method of numpy
-        if obs.shape[0] == len(boltz) and obs.shape[1] == len(boltz):   # number of rows and columns """
-            raise Exception('Error - both dimensions have length equal to number of snapshots, now confused!')
-        elif obs.shape[0] == len(boltz):
-            return np.sum(obs*boltz.reshape(-1,1),axis=0)/np.sum(boltz)  # now the average is got
-        elif obs.shape[1] == len(boltz):
-            return np.sum(obs*boltz,axis=1)/np.sum(boltz)
-        else:
-            raise Exception('The dimensions are wrong!')  # when none of them has the correct length
-    elif obs.ndim == 1:
-        return np.dot(obs,boltz)/sum(boltz)
-    else:
-        raise Exception('The number of dimensions can only be 1 or 2!')
-
-def calc_kappa(b=None, **kwargs):
-    #global kT
-    #global nframes
-    if b is None: b = np.ones(kwargs["nframes"], dtype=float)
-    if 'v_' in kwargs:
-        v_ = kwargs['v_']
-        # return bar_unit / kT * (bzavg(v_**2,b)-bzavg(v_,b)**2)/bzavg(v_,b)
-        return (bzavg(v_**2,b)-bzavg(v_,b)**2)/bzavg(v_,b)*1.0e-30/ kwargs["kT"]
+from fflip.tail.misfunc import calc_kappa, bzavg
     
 class TrainingTarget(object):
     
