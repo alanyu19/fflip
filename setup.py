@@ -33,6 +33,8 @@ requirements = [
     'packaging',
     'scipy>=1.0.0',
     'openmm>=7.3.0',
+    'openmmtools',
+    'mdtraj',
     'MDAnalysis',
     'nlopt',
     # put package requirements here
