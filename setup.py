@@ -34,6 +34,7 @@ requirements = [
     'scipy>=1.0.0',
     'openmm>=7.3.0',
     'MDAnalysis',
+    'nlopt',
     # put package requirements here
 ]
 

@@ -10,7 +10,7 @@ import os
 import time
 import sys
 
-from fflip.tail.misfunc import calc_kappa, bzavg
+from fflip.tail.misfunc import calc_kappa
     
 class TrainingTarget(object):
     
@@ -240,9 +240,9 @@ class TrainingTarget(object):
         sys.stdout.flush()
         
     def CreateTableWithExp(self):
+        # TODO: make this more generic, take inputs to replace CH*E_sig/eps
         print("Creating New Table for {}".format(self.name + '_' + str(self.temp)))
-        var_list = []
-        var_list = ["CH1E_sigma", "CH1E_epsilon", "rho", "kappa"]
+        var_list = ["CH1E_sigma", "CH1E_epsilon", "CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')
@@ -250,8 +250,10 @@ class TrainingTarget(object):
         csv_dict = {}
         for var in var_list:
             csv_dict[var] = [self.exp_dic[var]] if var in self.exp_dic else [None]
-            df = pd.DataFrame(csv_dict, columns=var_list)
-            df.to_csv(self.name + '-' + str(self.temp) + ".csv", index=False)
+        if not os.path.isdir("./table"):
+            os.system("mkdir table")
+        df = pd.DataFrame(csv_dict, columns=var_list)
+        df.to_csv("./table/" + self.name + '-' + str(self.temp) + ".csv", index=False)
         sys.stdout.flush()
         
     def WriteInfoToTable(self, path, counter):

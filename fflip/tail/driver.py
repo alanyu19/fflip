@@ -18,29 +18,46 @@ class objective_function(object):
         self.targets = targets
         self.objfunc_counter = 0
         self.driver_path = os.path.dirname(os.path.abspath(__file__))
-        global kT
-        global nframes
 
     def __call__(self, x, grad):
 
         self.objfunc_counter += 1
         print("objfunc_counter: ", self.objfunc_counter)
 
-        a, b = copy.deepcopy(x)
 
-        substringch_1 = "CH1E\t0.0\t%.4f\t%.3f\n" % (a, b)
+        ############ this whole thing should be written into a user-defined function to increase flexibility ###########
+        ############ possible inputs: the sigma/epsilons, the toppar dir, the line number (found elsewhere) ... ########
+        e2, s2, e3, s3, e1, s1 = copy.deepcopy(x)
+
+        substringch_1 = "CH1E\t0.0\t%.4f\t%.3f\n" % (e1, s1)
+        substringch_2 = "CH2E\t0.0\t%.3f\t%.3f\n" % (e2, s2)
+        substringch_3 = "CH3E\t0.0\t%.3f\t%.3f\n" % (e3, s3)
+
         os.chdir(self.driver_path + "toppar")
         # The line number here should be found by the program
         replace(self.driver_path + "toppar/c36ua.str", 1038, substringch_1)
+        replace(self.driver_path + "toppar/c36ua.str", 999, substringch_2)
+        replace(self.driver_path + "toppar/c36ua.str", 1000, substringch_3)
+
+        # Fit the Dihedral Parameters Using the Updated LJ Parameters
 
         previous_counter = self.objfunc_counter - 1
+
+        fit_dihedral(self.driver_path, substringch_2, substringch_3)
         fit_dihedral_2d(self.driver_path, substringch_1, previous_counter)
+
+        for target in self.targets:
+            target.dic["CH1E_sigma"] = [s1]
+            target.dic["CH1E_epsilon"] = [e1]
+            target.dic["CH2E_sigma"] = [s2]
+            target.dic["CH2E_epsilon"] = [e2]
+            target.dic["CH3E_sigma"] = [s3]
+            target.dic["CH3E_epsilon"] = [e3]
+        ################################################################################################################
 
         for target in self.targets:
             target.CleanUpPreviousIteration()
             target.Simulate()
-            target.dic["CH1E_sigma"] = [a]
-            target.dic["CH1E_epsilon"] = [b]
 
         for target in self.targets:
             target.GetDensitykappa(self.objfunc_counter)
@@ -71,7 +88,7 @@ class objective_function(object):
 
         for target in self.targets:
             target.dic["ssr_sum"] = [ssr_sum]
-            target.WriteInfoToTable(self.driver_path, self.objfunc_counter)
+            target.WriteInfoToTable(self.driver_path + "table/", self.objfunc_counter)
 
         return ssr_sum
 
@@ -103,13 +120,13 @@ class optimize(object):
             opt.set_xtol_rel(kwargs["xtol_rel"])
         else:
             opt.set_xtol_rel(0.0001)
-        x = opt.optimize(startpars)
+        x = opt.optimize(self.startpars)
         minf = opt.last_optimum_value()
         # print(x, minf)
         return x, minf
 
 
-startpars = [-0.118, 2.192, -0.175, 2.192, -0.115, 2.133]
+# startpars = [-0.118, 2.192, -0.175, 2.192, -0.115, 2.133]
 
 #####################################################################################
 # CH1E      0.0       -0.115    2.133     0.0   0.0   2.133   ! CH  (sp2) but-2-ene #
@@ -117,6 +134,5 @@ startpars = [-0.118, 2.192, -0.175, 2.192, -0.115, 2.133]
 # CH3E      0.0       -0.175    2.192     0.0   0.0   2.192   ! CH3 (sp3) butane    #
 #####################################################################################
 
-objfunc_counter = 0
-lower_bounds = []
-upper_bounds = []
+# lower_bounds = [-0.142, 1.754, -0.210, 1.754, -0.138, 1.706]
+# upper_bounds = [-0.094, 2.630, -0.140, 2.630, -0.092, 2.560]
