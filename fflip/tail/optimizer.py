@@ -36,14 +36,14 @@ class objective_function(object):
         os.chdir(self.driver_path + "toppar")
         # The line number here should be found by the program
         replace(self.driver_path + "toppar/c36ua.str", 1038, substringch_1)
-        replace(self.driver_path + "toppar/c36ua.str", 999, substringch_2)
-        replace(self.driver_path + "toppar/c36ua.str", 1000, substringch_3)
+        replace(self.driver_path + "toppar/c36ua.str", 1039, substringch_2)
+        replace(self.driver_path + "toppar/c36ua.str", 1040, substringch_3)
 
         # Fit the Dihedral Parameters Using the Updated LJ Parameters
 
         previous_counter = self.objfunc_counter - 1
 
-        fit_dihedral(self.driver_path, substringch_2, substringch_3)
+        fit_dihedral(self.driver_path, substringch_2, substringch_3, previous_counter)
         fit_dihedral_2d(self.driver_path, substringch_1, previous_counter)
 
         for target in self.targets:

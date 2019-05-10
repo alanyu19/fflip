@@ -9,6 +9,11 @@ import tempfile
 import shutil
 import numpy as np
 
+def check_dir(fname):
+    if not os.path.isdir("./{}".format(fname)):
+    os.system("mkdir {}".format(fname))
+
+
 def bzavg(obs,boltz):
     # Get the Boltzmann average of an observable.
     if obs.ndim == 2:          # ndim is the dimension of data set, a method of numpy
@@ -47,23 +52,21 @@ def replace(source_file_path, linen, substring):  # replace the target line with
     shutil.move(target_file_path, source_file_path) # move the temprary to the source file path
 
 
-def fit_dihedral(dp, substringch2, substringch3):
-    # if we stream the torsion parameters independently, we might want to delete info in the above stream file.
-    replace(dp + "toppar/c36ua_c5_dihe.str", 999, substringch2)
-    replace(dp + "toppar/c36ua_c5_dihe.str", 1000, substringch3)
-    replace(dp + "toppar/c36ua_c6_dihe.str", 999, substringch2)
-    replace(dp + "toppar/c36ua_c6_dihe.str", 1000, substringch3)
-    
+def fit_dihedral(dp, substringch2, substringch3, counter):
     """
     open the C5 AND C6 dihedral fitting folders and fix the dihedral force constants
     """
     ## write this into a funtion and import it as we might not need it for other parameterizing process ...
     os.chdir(dp + "c5_fitting")
+    check_dir("olds") 
+    os.system("cp dihe_2223.str ./olds/iter{}.str".format(counter))
     os.system("rm -f done.fit *.out *.mme *.ene *.dat")
     os.system("sbatch fit.csh")
     while not os.path.isfile("done.fit"):  # check W's minimize .sh to see where this file is generated
         time.sleep(6)
     os.chdir(dp + "c6_fitting")
+    check_dir("olds") 
+    os.system("cp dihe_2222.str ./olds/iter{}.str".format(counter))
     os.system("rm -f done.fit *.out *.mme *.ene *.dat")
     os.system("sbatch fit.csh")
     while not os.path.isfile("done.fit"):  # check W's minimize .sh to see where this file is generated
@@ -71,17 +74,13 @@ def fit_dihedral(dp, substringch2, substringch3):
 
 def fit_dihedral_2d(dp, substringch1, counter):
     # if we stream the torsion parameters independently, we might want to delete info in the above stream file.
-    os.chdir(dp + "hexene_2d_fitting")
-    os.system("cp dihe_11222.str ./olds/12_iter{}.str".format(counter))
-    os.chdir(dp + "toppar")
-    os.system("cp c36ua_hexe_2d.str ./olds/36_iter{}.str".format(counter))
-    # change the LJ before fitting dihedrals
-    replace(dp + "toppar/c36ua_hexe_2d.str", 1018, substringch1)   
+    os.chdir(dp + "2d_fitting")
+    check_dir("olds")
+    os.system("cp dihe_11222.str ./olds/iter{}.str".format(counter))
     """
     open the 2d fitting folders
     """
     ## write this into a funtion and import it as we might not need it for other parameterizing process ...
-    os.chdir(dp + "hexene_2d_fitting")
     os.system("rm -f done.fit *.out *.mme *.ene *.dat")
     os.system("sbatch fit.csh")
     while not os.path.isfile("done.fit"):  # check W's minimize .sh to see where this file is generated
