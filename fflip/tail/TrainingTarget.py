@@ -20,9 +20,7 @@ class TrainingTarget(object):
         assert "temp" in kwargs
         self.temp = kwargs["temp"]
         assert "resname" in kwargs
-        self.resname = kwargs["resname"] 
-        assert "crd" in kwargs
-        self.crd = os.path.abspath(kwargs["crd"])
+        self.resname = kwargs["resname"]
         assert "guess_box" in kwargs
         self.guess_box = kwargs["guess_box"]
         assert "hovnb" in kwargs
@@ -31,10 +29,10 @@ class TrainingTarget(object):
         self.fftx = kwargs["fftx"] 
         assert "root_dir" in kwargs
         self.dir = os.path.abspath(kwargs["root_dir"] + self.name + "_" + str(self.temp))
-        assert "psf" in kwargs
-        self.psf = os.path.abspath(kwargs["psf"])
         assert "number_molecules" in kwargs
         self.number = kwargs["number_molecules"]
+        self.psf = os.path.abspath("./psf/{}_{}.psf".format(self.name, self.number))
+        self.crd = os.path.abspath("./crd/{}_{}.crd".format(self.name, self.number))
         assert "molmass" in kwargs
         self.molmass = kwargs["molmass"]
         assert "dcd" in kwargs

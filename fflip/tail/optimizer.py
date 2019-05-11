@@ -13,18 +13,20 @@ from fflip.tail.TrainingTarget import *
 
 class objective_function(object):
 
-    def __init__(self, targets):
+    def __init__(self, targets, driver_path):
 
         self.targets = targets
         self.objfunc_counter = 0
-        self.driver_path = os.path.dirname(os.path.abspath(__file__))
+        self.driver_path = driver_path
 
     def __call__(self, x, grad):
 
         self.objfunc_counter += 1
         print("objfunc_counter: ", self.objfunc_counter)
 
-
+        if self.objfunc_counter==1:
+            for t in self.targets:
+                t.CreateTableWithExp()
         ############ this whole thing should be written into a user-defined function to increase flexibility ###########
         ############ possible inputs: the sigma/epsilons, the toppar dir, the line number (found elsewhere) ... ########
         e2, s2, e3, s3, e1, s1 = copy.deepcopy(x)
@@ -45,7 +47,7 @@ class objective_function(object):
 
         fit_dihedral(self.driver_path, substringch_2, substringch_3, previous_counter)
         fit_dihedral_2d(self.driver_path, substringch_1, previous_counter)
-
+        
         for target in self.targets:
             target.dic["CH1E_sigma"] = [s1]
             target.dic["CH1E_epsilon"] = [e1]
@@ -55,9 +57,11 @@ class objective_function(object):
             target.dic["CH3E_epsilon"] = [e3]
         ################################################################################################################
 
+        # """ MARKER
         for target in self.targets:
             target.CleanUpPreviousIteration()
             target.Simulate()
+        # """
 
         for target in self.targets:
             target.GetDensitykappa(self.objfunc_counter)
@@ -98,8 +102,9 @@ class optimize(object):
     """
     NLOPT optimizer to find the best parameter set
     """
-    def __init__(self, targets, obj_func, startpars, lower_bounds, upper_bounds, algorithm = nlopt.LN_SBPLX):
-        self.targets = targets
+    def __init__(self, obj_func, startpars, lower_bounds, upper_bounds, algorithm = nlopt.LN_SBPLX):
+        # moved to objfunc
+        # self.targets = targets
         self.obj_func = obj_func
         self.startpars = startpars
         self.lower_bounds = lower_bounds
@@ -110,8 +115,8 @@ class optimize(object):
         self.dimension = len(list(self.lower_bounds))
 
     def __call__(self, **kwargs):
-        for t in self.targets:
-            t.CreateTableWithExp()
+        # for t in self.targets:
+        #     t.CreateTableWithExp()
         opt = nlopt.opt(self.algorithm, self.dimension)
         opt.set_lower_bounds(self.lower_bounds)
         opt.set_upper_bounds(self.upper_bounds)

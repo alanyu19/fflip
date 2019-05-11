@@ -11,7 +11,7 @@ import numpy as np
 
 def check_dir(fname):
     if not os.path.isdir("./{}".format(fname)):
-    os.system("mkdir {}".format(fname))
+        os.system("mkdir {}".format(fname))
 
 
 def bzavg(obs,boltz):
