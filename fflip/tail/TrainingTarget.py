@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import division, print_function
 
@@ -10,7 +10,7 @@ import os
 import time
 import sys
 
-from fflip.tail.misfunc import calc_kappa, bzavg
+from fflip.tail.misfunc import replace2, calc_kappa, bzavg
     
 class TrainingTarget(object):
     
@@ -55,8 +55,26 @@ class TrainingTarget(object):
         self.frames = None
         
     def __repr__(self):
-        return "complete later!" 
-    
+        return "Training target {} at {}K".format(self.name, self.temp)
+
+    def create_folder(self):
+        os.system("cp -r sample {}".format(self.dir))
+        os.chdir(self.dir)
+        replace2("mdyn.sh", "#SBATCH --job-name", "#SBATCH --job-name=dyn-{}".format(
+            self.name+'_'+str(int(self.temp))
+        )
+                 )
+        replace2("gasmaster.csh", "#SBATCH --job-name", "#SBATCH --job-name=gas-{}".format(
+            self.name+'_'+str(int(self.temp)))
+                 )
+        replace2("do-ReducUnfold.csh", "#SBATCH --job-name", "#SBATCH --job-name=unf-{}".format(
+            self.name + '_' + str(int(self.temp)))
+                 )
+        replace2("do-bcseMSD.csh", "#SBATCH --job-name", "#SBATCH --job-name=dfs-{}".format(
+            self.name+'_'+str(int(self.temp))
+        )
+                 )
+
     def CleanUpPreviousIteration(self):
         os.chdir(self.dir)
         os.system("echo {} > last.seqno".format(self.dcd))
@@ -82,8 +100,8 @@ class TrainingTarget(object):
         # rundyn.py will need that.
         # should ADD a step in minimize.inp to write out last crd
         # COPY the coordinates from minimization in mdyn.sh or rundyn.py
-        os.system("sbatch minimize.csh {} {} {} {} {}".format(
-                  self.temp, self.psf, self.crd, self.guess_box, self.fftx))
+        os.system("sbatch mdyn.sh {} {} {} {} {} {}".format(
+                  self.temp, self.psf, self.crd, self.guess_box, self.last_dcd))
                 
     #def CreateAnts(self):
     #    print("Creating Ants for {}".format(self.name + '_' + str(self.temp)))

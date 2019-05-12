@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import division, print_function
 
@@ -50,6 +50,13 @@ def replace(source_file_path, linen, substring):  # replace the target line with
                     target_file.write(line.replace(line, line))
     os.rename(source_file_path, source_file_path + "-last")
     shutil.move(target_file_path, source_file_path) # move the temprary to the source file path
+
+
+def replace2(filename, text_to_search, replacement_text):
+    import fileinput
+    with fileinput.FileInput(filename, inplace=True, backup='.bak') as file:
+        for line in file:
+            print(line.replace(text_to_search, replacement_text), end='')
 
 
 def fit_dihedral(dp, substringch2, substringch3, counter):

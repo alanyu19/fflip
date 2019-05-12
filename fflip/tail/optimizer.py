@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import division, print_function
 
@@ -27,6 +27,7 @@ class objective_function(object):
         if self.objfunc_counter==1:
             for t in self.targets:
                 t.CreateTableWithExp()
+                t.creat_folder()
         ############ this whole thing should be written into a user-defined function to increase flexibility ###########
         ############ possible inputs: the sigma/epsilons, the toppar dir, the line number (found elsewhere) ... ########
         e2, s2, e3, s3, e1, s1 = copy.deepcopy(x)
