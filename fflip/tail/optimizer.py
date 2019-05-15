@@ -2,6 +2,7 @@
 
 from __future__ import division, print_function
 
+import os
 import nlopt
 import copy
 
@@ -27,11 +28,31 @@ class objective_function(object):
         if self.objfunc_counter==1:
             for t in self.targets:
                 t.CreateTableWithExp()
-                t.creat_folder()
+                t.create_folder()
+    
+        for target in self.targets:
+            target.CleanUpPreviousIteration()
+
         ############ this whole thing should be written into a user-defined function to increase flexibility ###########
         ############ possible inputs: the sigma/epsilons, the toppar dir, the line number (found elsewhere) ... ########
+        if self.objfunc_counter==1: 
+            os.chdir(self.driver_path + "c5_fitting")
+            os.system("rm -r olds")
+            os.chdir(self.driver_path + "c6_fitting")
+            os.system("rm -r olds")
+            os.chdir(self.driver_path + "2d_fitting")
+            os.system("rm -r olds")
+
         e2, s2, e3, s3, e1, s1 = copy.deepcopy(x)
 
+        for target in self.targets:
+            target.dic["CH1E_sigma"] = [s1]
+            target.dic["CH1E_epsilon"] = [e1]
+            target.dic["CH2E_sigma"] = [s2]
+            target.dic["CH2E_epsilon"] = [e2]
+            target.dic["CH3E_sigma"] = [s3]
+            target.dic["CH3E_epsilon"] = [e3]
+        
         substringch_1 = "CH1E\t0.0\t%.4f\t%.3f\n" % (e1, s1)
         substringch_2 = "CH2E\t0.0\t%.3f\t%.3f\n" % (e2, s2)
         substringch_3 = "CH3E\t0.0\t%.3f\t%.3f\n" % (e3, s3)
@@ -49,20 +70,9 @@ class objective_function(object):
         fit_dihedral(self.driver_path, substringch_2, substringch_3, previous_counter)
         fit_dihedral_2d(self.driver_path, substringch_1, previous_counter)
         
-        for target in self.targets:
-            target.dic["CH1E_sigma"] = [s1]
-            target.dic["CH1E_epsilon"] = [e1]
-            target.dic["CH2E_sigma"] = [s2]
-            target.dic["CH2E_epsilon"] = [e2]
-            target.dic["CH3E_sigma"] = [s3]
-            target.dic["CH3E_epsilon"] = [e3]
         ################################################################################################################
-
-        # """ MARKER
         for target in self.targets:
-            target.CleanUpPreviousIteration()
             target.Simulate()
-        # """
 
         for target in self.targets:
             target.GetDensitykappa(self.objfunc_counter)
@@ -105,7 +115,6 @@ class optimize(object):
     """
     def __init__(self, obj_func, startpars, lower_bounds, upper_bounds, algorithm = nlopt.LN_SBPLX):
         # moved to objfunc
-        # self.targets = targets
         self.obj_func = obj_func
         self.startpars = startpars
         self.lower_bounds = lower_bounds
@@ -116,8 +125,6 @@ class optimize(object):
         self.dimension = len(list(self.lower_bounds))
 
     def __call__(self, **kwargs):
-        # for t in self.targets:
-        #     t.CreateTableWithExp()
         opt = nlopt.opt(self.algorithm, self.dimension)
         opt.set_lower_bounds(self.lower_bounds)
         opt.set_upper_bounds(self.upper_bounds)

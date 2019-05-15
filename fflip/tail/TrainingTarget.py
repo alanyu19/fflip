@@ -28,6 +28,7 @@ class TrainingTarget(object):
         assert "fftx" in kwargs
         self.fftx = kwargs["fftx"] 
         assert "root_dir" in kwargs
+        self.root_dir = os.path.abspath(kwargs["root_dir"])
         self.dir = os.path.abspath(kwargs["root_dir"] + self.name + "_" + str(self.temp))
         assert "number_molecules" in kwargs
         self.number = kwargs["number_molecules"]
@@ -58,6 +59,7 @@ class TrainingTarget(object):
         return "Training target {} at {}K".format(self.name, self.temp)
 
     def create_folder(self):
+        os.chdir(self.root_dir)
         os.system("cp -r sample {}".format(self.dir))
         os.chdir(self.dir)
         replace2("mdyn.sh", "#SBATCH --job-name", "#SBATCH --job-name=dyn-{}".format(
@@ -93,14 +95,13 @@ class TrainingTarget(object):
             
     def Simulate(self):
         os.chdir(self.dir)
-        assert os.path.isfile(self.dir + "/minimize.csh")
         assert os.path.isfile(self.dir + "/mdyn.sh")
         assert os.path.isfile(self.dir + "/last.seqno")
         # pass the psf in this version since the openmm
         # rundyn.py will need that.
         # should ADD a step in minimize.inp to write out last crd
         # COPY the coordinates from minimization in mdyn.sh or rundyn.py
-        os.system("sbatch mdyn.sh {} {} {} {} {} {}".format(
+        os.system("sbatch mdyn.sh {} {} {} {} {}".format(
                   self.temp, self.psf, self.crd, self.guess_box, self.last_dcd))
                 
     #def CreateAnts(self):
@@ -151,7 +152,7 @@ class TrainingTarget(object):
     def Unfold_and_Gas(self, counter):
         os.chdir(self.dir)
         while not os.path.isfile("done.dyn"):
-            time.sleep(300)
+            time.sleep(100)
         # Diffusion in 3D
         if 'd3d' in self.addcalc:
             #os.chdir(driver_path + system.name + "_" + str(system.temp))
@@ -258,6 +259,7 @@ class TrainingTarget(object):
     def CreateTableWithExp(self):
         # TODO: make this more generic, take inputs to replace CH*E_sig/eps
         print("Creating New Table for {}".format(self.name + '_' + str(self.temp)))
+        os.chdir(self.root_dir)
         var_list = ["CH1E_sigma", "CH1E_epsilon", "CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
