@@ -273,6 +273,18 @@ class TrainingTarget(object):
         df = pd.DataFrame(csv_dict, columns=var_list)
         df.to_csv("./table/" + self.name + '-' + str(self.temp) + ".csv", index=False)
         sys.stdout.flush()
+
+    def OnlyEmptyDic(self):
+        var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon",
+                    "CH3E_sigma", "CH1E epsilon", "CH1E sigma", "rho", "kappa"]
+        # to_write = ["CH2E_sigma", "CH3E_sigma", "CH2E_epsilon", "CH3E_epsilon", "ssr_sum"]
+        for prop in self.addcalc:
+            var_list.append(prop)
+        var_list.append('ssr')
+        var_list.append('ssr_sum')
+        self.dic = {}
+        for var in var_list:
+            self.dic[var] = [None]
         
     def WriteInfoToTable(self, path, counter):
         print("Iteration #{}, Writing Table for {}".format(counter, self.name + '_' + str(self.temp)))
