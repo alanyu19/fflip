@@ -8,6 +8,7 @@ import copy
 
 from fflip.tail.misfunc import *
 from fflip.tail.TrainingTarget import *
+from fflip.tail.main_obj_func import *
 
 # the targets should be user defined, like:
 # from targets import *

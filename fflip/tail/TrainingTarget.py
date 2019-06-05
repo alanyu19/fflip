@@ -276,8 +276,7 @@ class TrainingTarget(object):
 
     def OnlyEmptyDic(self):
         var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon",
-                    "CH3E_sigma", "CH1E epsilon", "CH1E sigma", "rho", "kappa"]
-        # to_write = ["CH2E_sigma", "CH3E_sigma", "CH2E_epsilon", "CH3E_epsilon", "ssr_sum"]
+                    "CH3E_sigma", "CH1E_epsilon", "CH1E_sigma", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')

@@ -114,8 +114,14 @@ class objective_function_2(object):
 
         import copy
         e2, s2, e3, s3, e1, s1 = copy.deepcopy(self.x)
+        os.chdir(self.driver_path)
         ssrtable = np.loadtxt("previous.txt")
 
+        if self.objfunc_counter==1:
+            for t in self.targets:
+                t.CreateTableWithExp()
+                t.create_folder()
+        
         for target in self.targets:
             target.CleanUpPreviousIteration()
             target.OnlyEmptyDic()
@@ -127,7 +133,7 @@ class objective_function_2(object):
             target.dic["CH3E_epsilon"] = [e3]
 
             target.dic["ssr_sum"] = [ssrtable[self.objfunc_counter - 1]]
-            target.WriteInfoToTable(self.driver_path, self.objfunc_counter)
+            target.WriteInfoToTable(self.driver_path + "table/", self.objfunc_counter)
 
         return ssrtable[self.objfunc_counter - 1]
 
