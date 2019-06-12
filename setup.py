@@ -31,12 +31,12 @@ requirements = [
     'sphinx-click', # sphinx documentation for click
     'alabaster', # alabaster theme for documentation
     'packaging',
+    'nlopt=2.6.2',
     'scipy>=1.0.0',
     'openmm>=7.3.0',
     'openmmtools',
     'mdtraj',
     'MDAnalysis',
-    'nlopt',
     # put package requirements here
 ]
 
