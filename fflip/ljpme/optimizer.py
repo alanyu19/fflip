@@ -24,21 +24,23 @@ class optimize(object):
         #self.lower_bounds = lower_bounds
         #self.upper_bounds = upper_bounds
         self.algorithm = algorithm
-        assert len(list(self.lower_bounds)) == len(list(self.upper_bounds)) == len(list(startpars)),\
-            "Optimizer error: lower bounds dimension doesn't match upper bounds!"
-        self.dimension = len(list(self.lower_bounds))
+        self.dimension = len(list(self.startpars))
 
     def __call__(self, **kwargs):
         opt = nlopt.opt(self.algorithm, self.dimension)
         if "lower_bounds" in kwargs:
             opt.set_lower_bounds(kwargs["lower_bounds"])
+            assert len(list(self.lower_bounds)) == len(list(startpars)),\
+            "Optimizer error: lower bounds dimension doesn't match startpars!"
         if "upper_bounds" in kwargs:
             opt.set_upper_bounds(kwargs["upper_bounds"])
+            assert len(list(self.upper_bounds)) == len(list(startpars)),\
+            "Optimizer error: upper bounds dimension doesn't match startpars!"
         opt.set_min_objective(self.obj_func)
         if "xtol_rel" in kwargs:
             opt.set_xtol_rel(kwargs["xtol_rel"])
         else:
-            opt.set_xtol_rel(0.0001)
+            opt.set_xtol_rel(0.07)
         x = opt.optimize(self.startpars)
         minf = opt.last_optimum_value()
         # print(x, minf)
