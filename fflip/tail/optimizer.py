@@ -21,19 +21,19 @@ class optimize(object):
         # moved to objfunc
         self.obj_func = obj_func
         self.startpars = startpars
-        #self.lower_bounds = lower_bounds
-        #self.upper_bounds = upper_bounds
         self.algorithm = algorithm
-        assert len(list(self.lower_bounds)) == len(list(self.upper_bounds)) == len(list(startpars)),\
-            "Optimizer error: lower bounds dimension doesn't match upper bounds!"
-        self.dimension = len(list(self.lower_bounds))
+        self.dimension = len(list(self.startpars))
 
     def __call__(self, **kwargs):
         opt = nlopt.opt(self.algorithm, self.dimension)
         if "lower_bounds" in kwargs:
             opt.set_lower_bounds(kwargs["lower_bounds"])
+            assert len(list(kwargs["lower_bounds"])) == len(list(self.startpars)), \
+                "Optimizer error: lower bounds dimension doesn't match parameter set size!"
         if "upper_bounds" in kwargs:
             opt.set_upper_bounds(kwargs["upper_bounds"])
+            assert len(list(kwargs["upper_bounds"])) == len(list(self.startpars)), \
+                "Optimizer error: upper bounds dimension doesn't match parameter set size!"
         opt.set_min_objective(self.obj_func)
         if "xtol_rel" in kwargs:
             opt.set_xtol_rel(kwargs["xtol_rel"])
