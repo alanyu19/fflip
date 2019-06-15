@@ -4,16 +4,17 @@ from fflip.tail.misfunc import *
 from fflip.tail.TrainingTarget import *
 
 class head_obj_func(object):
-    def __init__(self, targets, driver_path):
+    def __init__(self, targets, driver_path, broken_point):
         self.objfunc_counter = 0
         self.targets = targets
         self.driver_path = driver_path
+        self.broken_point = broken_point
 
     def __call__(self, x, grad):
         from fflip.tail.objective_funcs import objective_function_2, objective_function_1
         self.objfunc_counter += 1
         print("objfunc_counter: ", self.objfunc_counter)
-        if self.objfunc_counter <= 33:
+        if self.objfunc_counter <= int(self.broken_point):
             obj_func = objective_function_2(self.targets, self.driver_path, self.objfunc_counter, x)
         else:
             obj_func = objective_function_1(self.targets, self.driver_path, self.objfunc_counter, x)
