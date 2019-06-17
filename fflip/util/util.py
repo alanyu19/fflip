@@ -87,7 +87,7 @@ def execute(nlipid, temperature, block_size, step_size, force_calc = False, forc
     print("Equilibrium reached after {} ns".format(eq_start_at))
     print("Block size is {} ns".format(block_size))
     if use_last_steps < 3 * block_size * step_size or force_calc == True: 
-        print("Ignoring the staring point of euiqlibrium above, using last 60% data ...")
+        print("Ignoring the staring point of euiqlibrium above, using last {}% data ...".format(int(force_fraction*100)))
         print("\n=.=")
         total_length = data0.shape[0]
         laststeps = int(total_length * force_fraction)
