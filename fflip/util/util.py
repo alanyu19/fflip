@@ -48,7 +48,7 @@ def get_equil_data(data, step_size, nskip, block_size = None):
     data_clean = data_equil[-use_last_steps:]
     return data_clean, data_equil, eq_start_at, use_last_steps, block_size
         
-def calc_block_avg(data, timestep, blocksize, time_to_skip = 0):
+def calc_block_avg(data, timestep, blocksize, time_to_skip = 0, verbose = True):
     """
     all inputs(time-related) are in nanoseconds
     """
@@ -61,8 +61,9 @@ def calc_block_avg(data, timestep, blocksize, time_to_skip = 0):
     block_number = int(len(data)/steps_per_block)
     steps = block_number * steps_per_block
     data = data[-steps:]
-    print("Using {} blocks (last {} ns) for SA calculation ...".format(
-          block_number, int(block_number*blocksize)))
+    if verbose:
+        print("Using {} blocks (last {} ns) for SA calculation ...".format(
+              block_number, int(block_number*blocksize)))
     for b in range(block_number):
         avg = np.mean(data[b*steps_per_block:(b+1)*steps_per_block])
         block_means.append(avg)
@@ -86,21 +87,21 @@ def execute(nlipid, temperature, block_size, step_size, force_calc = False, forc
     print("Equilibrium reached after {} ns".format(eq_start_at))
     print("Block size is {} ns".format(block_size))
     if use_last_steps < 3 * block_size * step_size or force_calc == True: 
-        print("Ignoring the above staring time of euiqlibrium, using last 60% data ...")
+        print("Ignoring the staring point of euiqlibrium above, using last 60% data ...")
         print("\n=.=")
         total_length = data0.shape[0]
         laststeps = int(total_length * force_fraction)
         data_to_use = data0[-laststeps:]
     else:
         data_to_use = data_equil
-    mean, err, bn, skip= calc_block_avg(data_to_use, step_size, block_size, time_to_skip = time_to_skip)
+    mean, err, bn, skip = calc_block_avg(data_to_use, step_size, block_size, time_to_skip = time_to_skip)
     # Calculate Compressibility Modulus using largest possible data set
-    data = data_equil
     N_steps= np.shape(data_to_use)[0]     # number of data points
     print("Using last {} ns data for compressibility calculation ...".format(round(N_steps*step_size,2)))
+    mean2, err2, bn2, skip2 = calc_block_avg(data_to_use, step_size, block_size, time_to_skip = 0, verbose = False)
     VarS=0      # VarS is variance after the system reaches equilibrium
     for i in range(0, N_steps, 1):
-        VarS=VarS+(data[i] - mean)**2
+        VarS=VarS+(data_to_use[i] - mean2)**2
     Variance=VarS/N_steps
     Ka = kb * temperature * mean / (nlipid * Variance * 1000) # order is corrected/recovered using 1000
     print('Final SA_avg/lip and err: %3.2f +- %3.2f' % (mean, err))
