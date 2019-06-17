@@ -40,7 +40,16 @@ class optimize(object):
         if "xtol_rel" in kwargs:
             opt.set_xtol_rel(kwargs["xtol_rel"])
         else:
-            opt.set_xtol_rel(0.07)
+            opt.set_xtol_rel(0.02)
+        if "xtol_abs" in kwargs:
+            print("干他妈的")
+            opt.set_xtol_abs(kwargs["xtol_abs"])
+        else:
+            opt.set_xtol_abs(0.001)
+            print("Warning: there isn't a effective stopping criteria specified!")
+        print("Starting Optimization ...")
+        print("abs xtol is {}".format(opt.get_xtol_abs()))
+        print("rel xtol is {}".format(opt.get_xtol_rel()))
         x = opt.optimize(self.startpars)
         minf = opt.last_optimum_value()
         # print(x, minf)
