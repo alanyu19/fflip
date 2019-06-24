@@ -1,12 +1,11 @@
 
-
 History
 -------
 
-FFLOP was initiated by Yalun in the group of Jeff Klauda
+FFLIP was initiated by Yalun in the group of Jeff Klauda
 at University of Maryland, College Park, MD, USA in 2019.
 
-FFLOP's concept and vision were equally contributed (in alphabetical order)
+FFLIP's concept and vision were equally contributed (in alphabetical order)
 by Jeffery Klauda, Andreas Krämer, and Yalun Yu.
 
 Development Lead
