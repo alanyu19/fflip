@@ -5,7 +5,7 @@ import mdtraj as md
 
 class rdf(object):
     def __init__(self, psf, name, atom_selections, r_range = [0,2], bin_width = 0.005,
-                 dimension = 3, separate_leaflet = False, method = 'yalun'):
+                 dimension = 3, separate_leaflet = False, method = 'yalun', save_blocks = True):
         topology = md.Topology.from_openmm(psf.topology)
         self.topology = topology
         self.r_range = r_range
@@ -21,6 +21,7 @@ class rdf(object):
         # the leatlet feature is for some bilayer rdfs
         self.separate_leaflet = separate_leaflet
         self.method = method
+        self.save_blocks = save_blocks
         self.count_traj = 0
     
     @property
@@ -174,7 +175,7 @@ class rdf(object):
                       )/ (natom1_upper + natom1_lower)
             return self.bins[:-1] + self.bin_width, np.array([rdf_avg, rdf_upper, rdf_lower])
             
-    def __call__(self, traj, verbose = 1, print_interval = 10):
+    def __call__(self, traj, begin, verbose = 1, print_interval = 10, save_blocks_interval = 5):
         self.count_traj += 1
         if verbose >= 2:
             print('Calculating <{}> rdf for trajectory {} ...'.format(
@@ -198,6 +199,25 @@ class rdf(object):
                 self.rdf = rdf_tmp
             else:
                 self.rdf = (self.rdf * (self.count_traj - 1) + rdf_tmp)/ self.count_traj
+            if self.save_blocks == True:
+                if (self.count_traj - 1) % save_blocks_interval == 0:
+                    self.last_block_rdf = rdf_tmp
+                else:
+                    self.last_block_rdf = (self.last_block_rdf * ((self.count_traj - 1) % save_blocks_interval) + rdf_tmp
+                                           )/ ((self.count_traj - 1) % save_blocks_interval + 1)
+                if self.count_traj % save_blocks_interval == 0:
+                    if self.dimension == 2:
+                        np.savetxt('rdf-{}-{}-{}.txt'.format(
+                            self.name, self.count_traj - save_blocks_interval + begin, self.count_traj + begin - 1
+                        ), np.swapaxes(
+                            np.array([self.radius, self.last_block_rdf[0], self.last_block_rdf[1], self.last_block_rdf[2]]),
+                            0, 1
+                        )
+                        )
+                    elif self.dimension == 3:
+                        np.savetxt('rdf-{}-{}-{}.txt'.format(
+                            self.name, self.count_traj - save_blocks_interval + begin, self.count_traj + begin - 1
+                        ), np.swapaxes(np.array([self.radius, self.last_block_rdf]), 0, 1))
         else:
             print('Method not accepted!')
     
@@ -211,7 +231,7 @@ class rdf(object):
         plt.show()
     
     def save_to_file(self):
-        file_name = '{}.txt'.format(self.name)
+        file_name = 'rdf-{}.txt'.format(self.name)
         if self.dimension == 3:
             np.savetxt(file_name, np.array(self.radius, self.rdf))
         elif self.dimension == 2:
