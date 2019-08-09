@@ -132,7 +132,7 @@ class rdf(object):
         r2_min = np.min(np.array(r2_all_images), axis = 0)
         return np.sqrt(r2_min)
                
-    def calc(self, traj):
+    def calc(self, traj, save_sparse):
         abc = self.box_edges(traj)
         # get bulk density, assume that the 2d density is on x-y plane
         volumns = (abc[:, 0] * abc[:, 1] * abc[:, 2]) if self.dimension == 3 else \
@@ -142,12 +142,20 @@ class rdf(object):
             (self.natom2 - 1)/ volumns
             r2_min = self.get_distances(abc, traj.xyz, self.pairs)
             rdf = np.zeros(int(self.bins.shape[0] - 1))
+            # create this even if there is no need to save the sparse RDF
+            sparse = []
             for i in range(traj.n_frames):
                 hist = np.histogram(r2_min[:, i], self.bins)
+                # Save sparse RDF each frame for reweighting
+                if save_sparse:
+                    sparse.append(hist[0])
+                    # this is a very very entry level code, should include peak/valley index later
                 rdf = rdf + hist[0]/ (self.v_bin_size * (self.bins[:-1] + self.bin_width/ 2
                                                         )**(int(self.dimension - 1))
                                     )/ dens_bulk[i]/ self.natom1
             rdf = rdf/ traj.n_frames
+            if save_sparse:
+                np.savetxt('sparse-{}.txt'.format(self.count_traj), np.array(sparse))
             return self.bins[:-1] + self.bin_width, rdf
         else:
             upper_pairs, lower_pairs = self.upper_lower_pairs(traj)
@@ -175,7 +183,7 @@ class rdf(object):
                       )/ (natom1_upper + natom1_lower)
             return self.bins[:-1] + self.bin_width, np.array([rdf_avg, rdf_upper, rdf_lower])
             
-    def __call__(self, traj, begin, verbose = 1, print_interval = 10, save_blocks_interval = 5):
+    def __call__(self, traj, begin, save_sparse = False, verbose = 1, print_interval = 10, save_blocks_interval = 5):
         self.count_traj += 1
         if verbose >= 2:
             print('Calculating <{}> rdf for trajectory {} ...'.format(
@@ -194,11 +202,12 @@ class rdf(object):
             else:
                 self.rdf = (self.rdf * (self.count_traj - 1) + rdf_tmp)/ self.count_traj
         elif self.method == 'yalun':
-            self.radius, rdf_tmp = self.calc(traj)
+            self.radius, rdf_tmp = self.calc(traj, save_sparse)
             if self.count_traj == 1:
                 self.rdf = rdf_tmp
             else:
                 self.rdf = (self.rdf * (self.count_traj - 1) + rdf_tmp)/ self.count_traj
+            # Save block average RDF to text file
             if self.save_blocks == True:
                 if (self.count_traj - 1) % save_blocks_interval == 0:
                     self.last_block_rdf = rdf_tmp
@@ -233,7 +242,9 @@ class rdf(object):
     def save_to_file(self):
         file_name = 'rdf-{}.txt'.format(self.name)
         if self.dimension == 3:
-            np.savetxt(file_name, np.array(self.radius, self.rdf))
+            np.savetxt(file_name, np.swapaxes(
+                np.array([self.radius, self.rdf]), 0, 1) 
+                )
         elif self.dimension == 2:
             np.savetxt(file_name, np.swapaxes(
                 np.array([self.radius, self.rdf[0], self.rdf[1], self.rdf[2]]), 0, 1
