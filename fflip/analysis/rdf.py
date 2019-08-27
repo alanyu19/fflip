@@ -39,7 +39,8 @@ class rdf(object):
         grid1, grid2 = np.meshgrid(self.atom1, self.atom2)
         for i in range(grid1.shape[0]):
             for j in range(grid1.shape[1]):
-                pairs.append([grid1[i][j], grid2[i][j]])
+                if grid1[i][j] != grid2[i][j]:
+                    pairs.append([grid1[i][j], grid2[i][j]])
         return np.array(pairs)
     
     @property
@@ -182,7 +183,14 @@ class rdf(object):
             rdf_avg = (rdf_upper * natom1_upper + rdf_lower * natom1_lower
                       )/ (natom1_upper + natom1_lower)
             return self.bins[:-1] + self.bin_width, np.array([rdf_avg, rdf_upper, rdf_lower])
-            
+
+    def save_sparse(self, traj, begin):
+        rdf_all_frames = []
+        for frm in range(traj.n_frames):
+            radius, frame_rdf = md.compute_rdf(traj[frm], self.pairs, self.r_range, bin_width=0.05)
+            rdf_all_frames.append(frame_rdf)
+        np.savetxt('sparse-{}-{}.txt'.format(self.name, self.count_traj + begin - 1), np.array(rdf_all_frames))
+
     def __call__(self, traj, begin, save_sparse = False, verbose = 1, print_interval = 10, save_blocks_interval = 5):
         self.count_traj += 1
         if verbose >= 2:
@@ -195,6 +203,8 @@ class rdf(object):
         else:
             pass
         if self.method == 'mdtraj':
+            if save_sparse:
+                self.save_sparse(traj, begin)
             self.radius, rdf_tmp = md.compute_rdf(traj, self.pairs, self.r_range)
             # confirm that the calculation is correct here (future work ...)  
             if self.count_traj == 1:
