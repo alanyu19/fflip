@@ -37,6 +37,7 @@ requirements = [
     'mdtraj',
     'MDAnalysis',
     'Click>=6.0',
+    'matplotlib'
     # put package requirements here
 ]
 
