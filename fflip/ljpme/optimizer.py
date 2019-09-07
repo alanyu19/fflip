@@ -42,7 +42,7 @@ class optimize(object):
         else:
             opt.set_xtol_rel(0.02)
         if "xtol_abs" in kwargs:
-            print("干他妈的")
+            print("Starting...")
             opt.set_xtol_abs(kwargs["xtol_abs"])
         else:
             opt.set_xtol_abs(0.001)
