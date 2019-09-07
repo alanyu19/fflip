@@ -39,10 +39,6 @@ A Python package for automation of molecular simulations and optimization of lip
 Features
 --------
 
-* Automated composure of simulation systems in Gromacs
-* Automated simulation workflows in Gromacs
-* Interaction with slurm and torque submission systems
-* Advanced stopping conditions for Gromacs simulations (TBD)
 * ... more to come
 
 
