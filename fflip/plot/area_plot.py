@@ -39,4 +39,4 @@ def plot_area(file_to_save, file_to_read, skip_ns = 0, interval = 0.002, unit_of
             tick.label.set_fontsize(28)
         for tick in ax.yaxis.get_major_ticks():
             tick.label.set_fontsize(28)
-    plt.savefig(file_to_save, dpi=250)
+    plt.savefig(file_to_save, dpi = 150, bbox_inches = 'tight')

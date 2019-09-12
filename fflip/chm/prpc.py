@@ -2,10 +2,10 @@
 from fflip.chm.lipid import *
 
 # ***************************************************************************************************************
-# DPPC GROUPS:
-dppc_gs = []
+# PRPC GROUPS:
+prpc_gs = []
 # Please note that the CHARMM force field use Rmin/2 intead of sigma, and the unit of epsilon is kcal/mol
-dppc_gs.append(charmm_group(num_atom_category=5, # NTL, HL, CTL5, CTL2, HL
+prpc_gs.append(charmm_group(num_atom_category=5, # NTL, HL, CTL5, CTL2, HL
                            atoms=[['N'],
                                   ['H13A','H13B','H13C','H14A','H14B','H14C','H15A','H15B','H15C'],
                                   ['C13','C14','C15'],
@@ -23,7 +23,7 @@ dppc_gs.append(charmm_group(num_atom_category=5, # NTL, HL, CTL5, CTL2, HL
                           )
              )
 
-dppc_gs.append(charmm_group(num_atom_category=7, # CTL2, HAL2, PL, 02L, OSLP, CTL2, HAL2
+prpc_gs.append(charmm_group(num_atom_category=7, # CTL2, HAL2, PL, 02L, OSLP, CTL2, HAL2
                            atoms=[['C11'],
                                   ['H11A','H11B'],
                                   ['P'],
@@ -43,7 +43,7 @@ dppc_gs.append(charmm_group(num_atom_category=7, # CTL2, HAL2, PL, 02L, OSLP, CT
                           )
              )
 
-dppc_gs.append(charmm_group(num_atom_category=7, # CTL1, HAL1, OSL, CL, OBL, CTL2, HAL2
+prpc_gs.append(charmm_group(num_atom_category=7, # CTL1, HAL1, OSL, CL, OBL, CTL2, HAL2
                            atoms=[['C2'],['HS'],['O21'],['C21'],['O22'],['C22'],['H2R','H2S']],
                            charges=[0.17, 0.09, -0.49, 0.90, -0.63, -0.22, 0.09],
                            half_r_mins=[2.275, 1.3200, 1.6500, 2.00, 1.70, 2.010, 1.3400],
@@ -51,9 +51,6 @@ dppc_gs.append(charmm_group(num_atom_category=7, # CTL1, HAL1, OSL, CL, OBL, CTL
                            add_charge_gtcnp=[True, False, True, True, True, True, True],
                            # When add_charge_gtcnp is False but atoms_same_charge is not empty,
                            # the later is used in neighbors/cooperators.
-                           # 'C3' is needed here (although the charge is not equal to C2)
-                           # since 'O31' will exchange charge with it
-                           # it will get skipped by the exclusion argument
                            atoms_same_charge=[['C3'],[],['O31'],['C31'],['O32'],['C32'],['H2X','H2Y']],
                            exclusion=[0],
                            neighbors=[[1],[],[0],[2,4,5],[3],[3],[5]],
@@ -63,7 +60,7 @@ dppc_gs.append(charmm_group(num_atom_category=7, # CTL1, HAL1, OSL, CL, OBL, CTL
                           )
              )
 
-dppc_gs.append(charmm_group(num_atom_category=7, # CTL2, HAL2, OSL, CL, OBL, CTL2, HAL2
+prpc_gs.append(charmm_group(num_atom_category=7, # CTL2, HAL2, OSL, CL, OBL, CTL2, HAL2
                            atoms=[['C3'],['HX','HY'],['O31'],['C31'],['O32'],['C32'],['H2X','H2Y']],
                            charges=[0.08, 0.09, -0.49, 0.90, -0.63, -0.22, 0.09],
                            half_r_mins=[2.275, 1.3200, 1.6500, 2.00, 1.70, 2.010, 1.3400],
@@ -79,7 +76,7 @@ dppc_gs.append(charmm_group(num_atom_category=7, # CTL2, HAL2, OSL, CL, OBL, CTL
 
 #  ***************************************************************************************************************
 
-dppc = lipid(charmm_group_list=dppc_gs, lipname="DPPC")
+prpc = lipid(charmm_group_list=prpc_gs, lipname="PRPC")
 
 #  ***************************************************************************************************************
 
