@@ -190,6 +190,7 @@ class rdf(object):
             radius, frame_rdf = md.compute_rdf(traj[frm], self.pairs, self.r_range, bin_width=bin_width)
             rdf_all_frames.append(frame_rdf)
         np.savetxt('{}/sparse-{}-{}.txt'.format(subfolder, self.name, self.count_traj + begin - 1), np.array(rdf_all_frames))
+        np.savetxt('{}/r.txt'.format(subfolder), np.array(radius))
 
     def __call__(self, traj, begin, save_sparse = False, verbose = 1, print_interval = 10, save_blocks_interval = 5, sparse_bin_width = 0.02, sparse_subfolder = "."):
         self.count_traj += 1

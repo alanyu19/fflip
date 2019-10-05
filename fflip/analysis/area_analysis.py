@@ -41,4 +41,4 @@ def get_area_and_ka(nlipid, temperature, block_size, step_size, force_calc = Fal
         file_to_save = 'sa.png'
         y_max = int(data0.max() + (data0.max() - data0.min())*0.3)
         y_min = int(data0.min() - (data0.max() - data0.min())*0.3)
-        plot_area(file_to_save, file_to_read, skip_ns = 0, interval = 0.002, unit_of_area_data = 'nm', area_range = (y_min, y_max))
+        plot_area(file_to_save, file_to_read, skip_ns = 0, interval = 0.001, unit_of_area_data = 'nm', area_range = (y_min, y_max))

@@ -59,7 +59,7 @@ class lipid():
     def parse_gtcnp(self):    
         gs = []
         for counter, chm_gp in enumerate(self.cgroups):
-            print("Creating 'gtcnp's for {} group {} ... ".format(self.lipname, counter+1))
+            #print("Creating 'gtcnp's for {} group {} ... ".format(self.lipname, counter+1))
             for i in range(chm_gp.num_atom_category):
                 # LJ
                 if chm_gp.add_lj_gtcnp[i]:
@@ -79,8 +79,7 @@ class lipid():
                                              )
                                    )
                 else:
-                    print("Skipping LJ parameters for {} ...".format(chm_gp.atoms[i]))
-                #
+                    pass
                 # Charge
                 if chm_gp.add_charge_gtcnp[i]:
                     center_names=[]; nb_names=[]; coop_names=[]
@@ -121,9 +120,10 @@ class lipid():
                                               roc=roc, ron=ron)
                                    )
                 else:
-                    print("Skipping charge(s) for {} ...".format(chm_gp.atoms[i]))
-            print("")
-        print("Total {} gtcnps created for {}\n".format(len(gs), self.lipname))
+                    pass
+                    #print("Skipping charge(s) for {} ...".format(chm_gp.atoms[i]))
+            #print("")
+        #print("Total {} gtcnps created for {}\n".format(len(gs), self.lipname))
         return gs
 
-# ***************************************************************************************************************
+

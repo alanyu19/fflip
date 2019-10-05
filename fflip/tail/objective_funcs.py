@@ -114,7 +114,7 @@ class objective_function_3(object):
 
         import copy
         #TODO: this should be any dimension!
-        e2, s2, e3, s3 = copy.deepcopy(self.x)
+        e3, s3, e2, s2 = copy.deepcopy(self.x)
 
         if self.objfunc_counter==1:
             for t in self.targets:
@@ -244,7 +244,7 @@ class objective_function_4(object):
     def __call__(self):
 
         import copy
-        e2, s2, e3, s3 = copy.deepcopy(self.x)
+        e3, s3, e2, s2 = copy.deepcopy(self.x)
         os.chdir(self.driver_path)
         ssrtable = np.loadtxt("previous.txt")
 
