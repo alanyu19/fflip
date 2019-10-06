@@ -156,7 +156,7 @@ class rdf(object):
                                     )/ dens_bulk[i]/ self.natom1
             rdf = rdf/ traj.n_frames
             if save_sparse:
-                np.savetxt('sparse-{}.txt'.format(self.count_traj), np.array(sparse))
+                np.savetxt('sparse-{}-{}.txt'.format(self.name, self.count_traj), np.array(sparse))
             return self.bins[:-1] + self.bin_width, rdf
         else:
             upper_pairs, lower_pairs = self.upper_lower_pairs(traj)
@@ -184,14 +184,15 @@ class rdf(object):
                       )/ (natom1_upper + natom1_lower)
             return self.bins[:-1] + self.bin_width, np.array([rdf_avg, rdf_upper, rdf_lower])
 
-    def save_sparse(self, traj, begin):
+    def save_sparse(self, traj, begin, bin_width, subfolder):
         rdf_all_frames = []
         for frm in range(traj.n_frames):
-            radius, frame_rdf = md.compute_rdf(traj[frm], self.pairs, self.r_range, bin_width=0.05)
+            radius, frame_rdf = md.compute_rdf(traj[frm], self.pairs, self.r_range, bin_width=bin_width)
             rdf_all_frames.append(frame_rdf)
-        np.savetxt('sparse-{}-{}.txt'.format(self.name, self.count_traj + begin - 1), np.array(rdf_all_frames))
+        np.savetxt('{}/sparse-{}-{}.txt'.format(subfolder, self.name, self.count_traj + begin - 1), np.array(rdf_all_frames))
+        np.savetxt('{}/r.txt'.format(subfolder), np.array(radius))
 
-    def __call__(self, traj, begin, save_sparse = False, verbose = 1, print_interval = 10, save_blocks_interval = 5):
+    def __call__(self, traj, begin, save_sparse = False, verbose = 1, print_interval = 10, save_blocks_interval = 5, sparse_bin_width = 0.02, sparse_subfolder = "."):
         self.count_traj += 1
         if verbose >= 2:
             print('Calculating <{}> rdf for trajectory {} ...'.format(
@@ -204,7 +205,7 @@ class rdf(object):
             pass
         if self.method == 'mdtraj':
             if save_sparse:
-                self.save_sparse(traj, begin)
+                self.save_sparse(traj, begin, sparse_bin_width, sparse_subfolder)
             self.radius, rdf_tmp = md.compute_rdf(traj, self.pairs, self.r_range)
             # confirm that the calculation is correct here (future work ...)  
             if self.count_traj == 1:

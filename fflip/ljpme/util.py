@@ -1,121 +1,313 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# coding: utf-8
 
+import os
+import time
 import numpy as np
+import glob
 import pandas as pd
+from fflip.utility import check_and_make_dir
 
-def reweight(property_name, folders, ginfo_file = "./gtcnp_order.txt", result_dir = "./rew", temperature=323.15, decimal_places=3):
-    # write this into a class with a name
-    if not os.path.isdir(result_dir):
-        os.system("mkdir {}".format(result_dir))
-    rt = reweightProperty(temperature=temperature)
-    sensitivity = []
-    value = []
-    for f in folders:
-        property_data = np.loadtxt("{}/{}.dat".format(f, property_name))
-        if property_name == 'area' or property_name == 'areas':
-            # maybe we can do this in rickflow
-            property_data = property_data * 100
-        o_energy_data = np.loadtxt("{}/original.dat".format(f))
-        p_energy_data = np.loadtxt("{}/perturbed.dat".format(f))
-        if len(p_energy_data.shape) == 1:
-            p_energy_data = np.reshape(p_energy_data, (-1,1))
-        old, new = rt(property_data, o_energy_data, p_energy_data)
-        fl = f.split("/")[-1]
-        np.savetxt(result_dir + '/org_{}_avg_{}.dat'.format(property_name, fl), np.round(np.reshape(old, (1)), decimal_places))
-        np.savetxt(result_dir + '/rew_{}_avg_{}.dat'.format(property_name, fl), np.round(np.reshape(new, (-1,1)), decimal_places))
-        np.savetxt(result_dir + '/sensitivity_{}_{}.dat'.format(property_name, fl), np.round(np.reshape((new-old), (-1,1)), decimal_places))
-        sensitivity.append(new - old)
-        value.append(new)
-    sensitivity_avg = np.round(np.mean(np.array(sensitivity), axis=0), decimal_places)
-    sensitivity_std = np.round(np.std(np.array(sensitivity), axis=0), decimal_places)
-    value_avg = np.round(np.mean(np.array(value), axis=0), decimal_places)
-    value_std = np.round(np.std(np.array(value), axis=0), decimal_places)
-    format_string = "{0} {1:>8." + str(decimal_places) + "f} +- {2:<5." + str(decimal_places) + "f} {3:>8." + str(decimal_places) + "f} +- {4:<5." + str(decimal_places) + "f}\n"
-    with open(result_dir + "/all-{}-sens.txt".format(property_name), 'w') as ftw:
-        with open(ginfo_file) as ftr:
-            glines = ftr.readlines()
-            sensitivity_avg = np.reshape(sensitivity_avg, (-1))
-            sensitivity_std = np.reshape(sensitivity_std, (-1))
-            value_avg = np.reshape(value_avg, (-1))
-            value_std = np.reshape(value_std, (-1))
-            assert len(glines) == sensitivity_avg.shape[0] == sensitivity_std.shape[0]
-            for j in range(len(glines)):
-                ginfo = glines[j].rstrip()
-                sens_avg = sensitivity_avg[j]
-                sens_std = sensitivity_std[j]
-                val_avg = value_avg[j]
-                val_std = value_std[j]
-                ftw.write(format_string.format(ginfo, sens_avg, sens_std, val_avg, val_std))
-                #ftw.write("{0} {1:>8.3f} +- {2:<5.3f}\n".format(ginfo, sens_avg, sens_std))
-    # return
-    return sensitivity_avg, sensitivity_std, value_avg, value_std
+class ReweightingError(Exception):
+    pass
+
+class NoSimDataError(ReweightingError):
+    def __init__(self):
+        print('There is no simulated data, please run the reweight method first!')
+
+class NoRewDataError(ReweightingError):
+    def __init__(self):
+        print('There is no  reweighted data, please run the reweight method first!')
+
+class OtherReweightError(ReweightingError):
+    def __int__(self, message):
+        print(message)
+
+class FutureResult(object):
+    def get_result(self, path_to_file, file_name, time_to_wait, loading_method, delete = False):
+        while not os.path.isfile(path_to_file + file_name):
+            time.sleep(time_to_wait)
+        if loading_method == 'numpy':
+            result = np.genfromtxt(path_to_file + file_name)
+        elif loading_method == 'pandas':
+            result = pd.read_csv(path_to_file + file_name)
+        else:
+            with open(path_to_file + file_name, 'r') as file:
+                result = file.readlines()
+        if delete == True:
+            os.system("rm -rf {}".format(path_to_file))
+        return result
+
+def copy_folder(sample, destination):
+    des_parent = '/'.join(destination.split('/')[:-2])
+    if not os.path.isdir(des_parent):
+        os.system("mkdir -p " + des_parent)
+    os.system("cp -r {} {}".format(sample, destination))
+
+def move_traj(fromdir, todir):
+    # Use with care
+    os.system("mv {}/dyn?.dcd {}".format(fromdir, todir))
+    os.system("mv {}/dyn??.dcd {}".format(fromdir, todir))
+    os.system("mv {}/dyn???.dcd {}".format(fromdir, todir))
+
+def on_cluster(executable, executable_args_list, *args, **kwargs):
+    out_dir = kwargs['out_dir']
+    if os.path.isdir(out_dir):
+        os.system("rm -rf {}".format(out_dir))
+    os.system("mkdir {}".format(out_dir))
+    if 'job_time' in kwargs:
+        run_time = kwargs['job_time']
+    else:
+        run_time = '01:00:00'
+    if 'partition' in kwargs:
+        partition = kwargs['partition']
+    else:
+        partition = "ivy,sbr,hpodall,spodall"
+    if 'ntasks' in kwargs:
+        ntasks = kwargs['ntasks']
+    else:
+        ntasks = 1
+    with open(kwargs["submit_script"], 'w+') as f:
+        f.write(
+            "#!/bin/bash\n" + \
+            "#SBATCH --output=./{}/{}.out\n".format(out_dir, kwargs["slurm_name"]) + \
+            "#SBATCH --error=./{}/{}.err\n".format(out_dir, kwargs["slurm_name"]) + \
+            "#SBATCH --time={}\n".format(run_time) + \
+            "#SBATCH --partition={}\n".format(partition) + \
+            "#SBATCH --ntasks={}\n".format(ntasks) + '\n'
+        )
+        f.write(
+            "source ~/.bashrc\n" + \
+            "conda activate ommrew\n"
+        )
+        argstring = ''
+        for arg in executable_args_list:
+            argstring += ' {}'.format(str(arg))
+        argstring += ' {}'.format(kwargs['out_dir'])
+        f.write("\n" + "python " + executable + " " + argstring + " >& ./{}/{}.out".format(out_dir, kwargs["exec_name"]))
+    os.system('sbatch {}'.format(kwargs['submit_script']))
+    time.sleep(1)
+    os.system("rm -f {}".format(kwargs['submit_script']))
+
+def get_avail_exp_prop_names(file_template = '/u/alanyu/c36ljpme/fflow/exp/*.exp'):
+    exp_props = glob.glob(file_template)
+    useful_props = []
+    for prop in exp_props:
+        name = prop.split('/')[-1].strip().split('.')[0]
+        useful_props.append(name)
+    return useful_props
+
+def get_sim_scd_names(file_template = '/u/alanyu/c36ljpme/fflow/runner/scd_dppc/block_data/*'):
+    scd_names = []
+    file_names = glob.glob(file_template)
+    for name in file_names:
+        scd_name = name.strip().split('/')[-1].split('_')[0]
+        if scd_name not in scd_names:
+            scd_names.append(scd_name)
+    return scd_names
+
+def get_rdf_names_as_properties(file_template = '/u/alanyu/c36ljpme/fflow/runner/rdf/block_data/sparse*'):
+    def not_in(a, bb):
+        for b in bb:
+            if a in b:
+                return False
+        return True
+    rdf_names = []
+    file_names = glob.glob(file_template)
+    for name in file_names:
+        name_parts = name.strip().split('/')[-1].split('-')
+        rdf_name = name_parts[1] + '-' + name_parts[2]
+        if not_in(rdf_name, rdf_names) and 'Os2' not in rdf_name:
+            rdf_names.append(rdf_name + '_peak_1')
+            rdf_names.append(rdf_name + '_foot_1')
+            if not (rdf_name == 'O2-OW' or rdf_name == 'Ob-OW'):
+                rdf_names.append(rdf_name + '_peak_2')
+    return rdf_names
+
+def rename_row_col(names):
+    dict = {}
+    for i, name in enumerate(names):
+        dict[i] = name
+    return dict
+
+def order_peak_foot(name):
+    splist = name.split('_')
+    if splist[1] == 'peak':
+        b = 0
+    elif splist[1] == 'foot':
+        b = 1
+    else:
+        raise OtherReweightError('Name of property () is not suitable'.format(name))
+    a = int(splist[2])
+    return 2*(a-1) + b
 
 
-def create_dict(area_weight = 1000, scd_weight = 1):
-    # read atom names and types of parameters:
-    para_names = [np.nan, np.nan] # two place holders, same for the nexts
-    para_types = [np.nan, np.nan]
-    para_changes = [np.nan, np.nan]
-
-    with open('./rew/all-area-sens.txt', 'r') as f:
-        for line in f.readlines():
-            line = line.strip().split()
-            nm = line[0]; para_names.append(nm)
-            tp = line[1]; para_types.append(tp)
-            cg = line[2]; para_changes.append(cg)
+def smooth(y, box_pts):
+    box = np.ones(box_pts)/box_pts
+    y_smooth = np.convolve(y, box, mode='same')
+    return y_smooth
 
 
-    # initialize the dictionary:
-    prop_dict = {}
+def find_peak_position(x, first_n_peak = 2):
+    local_max_bool = np.r_[True, x[1:] > x[:-1]] & np.r_[x[:-1] > x[1:], True]
+    _where_max = np.where(local_max_bool == True)
+    _where_big = np.where(x > 0.2)
+    where_max = list(_where_max[0])
+    where_big = list(_where_big[0])
+    return_list = []
+    count = 1
+    previous_index = -999
+    for index in where_max:
+        if count > first_n_peak:
+            break
+        if index in where_big and (index - previous_index) > 40:
+            return_list.append(index)
+            previous_index = index
+            count += 1
+    return return_list
 
-    # fill in first few columns and create key for area
-    prop_dict['name'] = para_names
-    prop_dict['type'] = para_types
-    # weight is always the first and the second should be deviation from the experiment
-    # sim area is 58.6556 and the exp is 63.0
-    area_dev = 63.0 - 58.6556
-    prop_dict['area'] = [area_weight, area_dev]
 
-    # read scd_diffs between exp and sim:
-    scd_info = pd.read_csv("scd_table.csv")
-    scd_name = scd_info['name']
-    scd_diff = scd_info['diff']
-    for i, key in enumerate(scd_name):
-        prop_dict[key] = [scd_weight, round(scd_diff[i], 3)]
+def find_foot_position(x, first_n_foots = 1):
+    local_min_bool = np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
+    _where_min = np.where(local_min_bool == True)
+    _where_big = np.where(x > 0.05)
+    where_min = list(_where_min[0])
+    where_big = list(_where_big[0])
+    return_list = []
+    count = 1
+    previous_index = -999
+    for index in where_min:
+        if count > first_n_foots:
+            break
+        if index in where_big and (index - previous_index) > 40:
+            return_list.append(index)
+            previous_index = index
+            count += 1
+    return return_list
 
-    # create key for stderr of sensitivity and gaussian_charge - current(during optimization) charge
-    # the second should be activated after finding the QM charges
-    prop_dict['sens err'] = [1, None] # no deviation available, not going to use the standard for area and scd
-    # (to be activated) prop_dict['qm-mm'] = [1, None] # no deviation available, not going to use the standard for area and scd
-     
 
-    # read in sensitivity information:
-    # 1. area/lipid + the stderr of the robustness of it
-    with open('./rew/all-area-sens.txt', 'r') as f:
-        for name_cmp, line in zip(prop_dict['name'][2:], f.readlines()):
-            line = line.strip().split()
-            assert line[0] == name_cmp # I think this is strong enough without the para_type checking (YYL)
-            prop_dict['area'].append(round(float(line[3])/1, 4)) # thefactor devided here should have no influce, but be careful anyway
-            prop_dict['sens err'].append(np.abs(round(float(line[5])/float(line[3]), 4)))
+def find_rdf_peaks_and_foots(r, rdf, first_n_peaks = 2, first_n_foots = 1, smooth_window_size = 1):
+    """
+    Args:
+        r: numpy.array, (n,), radius of the rdf
+        rdf: numpy.array, (m,n), the rdf
+        first_n_peaks: integer, number of the nearest peaks to find ()
+    """
+    r = np.array(r)
+    rdf = np.array(rdf)
+    shape_original = np.shape(rdf)
+    if len(shape_original) == 2:
+        value_list = []
+        r_list = []
+        for i in range(int(shape_original[0])):
+            copy_of_rdf = rdf[i, :]
+            peak_indexes_smoothed = find_peak_position(smooth(copy_of_rdf, smooth_window_size), first_n_peaks)
+            foot_indexes_smoothed = find_foot_position(smooth(copy_of_rdf, smooth_window_size), first_n_foots)
+            peak_indexes = find_peak_position(copy_of_rdf, first_n_peaks)
+            foot_indexes = find_foot_position(copy_of_rdf, first_n_foots)
+            r_list.append(r[np.array(peak_indexes_smoothed + foot_indexes_smoothed)])
+            value_list.append(copy_of_rdf[np.array(peak_indexes + foot_indexes)])
+        return r_list, value_list
+    else:
+        peak_indexes_smoothed = find_peak_position(smooth(rdf, smooth_window_size), first_n_peaks)
+        foot_indexes_smoothed = find_foot_position(smooth(rdf, smooth_window_size), first_n_foots)
+        peak_indexes = find_peak_position(rdf, first_n_peaks)
+        foot_indexes = find_foot_position(rdf, first_n_foots)
+        return r[np.array(peak_indexes_smoothed + foot_indexes_smoothed)], rdf[np.array(peak_indexes + foot_indexes)]
 
-    # 2. scd
-    def fill_scd_info(name):
-        with open('./rew/all-{}-sens.txt'.format(name), 'r') as f:
-            # loop over parameters
-            for name_cmp, line in zip(prop_dict['name'][2:], f.readlines()):
-                line = line.strip().split()
-                assert line[0] == name_cmp # I think this is strong enough without the para_type checking (YYL)
-                # thefactor devided here should have no influce, but be careful anyway
-                prop_dict[name].append(round(float(line[3])/1, 4))
-    # 2.1 scd for special C22
-    fill_scd_info('scd-c22-h2s')
-    fill_scd_info('scd-c22-h2r')
-    # 2.2 scd for other sn-2 carbons
-    for carbon in range(2, 16):
-        fill_scd_info('scd-c3{}'.format(carbon))
-    # 2.3 scd for sn-1 carbons
-    for carbon in range(3, 16):
-        fill_scd_info('scd-c2{}'.format(carbon))
+class sensitivity_evaluator(object):
+    def __init__(self, ngroups, exp_x, exp, sim_x, sim, rew, sens_type = 1, n_peaks = 2, n_foots = 1):
+        """
+        Args:
+            -- exp: the experimental value(s)
+            -- sim: the simulated value(s)
+            -- rew: the reweighted value(s)
+            -- sens_type: the catagory of the property (1: area/scd, 2: rdf)
+        """
+        self.ngroups = ngroups
+        self.sim = sim
+        self.exp = exp
+        if sens_type == 2:
+            self.exp_x = exp_x
+            self.sim_x = sim_x
+        self.rew = rew
+        self.sens_type = sens_type
+        self.n_peaks = n_peaks
+        self.n_foots = n_foots
 
-    return prop_dict
+    @property
+    def diff_sim_exp(self):
+        if self.sens_type == 1:
+            """
+            Area / Order parameter
+            """
+            return self.sim - self.exp
+        elif self.sens_type == 2:
+            """
+            Things like rdf which contain both positions and magnitudes
+            """
+            x_exp, y_exp = find_rdf_peaks_and_foots(
+                self.exp_x, self.exp, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 3
+            )
+            x_sim, y_sim = find_rdf_peaks_and_foots(
+                self.sim_x, self.sim, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+            )
+            return x_sim - x_exp, y_sim - y_exp
 
+    @property
+    def rel_diff_sim_exp(self):
+        if self.sens_type == 1:
+            """
+            Area / Order parameter
+            """
+            return (self.sim - self.exp) /self.exp
+        elif self.sens_type == 2:
+            """
+            Things like rdf which contain both positions and magnitudes
+            """
+            x_exp, y_exp = find_rdf_peaks_and_foots(
+                self.exp_x, self.exp, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 3
+            )
+            x_sim, y_sim = find_rdf_peaks_and_foots(
+                self.sim_x, self.sim, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+            )
+            return (x_sim - x_exp)/x_exp, (y_sim - y_exp)/y_exp
+
+    @property
+    def diff_rew_sim(self):
+        if self.sens_type == 1:
+            rew = self.rew
+            sim_tiled = np.tile(self.sim, self.ngroups)
+            return rew - sim_tiled
+        elif self.sens_type == 2:
+            x_sim, y_sim = find_rdf_peaks_and_foots(
+                self.sim_x, self.sim, first_n_peaks=self.n_peaks, first_n_foots=self.n_foots, smooth_window_size=1
+            )
+            r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
+                self.sim_x, self.rew, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+            )
+            diff_list = []
+            for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
+                diff_list.append(np.array([r - x_sim, pfv - y_sim]))
+            return np.array(diff_list)
+
+    @property
+    def rel_diff_rew_sim(self):
+        if self.sens_type == 1:
+            rew = self.rew
+            sim_tiled = np.tile(self.sim, self.ngroups)
+            return (rew - sim_tiled) /self.exp
+        elif self.sens_type == 2:
+            x_sim, y_sim = find_rdf_peaks_and_foots(
+                self.sim_x, self.sim, first_n_peaks=self.n_peaks, first_n_foots=self.n_foots, smooth_window_size=1
+            )
+            r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
+                self.sim_x, self.rew, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+            )
+            x_exp, y_exp = find_rdf_peaks_and_foots(
+                self.exp_x, self.exp, first_n_peaks=self.n_peaks, first_n_foots=self.n_foots, smooth_window_size=3
+            )
+            rel_diff_list = []
+            for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
+                rel_diff_list.append(np.array([(r - x_sim) /x_exp, (pfv - y_sim) /y_exp]))
+            return np.array(rel_diff_list)

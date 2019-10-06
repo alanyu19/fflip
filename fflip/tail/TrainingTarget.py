@@ -80,7 +80,11 @@ class TrainingTarget(object):
     def CleanUpPreviousIteration(self):
         os.chdir(self.dir)
         os.system("echo {} > last.seqno".format(self.dcd))
-        os.system("rm -rf kap.dat rho.dat *.out test.file start.time next.seqno done.* slurm-* slurm pyfile output")
+        os.system("rm -rf kap.dat rho.dat *.out test.file start.time next.seqno done.* slurm-* slurm pyfile")
+        try:
+            os.system("rm -rf output")
+        except:
+            os.system("mv output old-output")
         #os.system("rm -f ./output/*")
         #os.system("rm -f ./output/avg_*")
         
@@ -93,7 +97,7 @@ class TrainingTarget(object):
         
         self.dic = {} 
             
-    def Simulate(self):
+    def Simulate(self, counter):
         os.chdir(self.dir)
         assert os.path.isfile(self.dir + "/mdyn.sh")
         assert os.path.isfile(self.dir + "/last.seqno")
@@ -101,8 +105,8 @@ class TrainingTarget(object):
         # rundyn.py will need that.
         # should ADD a step in minimize.inp to write out last crd
         # COPY the coordinates from minimization in mdyn.sh or rundyn.py
-        os.system("sbatch mdyn.sh {} {} {} {} {}".format(
-                  self.temp, self.psf, self.crd, self.guess_box, self.last_dcd))
+        os.system("sbatch mdyn.sh {} {} {} {} {} {}".format(
+                  self.temp, self.psf, self.crd, self.guess_box, self.last_dcd, counter))
                 
     #def CreateAnts(self):
     #    print("Creating Ants for {}".format(self.name + '_' + str(self.temp)))
@@ -115,16 +119,13 @@ class TrainingTarget(object):
         # Get Kappa even if no experimental data available
         os.chdir(self.dir)
         while not os.path.isfile("done.dyn"):
-            time.sleep(300)
+            time.sleep(30)
         os.chdir(self.dir)
         kT = 1.380648e-23 * float(self.temp)
         ommout = np.loadtxt("./output/dyn{}.out".format(self.last_dcd), skiprows=1, delimiter=",")
         V = ommout[:,4] * 1000
         nframes = np.shape(V)[0]
-        if self.frames != None:
-            assert nframes == self.frames
-        else:
-            self.frames = nframes
+        self.frames = nframes
         print("Iteration #{}, Getting Density for {}".format(
               counter, self.name + '_' + str(self.temp)))
         V_avg_inverse = np.mean(1/V)    
@@ -183,7 +184,7 @@ class TrainingTarget(object):
                 for i in range(int(self.number)):
                      file.write(str(i+1)+' ')
             #os.chdir(driver_path + system.name + "_" + str(system.temp))
-            os.system("sbatch gasmaster.csh {} {} {} {} {} {} {} {}".format(
+            os.system("./gasinit.cmd {} {} {} {} {} {} {} {}".format(
                       self.last_dcd, self.number, self.temp, self.resname, 
                       self.crd, self.guess_box, self.hovnb, self.frames))
             print("Iteration #{}, Getting Gas Phase Potentials for {}".format(
@@ -256,11 +257,14 @@ class TrainingTarget(object):
         return float(self.dic["ssr"][0])
         sys.stdout.flush()
         
-    def CreateTableWithExp(self):
+    def CreateTableWithExp(self, dimension):
         # TODO: make this more generic, take inputs to replace CH*E_sig/eps
         print("Creating New Table for {}".format(self.name + '_' + str(self.temp)))
         os.chdir(self.root_dir)
-        var_list = ["CH1E_sigma", "CH1E_epsilon", "CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
+        if dimension == 6:
+            var_list = ["CH1E_sigma", "CH1E_epsilon", "CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
+        elif dimension == 4:
+            var_list = ["CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')
@@ -274,9 +278,12 @@ class TrainingTarget(object):
         df.to_csv("./table/" + self.name + '-' + str(self.temp) + ".csv", index=False)
         sys.stdout.flush()
 
-    def OnlyEmptyDic(self):
-        var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon",
-                    "CH3E_sigma", "CH1E_epsilon", "CH1E_sigma", "rho", "kappa"]
+    def OnlyEmptyDic(self, dimension):
+        if dimension == 6:
+            var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon",
+                        "CH3E_sigma", "CH1E_epsilon", "CH1E_sigma", "rho", "kappa"]
+        elif dimension == 4:
+            var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon", "CH3E_sigma"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')

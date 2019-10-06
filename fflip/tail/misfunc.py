@@ -71,7 +71,7 @@ def fit_dihedral(dp, substringch2, substringch3, counter):
     os.system("sbatch fit.csh")
     while not os.path.isfile("done.fit"):  # check W's minimize .sh to see where this file is generated
         time.sleep(6)
-    os.chdir(dp + "c6_fitting")
+    os.chdir(dp + "c7_fitting")
     check_dir("olds") 
     os.system("cp dihe_2222.str ./olds/iter{}.str".format(counter))
     os.system("rm -f done.fit *.out *.mme *.ene *.dat")
@@ -81,6 +81,7 @@ def fit_dihedral(dp, substringch2, substringch3, counter):
 
 def fit_dihedral_2d(dp, substringch1, counter):
     # if we stream the torsion parameters independently, we might want to delete info in the above stream file.
+    # TODO: the path should be one of the input?
     os.chdir(dp + "2d_fitting")
     check_dir("olds")
     os.system("cp dihe_11222.str ./olds/iter{}.str".format(counter))

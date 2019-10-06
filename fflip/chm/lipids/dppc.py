@@ -51,6 +51,9 @@ dppc_gs.append(charmm_group(num_atom_category=7, # CTL1, HAL1, OSL, CL, OBL, CTL
                            add_charge_gtcnp=[True, False, True, True, True, True, True],
                            # When add_charge_gtcnp is False but atoms_same_charge is not empty,
                            # the later is used in neighbors/cooperators.
+                           # 'C3' is needed here (although the charge is not equal to C2)
+                           # since 'O31' will exchange charge with it
+                           # it will get skipped by the exclusion argument
                            atoms_same_charge=[['C3'],[],['O31'],['C31'],['O32'],['C32'],['H2X','H2Y']],
                            exclusion=[0],
                            neighbors=[[1],[],[0],[2,4,5],[3],[3],[5]],
