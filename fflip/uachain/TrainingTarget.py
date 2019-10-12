@@ -10,7 +10,7 @@ import os
 import time
 import sys
 
-from fflip.tail.misfunc import replace2, calc_kappa, bzavg
+from fflip.uachain.misfunc import replace2, calc_kappa, bzavg
     
 class TrainingTarget(object):
     

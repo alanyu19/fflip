@@ -3,13 +3,13 @@
 from __future__ import division, print_function
 
 
-from fflip.tailnew.misfunc import *
-from fflip.tailnew.TrainingTarget import *
+from fflip.uachain.misfunc import *
+from fflip.uachain.TrainingTarget import *
 
 
 class objective_function(object):
 
-    def __init__(self, targets, driver_path, objfunc_counter, x, prm_names, lb, ub, usesoftconstraint=True, **kwargs):
+    def __init__(self, targets, driver_path, objfunc_counter, x, prm_names, lb=None, ub=None, usesoftconstraint=False, **kwargs):
         self.targets = targets
         self.objfunc_counter = objfunc_counter
         self.driver_path = driver_path
@@ -31,11 +31,6 @@ class objective_function(object):
 
         xcopy = copy.deepcopy(self.x)
 
-        if self.usesoftconstraint:
-            out_of_boundary = applyconstraint(xcopy, self.lb, self.ub)
-            if out_of_boundary:
-                return 1000   #return a big enough figure as lost function to 'reject' the current trial
-
         if self.objfunc_counter==1:
             for t in self.targets:
                 assert self.dimension==4 or self.dimension==6
@@ -49,8 +44,15 @@ class objective_function(object):
             for name, value in zip(self.prm_names, xcopy):
                 target.dic[name] = [value]
 
+        if self.usesoftconstraint:
+            out_of_boundary = applyconstraint(xcopy, self.lb, self.ub)
+            if out_of_boundary:
+                for target in self.targets:
+                    target.dic["ssr_sum"] = [10]
+                    target.WriteInfoToTable(self.driver_path + "table/", self.objfunc_counter)
+                return 10   #return a big enough figure as lost function to 'reject' the current trial
+        
         previous_counter = self.objfunc_counter - 1
-
         # a customizable fitting function, currently put in util
         fit_dihedrals(self.driver_path, self.dimension, self.options['replacelines'], self.prm_names, xcopy, previous_counter)
 

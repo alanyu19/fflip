@@ -7,9 +7,9 @@ import copy
 import nlopt
 import scipy.optimize as sopt
 
-from fflip.tail.misfunc import *
-from fflip.tail.TrainingTarget import *
-from fflip.tail.main_obj_func import *
+from fflip.uachain.misfunc import *
+from fflip.uachain.TrainingTarget import *
+from fflip.uachain.head_obj_func import *
 
 class Optimize(object):
     """The parent optimizer of all others
@@ -59,7 +59,7 @@ class ScipyOptimize(Optimize):
     """
     Scipy optimizer to search for the best parameter set
     """
-    def __init__(self, objfunc, starpars, method = 'BFGS', **options):
+    def __init__(self, objfunc, starpars, method, **options):
         """
         :param objfunc: the main objective funciton to use
         :param starpars: the starting parameter
@@ -71,7 +71,7 @@ class ScipyOptimize(Optimize):
         super().__init__(starpars, objfunc)
 
     def __call__(self):
-        optimum = sopt.minimize(self.objfunc, self.startpars, method = self.method, **self.options)
+        optimum = sopt.minimize(self.objfunc, self.startpars, method=self.method, **self.options)
         return optimum
 
 class ScipyBrute(Optimize):

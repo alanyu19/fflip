@@ -96,6 +96,15 @@ def fit_dihedral_2d(dp, counter):
 
 
 def fit_dihedrals(driver_path, dimension, line_numbers, prm_names, x, counter):
+    """dihedral fitting for ch2e and ch3e
+    Args:
+        - driver_path:
+        - dimension:
+        - line_numbers: a dictionary contains the line numbers to replace
+        - prm_names:
+        - x: the parameter values
+        - counter: objective function counter
+    """
     parameter = {}
     for pn, p in zip(prm_names, x):
         parameter[pn] = p
@@ -131,8 +140,8 @@ def fit_dihedrals(driver_path, dimension, line_numbers, prm_names, x, counter):
         fit_dihedral(driver_path, counter)
 
 
-def applyconstraint(names, values, lb, up):
-    for n, v, l, u in zip(names, values, lb, up):
-        if not l < v < u:
+def applyconstraint(values, lb, up):
+    for v, l, u in zip(values, lb, up):
+        if not l <= v <= u:
             return True
     return False
