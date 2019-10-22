@@ -74,10 +74,18 @@ class ScipyOptimize(Optimize):
         optimum = sopt.minimize(self.objfunc, self.startpars, method=self.method, **self.options)
         return optimum
 
-class ScipyBrute(Optimize):
-    def __init__(self):
-        pass
-
+class ScipyBrute():
+    def __init__(self, objfunc, lowers, uppers, intervals):
+        self.objfunc = objfunc
+        assert len(lowers) == len(uppers) and len(lowers) == len(intervals)
+        rrange = ()
+        for l, u, i in zip(lowers, uppers, intervals):
+            rrange = rrange + (slice(l, u, i),)
+        print(rrange)
+        self.rrange = rrange
+    def __call__(self):
+        optimum = sopt.brute(self.objfunc, self.rrange, full_output=True)
+        return optimum
 
 
 # startpars = [-0.118, 2.192, -0.175, 2.192, -0.115, 2.133]
