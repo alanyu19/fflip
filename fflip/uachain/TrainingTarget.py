@@ -34,6 +34,7 @@ class TrainingTarget(object):
         self.number = kwargs["number_molecules"]
         self.psf = os.path.abspath("./psf/{}_{}.psf".format(self.name, self.number))
         self.crd = os.path.abspath("./crd/{}_{}.crd".format(self.name, self.number))
+        self.pdb = os.path.abspath("./pdb/{}_{}.pdb".format(self.name, self.number))
         assert "molmass" in kwargs
         self.molmass = kwargs["molmass"]
         assert "dcd" in kwargs
@@ -106,7 +107,7 @@ class TrainingTarget(object):
         # should ADD a step in minimize.inp to write out last crd
         # COPY the coordinates from minimization in mdyn.sh or rundyn.py
         os.system("sbatch mdyn.sh {} {} {} {} {} {}".format(
-                  self.temp, self.psf, self.crd, self.guess_box, self.last_dcd, counter))
+                  self.temp, self.psf, self.pdb, self.guess_box, self.last_dcd, counter))
                 
     #def CreateAnts(self):
     #    print("Creating Ants for {}".format(self.name + '_' + str(self.temp)))
