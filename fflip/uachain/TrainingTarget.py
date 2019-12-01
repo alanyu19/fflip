@@ -266,6 +266,8 @@ class TrainingTarget(object):
             var_list = ["CH1E_sigma", "CH1E_epsilon", "CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
         elif dimension == 4:
             var_list = ["CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
+        elif dimension == 2:
+            var_list = ["CH1E_sigma", "CH1E_epsilon", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')
@@ -284,7 +286,9 @@ class TrainingTarget(object):
             var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon",
                         "CH3E_sigma", "CH1E_epsilon", "CH1E_sigma", "rho", "kappa"]
         elif dimension == 4:
-            var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon", "CH3E_sigma"]
+            var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon", "CH3E_sigma", "rho", "kappa"]
+        elif dimension == 2:
+            var_list = ["CH1E_epsilon", "CH1E_sigma", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')
