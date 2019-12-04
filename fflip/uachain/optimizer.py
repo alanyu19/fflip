@@ -50,6 +50,7 @@ class NloptOptimize(Optimize):
             opt.set_xtol_rel(kwargs["xtol_rel"])
         else:
             opt.set_xtol_rel(0.0001)
+        print(self.startpars)
         x = opt.optimize(self.startpars)
         minf = opt.last_optimum_value()
         # print(x, minf)

@@ -34,6 +34,7 @@ class TrainingTarget(object):
         self.number = kwargs["number_molecules"]
         self.psf = os.path.abspath("./psf/{}_{}.psf".format(self.name, self.number))
         self.crd = os.path.abspath("./crd/{}_{}.crd".format(self.name, self.number))
+        self.pdb = os.path.abspath("./pdb/{}_{}.pdb".format(self.name, self.number))
         assert "molmass" in kwargs
         self.molmass = kwargs["molmass"]
         assert "dcd" in kwargs
@@ -106,7 +107,7 @@ class TrainingTarget(object):
         # should ADD a step in minimize.inp to write out last crd
         # COPY the coordinates from minimization in mdyn.sh or rundyn.py
         os.system("sbatch mdyn.sh {} {} {} {} {} {}".format(
-                  self.temp, self.psf, self.crd, self.guess_box, self.last_dcd, counter))
+                  self.temp, self.psf, self.pdb, self.guess_box, self.last_dcd, counter))
                 
     #def CreateAnts(self):
     #    print("Creating Ants for {}".format(self.name + '_' + str(self.temp)))
@@ -265,6 +266,8 @@ class TrainingTarget(object):
             var_list = ["CH1E_sigma", "CH1E_epsilon", "CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
         elif dimension == 4:
             var_list = ["CH2E_sigma", "CH2E_epsilon", "CH3E_sigma", "CH3E_epsilon", "rho", "kappa"]
+        elif dimension == 2:
+            var_list = ["CH1E_sigma", "CH1E_epsilon", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')
@@ -283,7 +286,9 @@ class TrainingTarget(object):
             var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon",
                         "CH3E_sigma", "CH1E_epsilon", "CH1E_sigma", "rho", "kappa"]
         elif dimension == 4:
-            var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon", "CH3E_sigma"]
+            var_list = ["CH2E_epsilon", "CH2E_sigma", "CH3E_epsilon", "CH3E_sigma", "rho", "kappa"]
+        elif dimension == 2:
+            var_list = ["CH1E_epsilon", "CH1E_sigma", "rho", "kappa"]
         for prop in self.addcalc:
             var_list.append(prop)
         var_list.append('ssr')

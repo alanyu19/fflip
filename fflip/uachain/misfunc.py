@@ -108,13 +108,17 @@ def fit_dihedrals(driver_path, dimension, line_numbers, prm_names, x, counter):
     parameter = {}
     for pn, p in zip(prm_names, x):
         parameter[pn] = p
+    print('Dim is {}'.format(dimension))
     if dimension == 6:
         os.chdir(driver_path + "c5_fitting")
-        os.system("rm -r olds")
+        if counter == 0:
+            os.system("rm -r olds")
         os.chdir(driver_path + "c7_fitting")
-        os.system("rm -r olds")
+        if counter == 0:
+            os.system("rm -r olds")
         os.chdir(driver_path + "2d_fitting")
-        os.system("rm -r olds")
+        if counter == 0:
+            os.system("rm -r olds")
         substringch_1 = "CH1E\t0.0\t%.5f\t%.4f\n" % (parameter['CH1E_epsilon'], parameter['CH1E_sigma'])
         substringch_2 = "CH2E\t0.0\t%.5f\t%.4f\n" % (parameter['CH2E_epsilon'], parameter['CH2E_sigma'])
         substringch_3 = "CH3E\t0.0\t%.5f\t%.4f\n" % (parameter['CH3E_epsilon'], parameter['CH3E_sigma'])
@@ -122,22 +126,32 @@ def fit_dihedrals(driver_path, dimension, line_numbers, prm_names, x, counter):
         replace(driver_path + "toppar/c36ua.str", line_numbers['CH1E'], substringch_1)
         replace(driver_path + "toppar/c36ua.str", line_numbers['CH2E'], substringch_2)
         replace(driver_path + "toppar/c36ua.str", line_numbers['CH3E'], substringch_3)
-        fit_dihedral(driver_path, substringch_2, substringch_3, counter)
+        fit_dihedral(driver_path, counter)
         fit_dihedral_2d(driver_path, counter)
     elif dimension == 4:
         parameter = {}
         for pn, p in zip(prm_names, x):
             parameter[pn] = p
         os.chdir(driver_path + "c5_fitting")
-        os.system("rm -r olds")
+        if counter == 0:
+            os.system("rm -r olds")
         os.chdir(driver_path + "c7_fitting")
-        os.system("rm -r olds")
+        if counter == 0:
+            os.system("rm -r olds")
         substringch_2 = "CH2E\t0.0\t%.5f\t%.4f\n" % (parameter['CH2E_epsilon'], parameter['CH2E_sigma'])
         substringch_3 = "CH3E\t0.0\t%.5f\t%.4f\n" % (parameter['CH3E_epsilon'], parameter['CH3E_sigma'])
         os.chdir(driver_path + "toppar")
         replace(driver_path + "toppar/c36ua.str", line_numbers['CH2E'], substringch_2)
         replace(driver_path + "toppar/c36ua.str", line_numbers['CH3E'], substringch_3)
         fit_dihedral(driver_path, counter)
+    if dimension == 2:
+        os.chdir(driver_path + "2d_fitting")
+        if counter == 0:
+            os.system("rm -r olds")
+        substringch_1 = "CH1E\t0.0\t%.5f\t%.4f\n" % (parameter['CH1E_epsilon'], parameter['CH1E_sigma'])
+        os.chdir(driver_path + "toppar")
+        replace(driver_path + "toppar/c36ua.str", line_numbers['CH1E'], substringch_1)
+        fit_dihedral_2d(driver_path, counter)
 
 
 def applyconstraint(values, lb, up):

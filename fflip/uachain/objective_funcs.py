@@ -33,7 +33,7 @@ class objective_function(object):
 
         if self.objfunc_counter==1:
             for t in self.targets:
-                assert self.dimension==4 or self.dimension==6
+                assert self.dimension==2 or self.dimension==4 or self.dimension==6
                 t.CreateTableWithExp(self.dimension)
                 t.create_folder()
     
