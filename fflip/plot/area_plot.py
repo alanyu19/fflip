@@ -1,10 +1,6 @@
-def plot_area(file_to_save, file_to_read, skip_ns = 0, interval = 0.002, unit_of_area_data = 'nm', area_range = (35, 80)):
+def plot_area(file_to_save, data, skip_ns = 0, interval = 0.002, area_range = (35, 80)):
     import numpy as np
     from matplotlib import pyplot as plt
-    data = np.loadtxt(file_to_read)
-    data = data[int(skip_ns/interval):]
-    if unit_of_area_data == 'nm':
-        data = data * 100
     cumulative = np.cumsum(data)/np.arange(1, data.shape[0]+1, 1)
     pattern = ['-','-']
     linewidth = [6, 10]
