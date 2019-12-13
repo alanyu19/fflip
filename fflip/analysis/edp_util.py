@@ -129,7 +129,7 @@ def gddra(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2,
         # sterols and possible future bad naming of atoms
         atmindxs = []
         with open(topology_file, 'r') as topfile:
-            lines = topfile.readlines
+            lines = topfile.readlines()
         for line in lines:
             if atmn in line:
                 atmindxs.append(line.strip().split()[0])
