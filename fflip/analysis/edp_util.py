@@ -132,7 +132,7 @@ def gddra(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2,
             lines = topfile.readlines()
         for line in lines:
             if atmn in line:
-                atmindxs.append(line.strip().split()[0])
+                atmindxs.append(int(line.strip().split()[0]))
         selection = np.array(atmindxs)
         print(selection)
     else:
