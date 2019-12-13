@@ -124,7 +124,19 @@ def gddra(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2,
         else:
             bin_size = bin_size * (bds[1] - bds[0]) / list(bins)[bindex]
     omm_topology = md.Topology.from_openmm(psf.topology)
-    selection = omm_topology.select('name {} and resname {}'.format(atmn.upper(), resn.upper()))
+    if "\'" in atmn:
+        # Do our own selection to avoid error in mdtraj for H3' and O3' in
+        # sterols and possible future bad naming of atoms
+        atmindxs = []
+        with open(topology_file, 'r') as topfile:
+            lines = topfile.readlines
+        for line in lines:
+            if atmn in line:
+                atmindxs.append(line.strip().split()[0])
+        selection = np.array(atmindxs)
+        print(selection)
+    else:
+        selection = omm_topology.select('name {} and resname {}'.format(atmn.upper(), resn.upper()))
     if len(selection) == 0:
         print("Error: No atom selected, please check your selection words")
     num_selection = len(list(selection))
