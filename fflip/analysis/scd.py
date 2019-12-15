@@ -83,12 +83,12 @@ class OrderParameterCalculation(object):
 
     def __call__(self, traj):
         sele1 = self.topology.select(
-            "resname {} name {}".format(self.residue, self.atom1)
+            "resname {} and name {}".format(self.residue, self.atom1)
         )
         center_atom = traj.xyz[:, sele1]
         for i, atom in enumerate(self.atom2):
             sele2 = self.topology.select(
-                "resname {} name {}".format(self.residue, atom)
+                "resname {} and name {}".format(self.residue, atom)
             )
             the_other_atom = traj.xyz[:, sele2]
             vectors = the_other_atom - center_atom
