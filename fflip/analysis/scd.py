@@ -55,7 +55,7 @@ class OrderParameterFactory(object):
     def __len__(self):
         l = 0
         for residue in self.scd_pairs_for_residues:
-            for atom_pair in self.scd_pairs_for_residues[residue]:
+            for _ in self.scd_pairs_for_residues[residue]:
                 l += 1
         return l
 
