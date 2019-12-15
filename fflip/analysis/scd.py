@@ -5,7 +5,16 @@ from fflip.analysis.util import construct_scd_bond, gen_scd_pairs
 
 
 class OrderParameterFactory(object):
+    """
+    A tool that generate order parameter calculations automatically for a
+    given topology
+    """
     def __init__(self, topology, special_carbons_for_splitting={}):
+        """
+        Args:
+            topology: the mdtraj topology
+            special_carbons_for_splitting: carbon names for splitting
+        """
         self.topology = topology
         self.scd_res_dict = construct_scd_bond(topology)
         self.bonds_for_residues = construct_scd_bond(topology)
@@ -13,9 +22,10 @@ class OrderParameterFactory(object):
             self.bonds_for_residues,
             special_carbons_for_residues=special_carbons_for_splitting
         )
+
     def __call__(self):
         """
-        Returns: OrderParameterCalculation(s)
+        Returns: all OrderParameterCalculation(s)
         """
         calculations = []
         i = 0
@@ -32,7 +42,6 @@ class OrderParameterFactory(object):
         """
         Returns: OrderParameterCalculation(s)
         """
-        # calculations = []
         i = 0
         for residue in self.scd_pairs_for_residues:
             for atom_pair in self.scd_pairs_for_residues[residue]:
@@ -41,7 +50,7 @@ class OrderParameterFactory(object):
                     self.topology, residue, atom_pair[0], atom_pair[1]
                 )
                 opc.i = i
-            yield opc
+                yield opc
 
     def __len__(self):
         l = 0
