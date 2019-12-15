@@ -1,10 +1,6 @@
 #!/usr/bin/python
 
-
-import os
-import glob
 from rflow.trajectory import *
-
 
 def find_resnames_from_psf(psf_file):
     res_list = []

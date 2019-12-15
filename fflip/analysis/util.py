@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import pandas as pd
 from pymbar import timeseries
 
 def find_block_size(ineff_in_step, step_size, block_length_in_ns = 5):
@@ -16,6 +15,7 @@ def find_block_size(ineff_in_step, step_size, block_length_in_ns = 5):
     while ineff_in_ns > i:
         i += block_length_in_ns
     return i, ineff_in_ns
+
 
 def get_equil_data(data, step_size, nskip, block_size = None):
     """
@@ -47,7 +47,8 @@ def get_equil_data(data, step_size, nskip, block_size = None):
     use_last_steps = int(blocks * block_size / step_size)
     data_clean = data_equil[-use_last_steps:]
     return data_clean, data_equil, eq_start_at, use_last_steps, block_size
-        
+
+
 def calc_block_avg(data, timestep, blocksize, time_to_skip = 0, verbose = True):
     """
     all inputs(time-related) are in nanoseconds
@@ -72,3 +73,60 @@ def calc_block_avg(data, timestep, blocksize, time_to_skip = 0, verbose = True):
     error = np.std(blocks,)/np.sqrt(block_number)
     return mean, error, block_number, nskip
 
+
+def construct_scd_bond(topology):
+    bond_dict_res = {}
+    for bond in topology.bonds:
+        atom1 = bond[0]
+        atom2 = bond[1]
+        residue = atom1.residue.name
+        atomname1 = atom1.name
+        atomname2 = atom2.name
+        # loose condition, since 'C' and 'H' might be used as indexing other than element
+        if 'C' in atomname1 and 'H' in atomname2 or \
+        'H' in atomname1 and 'C' in atomname2:
+            if 'C' in atomname1 and 'H' in atomname2:
+                carbon = atomname1; hydrogen = atomname2
+            else:
+                carbon = atomname2; hydrogen = atomname1
+            if not residue in bond_dict_res:
+                bond_dict_res[residue] = [(carbon, hydrogen)]
+            else:
+                if not (atomname1, atomname2) in bond_dict_res[residue]:
+                    bond_dict_res[residue].append((atomname1, atomname2))
+    return bond_dict_res
+
+
+def gen_scd_pairs(scd_res_dict, special_carbons_for_residues={}):
+    return_dict = {}
+    for res in scd_res_dict:
+        res_list = []
+        carbons = []
+        if not res in special_carbons_for_residues:
+            # first find all the carbons
+            for bond in scd_res_dict[res]:
+                carbons.append(bond[0])
+            # then generate the scd pairs
+            for carbon in carbons:
+                hydrogens_bond_to_the_carbon = []
+                for bond in scd_res_dict[res]:
+                    if bond[0] == carbon:
+                        hydrogens_bond_to_the_carbon.append(bond[1])
+                res_list.append((carbon, hydrogens_bond_to_the_carbon))
+        else:
+            # first find all the carbons
+            for bond in scd_res_dict[res]:
+                if not bond[0] in carbons and not bond[0] in special_carbons_for_residues[res]:
+                    carbons.append(bond[0])
+            for carbon in carbons:
+                hydrogens_bond_to_the_carbon = []
+                for bond in scd_res_dict[res]:
+                    if bond[0] == carbon:
+                        hydrogens_bond_to_the_carbon.append(bond[1])
+                res_list.append((carbon, hydrogens_bond_to_the_carbon))
+            for carbon in special_carbons_for_residues[res]:
+                for bond in scd_res_dict[res]:
+                    if bond[0] == carbon:
+                        res_list.append((carbon, [bond[1]]))
+        return_dict[res] = res_list
+    return return_dict
