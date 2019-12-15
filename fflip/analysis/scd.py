@@ -107,7 +107,7 @@ class OrderParameterCalculation(object):
         scd = scd/(i+1)
 
         # update the average scd
-        self.scd = self.n_frams * self.scd + (-1.5 * np.mean(scd) + 0.5) * \
+        self.scd = self.n_frames * self.scd + (-1.5 * np.mean(scd) + 0.5) * \
         traj.n_frames
         self.n_frames += traj.n_frames
         self.scd /= self.n_frames
