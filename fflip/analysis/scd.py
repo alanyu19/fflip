@@ -35,7 +35,7 @@ class OrderParameterFactory(object):
                 opc = OrderParameterCalculation(
                     self.topology, residue, atom_pair[0], atom_pair[1]
                 )
-                opc.i = i
+                calculations.append(opc)
         return calculations
 
     def __iter__(self):
