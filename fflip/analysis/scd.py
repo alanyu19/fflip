@@ -66,7 +66,7 @@ class OrderParameterCalculation(object):
     of) chemical bond
     TODO: THE BILAYER NORMAL DIRECTION
     """
-    def __init__(self, topology, residue, atom1, atom2, ):
+    def __init__(self, topology, residue, atom1, atom2):
         """
         Args:
             topology: a topology object of mdtraj

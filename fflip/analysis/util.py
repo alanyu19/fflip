@@ -105,7 +105,8 @@ def gen_scd_pairs(scd_res_dict, special_carbons_for_residues={}):
         if not res in special_carbons_for_residues:
             # first find all the carbons
             for bond in scd_res_dict[res]:
-                carbons.append(bond[0])
+                if not bond[0] in carbons:
+                    carbons.append(bond[0])
             # then generate the scd pairs
             for carbon in carbons:
                 hydrogens_bond_to_the_carbon = []
