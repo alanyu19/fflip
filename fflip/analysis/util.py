@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import pandas as pd
 from pymbar import timeseries
 
 def find_block_size(ineff_in_step, step_size, block_length_in_ns = 5):
