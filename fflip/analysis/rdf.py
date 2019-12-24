@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import numpy as np
 import mdtraj as md
 
@@ -74,110 +75,145 @@ class RDF(object):
                 for j in [0, 1, -1]:
                     comb_vectors.append([i, j])
         return comb_vectors
-    
-    # attention:
-    # 1) can not be used for water and those have a high diffusion constant
-    # 2) assumption: the bilayer is lying in the xy plane
-    # 3) must use centered trajectory!
-    def upper_lower_pairs(self, traj):
+
+    @staticmethod
+    def make_pairs(atoms1, atoms2):
+        pairs = []
+        grid1, grid2 = np.meshgrid(atoms1, atoms2)
+        for i in range(grid1.shape[0]):
+            for j in range(grid1.shape[1]):
+                if not grid1[i][j] == grid2[i][j]:
+                    pairs.append([grid1[i][j], grid2[i][j]])
+        return pairs
+
+    def up_low_atoms_from_recentered(self, traj):
+        # attention:
+        # 1) can not be used for water and those have a high diffusion constant
+        # 2) assumption: the bilayer is lying in the xy plane
+        # 3) must use centered trajectory!
         n_frames = traj.n_frames
-        zmean_1 = np.mean(traj.xyz[int(n_frames/2), self.atom1, 2])
-        zmean_2 = np.mean(traj.xyz[int(n_frames/2), self.atom2, 2])
+        zmean_1 = np.mean(traj.xyz[int(n_frames / 2), self.atom1, 2])
+        zmean_2 = np.mean(traj.xyz[int(n_frames / 2), self.atom2, 2])
         upper_atom1 = self.atom1[
-            np.where(traj.xyz[int(n_frames/2), self.atom1, 2] > zmean_1)
+            np.where(traj.xyz[int(n_frames / 2), self.atom1, 2] > zmean_1)
         ]
         upper_atom2 = self.atom2[
-            np.where(traj.xyz[int(n_frames/2), self.atom2, 2] > zmean_2)
+            np.where(traj.xyz[int(n_frames / 2), self.atom2, 2] > zmean_2)
         ]
         lower_atom1 = self.atom1[
-            np.where(traj.xyz[int(n_frames/2), self.atom1, 2] <= zmean_1)
+            np.where(traj.xyz[int(n_frames / 2), self.atom1, 2] <= zmean_1)
         ]
         lower_atom2 = self.atom2[
-            np.where(traj.xyz[int(n_frames/2), self.atom2, 2] <= zmean_2)
+            np.where(traj.xyz[int(n_frames / 2), self.atom2, 2] <= zmean_2)
         ]
-        upper_pairs = []
-        grid1, grid2 = np.meshgrid(upper_atom1, upper_atom2)
-        for i in range(grid1.shape[0]):
-            for j in range(grid1.shape[1]):
-                upper_pairs.append([grid1[i][j], grid2[i][j]])
-        lower_pairs = []
-        grid1, grid2 = np.meshgrid(lower_atom1, lower_atom2)
-        for i in range(grid1.shape[0]):
-            for j in range(grid1.shape[1]):
-                lower_pairs.append([grid1[i][j], grid2[i][j]])
+        return upper_atom1, upper_atom2, lower_atom1, lower_atom2
+
+    def up_low_pairs_from_recentered(self, traj):
+        # attention:
+        # 1) can not be used for water and those have a high diffusion constant
+        # 2) assumption: the bilayer is lying in the xy plane
+        # 3) must use centered trajectory!
+        upper_atom1, upper_atom2, lower_atom1, lower_atom2 = \
+            self.up_low_atoms_from_recentered(traj)
+        upper_pairs = self.make_pairs(upper_atom1, upper_atom2)
+        lower_pairs = self.make_pairs(lower_atom1, lower_atom2)
         return np.array(upper_pairs), np.array(lower_pairs)
 
-    def natom_upper_lower(self, traj):
+    def natom_up_low_from_recentered(self, traj):
         """
         For getting the bulk density, assume that the diffusion is not very
         fast, so that the bulk density won't change (statistically),
         this (and the upper_lower_pairs method) can be improved by per frame
         calculation, but will take significantly longer time.
         """
-        n_frames = traj.n_frames
-        zmean_1 = np.mean(traj.xyz[int(n_frames/2), self.atom1, 2])
-        zmean_2 = np.mean(traj.xyz[int(n_frames/2), self.atom2, 2])
-        natom1_upper = np.shape(
-            self.atom1[np.where(
-                traj.xyz[int(n_frames/2), self.atom1, 2] > zmean_1
-            )]
-        )[0]
-        natom1_lower = np.shape(
-            self.atom1[np.where(
-                traj.xyz[int(n_frames/2), self.atom1, 2] <= zmean_1
-            )]
-        )[0]
-        natom2_upper = np.shape(
-            self.atom2[np.where(
-                traj.xyz[int(n_frames/2), self.atom2, 2] > zmean_2
-            )]
-        )[0]
-        natom2_lower = np.shape(
-            self.atom2[np.where(
-                traj.xyz[int(n_frames/2), self.atom2, 2] <= zmean_2
-            )]
-        )[0]
+        upper_atom1, upper_atom2, lower_atom1, lower_atom2 = \
+            self.up_low_atoms_from_recentered(traj)
+        natom1_upper = np.shape(upper_atom1)[0]
+        natom1_lower = np.shape(lower_atom1)[0]
+        natom2_upper = np.shape(upper_atom2)[0]
+        natom2_lower = np.shape(lower_atom2)[0]
+        return natom1_upper, natom2_upper, natom1_lower, natom2_lower
+
+    def hard_up_low_atoms(self, recipe):
+        if 'hard_border' in recipe:
+            assert isinstance(recipe['hard_border'], int)
+            upper_atom1 = []
+            lower_atom1 = []
+            for atom in self.atom1:
+                if atom <= recipe['hard_border']:
+                    upper_atom1.append(atom)
+                else:
+                    lower_atom1.append(atom)
+            upper_atom2 = []
+            lower_atom2 = []
+            for atom in self.atom2:
+                if atom <= recipe['hard_border']:
+                    upper_atom2.append(atom)
+                else:
+                    lower_atom2.append(atom)
+            return upper_atom1, upper_atom2, lower_atom1, lower_atom2
+        else:
+            pass  # being stupid for now
+
+    def hard_up_low_pairs(self, recipe=dict()):
+        upper_atom1, upper_atom2, lower_atom1, lower_atom2 = \
+            self.hard_up_low_atoms(recipe)
+        upper_pairs = self.make_pairs(upper_atom1, upper_atom2)
+        lower_pairs = self.make_pairs(lower_atom1, lower_atom2)
+        return np.array(upper_pairs), np.array(lower_pairs)
+
+    def hard_natom_up_low(self, recipe=dict()):
+        upper_atom1, upper_atom2, lower_atom1, lower_atom2 = \
+            self.hard_up_low_atoms(recipe)
+        natom1_upper = np.shape(upper_atom1)[0]
+        natom1_lower = np.shape(lower_atom1)[0]
+        natom2_upper = np.shape(upper_atom2)[0]
+        natom2_lower = np.shape(lower_atom2)[0]
         return natom1_upper, natom2_upper, natom1_lower, natom2_lower
 
     @staticmethod
     def box_edges(traj):
         return traj.unitcell_lengths[:, :]
-     
-    def get_xyz(self, traj):
-        return traj.xyz[:, self.atom1, :], traj.xyz[:, self.atom2, :]
     
     def get_distances(self, abc, xyz, pairs):
-        # particle_a and particle_b should be the atom indexes
         r2_all_images = []
         for comb in self.comb_vectors:
-            r2_image = []
             if self.dimension == 3:
-                for a, b in pairs:                    
-                    # xyz[frame, atom, axis]
-                    if a != b:
-                        r2_image.append(
-                            (xyz[:, a, 0] - xyz[:, b, 0] + comb[0] * abc[:, 0])**2 +
-                            (xyz[:, a, 1] - xyz[:, b, 1] + comb[1] * abc[:, 1])**2 +
-                            (xyz[:, a, 2] - xyz[:, b, 2] + comb[2] * abc[:, 2])**2
-                        )
+                num_pairs = pairs.shape[0]
+                r2_image = (
+                    xyz[:, pairs.transpose()[0], 0] -
+                    xyz[:, pairs.transpose()[1], 0] +
+                    comb[0] * np.tile(abc[:, 0], (num_pairs, 1)).transpose()
+                ) ** 2 + (
+                    xyz[:, pairs.transpose()[0], 1] -
+                    xyz[:, pairs.transpose()[1], 1] +
+                    comb[1] * np.tile(abc[:, 1], (num_pairs, 1)).transpose()
+                ) ** 2 + (
+                    xyz[:, pairs.transpose()[0], 2] -
+                    xyz[:, pairs.transpose()[1], 2] +
+                    comb[1] * np.tile(abc[:, 2], (num_pairs, 1)).transpose()
+                ) ** 2
+
             elif self.dimension == 2:
-                for a,  b in pairs:
-                    if a != b:
-                        r2_image.append(
-                            (xyz[:, a, 0] - xyz[:, b, 0] + comb[0] *
-                             abc[:, 0]) ** 2 +
-                            (xyz[:, a, 1] - xyz[:, b, 1] + comb[1] *
-                             abc[:, 1]) ** 2
-                        )
+                num_pairs = pairs.shape[0]
+                r2_image = (
+                    xyz[:, pairs.transpose()[0], 0] -
+                    xyz[:, pairs.transpose()[1], 0] +
+                    comb[0] * np.tile(abc[:, 0], (num_pairs, 1)).transpose()
+                ) ** 2 + (
+                    xyz[:, pairs.transpose()[0], 1] -
+                    xyz[:, pairs.transpose()[1], 1] +
+                    comb[1] * np.tile(abc[:, 1], (num_pairs, 1)).transpose()
+                ) ** 2
             else:
                 raise Exception(
-                    "You are NOT studying relativity, select dimension under 3!"
+                    "You are NOT studying relativity, select dimension under 4!"
                 )
             r2_all_images.append(r2_image)
-        r2_min = np.min(np.array(r2_all_images), axis=0)
+        r2_min = np.min(np.array(r2_all_images), axis=0).transpose()
         return np.sqrt(r2_min)
                
-    def calc(self, traj, save_sparse):
+    def calc(self, traj, recentered, up_low_recipe, save_sparse):
         abc = self.box_edges(traj)
         # get bulk density, assume that the 2d density is on x-y plane
         volumns = (abc[:, 0] * abc[:, 1] * abc[:, 2]) if self.dimension == 3 \
@@ -192,7 +228,7 @@ class RDF(object):
             sparse = []
             for i in range(traj.n_frames):
                 hist = np.histogram(r2_min[:, i], self.bins)
-                # Save sparse RDF each frame for reweighting
+                # save sparse RDF each frame for reweighting
                 if save_sparse:
                     sparse.append(hist[0])
                     # this is a very very entry level code,
@@ -210,17 +246,24 @@ class RDF(object):
                 )
             return self.bins[:-1] + self.bin_width, rdf
         else:
-            upper_pairs, lower_pairs = self.upper_lower_pairs(traj)
-            natom1_upper, natom2_upper, natom1_lower, natom2_lower = \
-                self.natom_upper_lower(traj)
+            # upper/lower pairs
+            if recentered:
+                up_pairs, low_pairs = self.up_low_pairs_from_recentered(traj)
+                natom1_upper, natom2_upper, natom1_lower, natom2_lower = \
+                    self.natom_up_low_from_recentered(traj)
+            else:
+                up_pairs, low_pairs = self.hard_up_low_pairs(up_low_recipe)
+                natom1_upper, natom2_upper, natom1_lower, natom2_lower = \
+                    self.hard_natom_up_low(up_low_recipe)
+            # bulk density
             dens_bulk_upper = natom2_upper / volumns if not \
                 np.array_equal(self.atom1, self.atom2) else \
                 (natom2_upper - 1) / volumns
             dens_bulk_lower = natom2_lower / volumns if not \
                 np.array_equal(self.atom1, self.atom2) else \
                 (natom2_lower - 1) / volumns
-            r2_min_upper = self.get_distances(abc, traj.xyz, upper_pairs)
-            r2_min_lower = self.get_distances(abc, traj.xyz, lower_pairs)
+            r2_min_upper = self.get_distances(abc, traj.xyz, up_pairs)
+            r2_min_lower = self.get_distances(abc, traj.xyz, low_pairs)
             rdf_upper = np.zeros(int(self.bins.shape[0] - 1))
             rdf_lower = np.zeros(int(self.bins.shape[0] - 1))
             for i in range(traj.n_frames):
@@ -256,9 +299,16 @@ class RDF(object):
         )
         np.savetxt('{}/r.txt'.format(subfolder), np.array(radius))
 
-    def __call__(self, traj, begin, save_sparse=False, verbose=1,
-                 print_interval=10, save_blocks_interval=5,
-                 sparse_bin_width=0.02, sparse_subfolder="."):
+    def __call__(
+            self, traj, first_trj_index=1,
+            recentered=False, up_low_recipe=None,
+            verbose=1, print_interval=10, save_blocks_interval=5, save_to=".",
+            save_sparse=False, sparse_bin_width=0.02, sparse_subfolder="."
+    ):
+        if not recentered:
+            assert up_low_recipe is not None,\
+                "Please provide a recipe for telling upper leaflet from lower!"
+
         self.count_traj += 1
         if verbose >= 2:
             print('Calculating <{}> rdf for trajectory {} ...'.format(
@@ -269,10 +319,12 @@ class RDF(object):
                     self.name, self.count_traj))
         else:
             pass
+
         if self.method == 'mdtraj':
+            # only support 3d distances/rdf
             if save_sparse:
                 self.save_sparse(
-                    traj, begin, sparse_bin_width, sparse_subfolder
+                    traj, first_trj_index, sparse_bin_width, sparse_subfolder
                 )
             self.radius, rdf_tmp = md.compute_rdf(
                 traj, self.pairs, self.r_range
@@ -283,8 +335,11 @@ class RDF(object):
             else:
                 self.rdf = (self.rdf * (self.count_traj - 1) + rdf_tmp) / \
                            self.count_traj
+
         elif self.method == 'yalun':
-            self.radius, rdf_tmp = self.calc(traj, save_sparse)
+            self.radius, rdf_tmp = self.calc(
+                traj, recentered, up_low_recipe, save_sparse
+            )
             if self.count_traj == 1:
                 self.rdf = rdf_tmp
             else:
@@ -302,12 +357,15 @@ class RDF(object):
                         ((self.count_traj - 1) % save_blocks_interval + 1)
                 if self.count_traj % save_blocks_interval == 0:
                     if self.dimension == 2:
-                        np.savetxt(
-                            'rdf-{}-{}-{}.txt'.format(
+                        file_name = os.path.join(
+                            save_to, 'rdf-{}-{}-{}.txt'.format(
                                 self.name,
-                                self.count_traj - save_blocks_interval + begin,
-                                self.count_traj + begin - 1
-                            ), np.swapaxes(
+                                self.count_traj - save_blocks_interval + first_trj_index,
+                                self.count_traj + first_trj_index - 1
+                            )
+                        )
+                        np.savetxt(
+                            file_name, np.swapaxes(
                                 np.array(
                                     [self.radius,
                                      self.last_block_rdf[0],
@@ -317,12 +375,15 @@ class RDF(object):
                             )
                         )
                     elif self.dimension == 3:
-                        np.savetxt(
-                            'rdf-{}-{}-{}.txt'.format(
+                        file_name = os.path.join(
+                            save_to,'rdf-{}-{}-{}.txt'.format(
                                 self.name,
-                                self.count_traj - save_blocks_interval + begin,
-                                self.count_traj + begin - 1
-                            ), np.swapaxes(
+                                self.count_traj - save_blocks_interval + first_trj_index,
+                                self.count_traj + first_trj_index - 1
+                            )
+                        )
+                        np.savetxt(
+                            file_name, np.swapaxes(
                                 np.array([self.radius, self.last_block_rdf]),
                                 0, 1
                             )
