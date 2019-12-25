@@ -6,22 +6,26 @@ import time
 import numpy as np
 import glob
 import pandas as pd
-from fflip.utility import check_and_make_dir
+
 
 class ReweightingError(Exception):
     pass
+
 
 class NoSimDataError(ReweightingError):
     def __init__(self):
         print('There is no simulated data, please run the reweight method first!')
 
+
 class NoRewDataError(ReweightingError):
     def __init__(self):
         print('There is no  reweighted data, please run the reweight method first!')
 
+
 class OtherReweightError(ReweightingError):
     def __int__(self, message):
         print(message)
+
 
 class FutureResult(object):
     def get_result(self, path_to_file, file_name, time_to_wait, loading_method, delete = False):
@@ -38,17 +42,20 @@ class FutureResult(object):
             os.system("rm -rf {}".format(path_to_file))
         return result
 
+
 def copy_folder(sample, destination):
     des_parent = '/'.join(destination.split('/')[:-2])
     if not os.path.isdir(des_parent):
         os.system("mkdir -p " + des_parent)
     os.system("cp -r {} {}".format(sample, destination))
 
+
 def move_traj(fromdir, todir):
     # Use with care
     os.system("mv {}/dyn?.dcd {}".format(fromdir, todir))
     os.system("mv {}/dyn??.dcd {}".format(fromdir, todir))
     os.system("mv {}/dyn???.dcd {}".format(fromdir, todir))
+
 
 def on_cluster(executable, executable_args_list, *args, **kwargs):
     out_dir = kwargs['out_dir']
@@ -89,6 +96,7 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
     time.sleep(1)
     os.system("rm -f {}".format(kwargs['submit_script']))
 
+
 def get_avail_exp_prop_names(file_template = '/u/alanyu/c36ljpme/fflow/exp/*.exp'):
     exp_props = glob.glob(file_template)
     useful_props = []
@@ -97,7 +105,8 @@ def get_avail_exp_prop_names(file_template = '/u/alanyu/c36ljpme/fflow/exp/*.exp
         useful_props.append(name)
     return useful_props
 
-def get_sim_scd_names(file_template = '/u/alanyu/c36ljpme/fflow/runner/scd_dppc/block_data/*'):
+
+def get_sim_scd_names(file_template='/u/alanyu/c36ljpme/fflow/runner/scd_dppc/block_data/*'):
     scd_names = []
     file_names = glob.glob(file_template)
     for name in file_names:
@@ -106,7 +115,8 @@ def get_sim_scd_names(file_template = '/u/alanyu/c36ljpme/fflow/runner/scd_dppc/
             scd_names.append(scd_name)
     return scd_names
 
-def get_rdf_names_as_properties(file_template = '/u/alanyu/c36ljpme/fflow/runner/rdf/block_data/sparse*'):
+
+def get_rdf_names_as_properties(file_template='/u/alanyu/c36ljpme/fflow/runner/rdf/block_data/sparse*'):
     def not_in(a, bb):
         for b in bb:
             if a in b:
@@ -124,11 +134,13 @@ def get_rdf_names_as_properties(file_template = '/u/alanyu/c36ljpme/fflow/runner
                 rdf_names.append(rdf_name + '_peak_2')
     return rdf_names
 
+
 def rename_row_col(names):
     dict = {}
     for i, name in enumerate(names):
         dict[i] = name
     return dict
+
 
 def order_peak_foot(name):
     splist = name.split('_')
@@ -214,6 +226,7 @@ def find_rdf_peaks_and_foots(r, rdf, first_n_peaks = 2, first_n_foots = 1, smoot
         peak_indexes = find_peak_position(rdf, first_n_peaks)
         foot_indexes = find_foot_position(rdf, first_n_foots)
         return r[np.array(peak_indexes_smoothed + foot_indexes_smoothed)], rdf[np.array(peak_indexes + foot_indexes)]
+
 
 class sensitivity_evaluator(object):
     def __init__(self, ngroups, exp_x, exp, sim_x, sim, rew, sens_type = 1, n_peaks = 2, n_foots = 1):
