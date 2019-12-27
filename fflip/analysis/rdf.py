@@ -135,7 +135,30 @@ class RDF(object):
         return natom1_upper, natom2_upper, natom1_lower, natom2_lower
 
     def hard_up_low_atoms(self, recipe):
-        if 'hard_border' in recipe:
+        if 'explicit_grouping' in recipe:
+            groups = recipe['explicit_grouping']
+            assert isinstance(groups, tuple)
+            assert len(groups) == 2
+            assert isinstance(groups[0], list)
+            assert isinstance(groups[1], list)
+            upper_atom1 = []
+            lower_atom1 = []
+            for atom in self.atom1:
+                if atom in groups[0]:
+                    upper_atom1.append(atom)
+                else:
+                    assert atom in groups[1]
+                    lower_atom1.append(atom)
+            upper_atom2 = []
+            lower_atom2 = []
+            for atom in self.atom2:
+                if atom in groups[0]:
+                    upper_atom2.append(atom)
+                else:
+                    assert atom in groups[1]
+                    lower_atom2.append(atom)
+            return upper_atom1, upper_atom2, lower_atom1, lower_atom2
+        elif 'hard_border' in recipe:
             assert isinstance(recipe['hard_border'], int)
             upper_atom1 = []
             lower_atom1 = []

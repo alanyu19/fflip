@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from coffe.omm.util import filter_solution
 from fflip.ljpme.moreutil import *
 import numpy as np
 import pandas as pd
@@ -66,7 +67,7 @@ class PropertyLinearEstimator(Optimizer):
         self.target_properties = target_properties
         self.special_properties = special_properties
         self.targets = []  ## might not be useful in the end
-        self.scaling = uncertainty_scaling
+        self.uncertainty_scaling = uncertainty_scaling
 
     @property
     def all_properties(self):
@@ -171,15 +172,13 @@ class PropertyLinearEstimator(Optimizer):
         for prop in self.target_properties:
             if hasattr(prop, 'robustness'):
                 # The weights here is used to scale the robustness!
-                weights.append(prop.app_weight)
+                weights.append(prop.weight_factor)
                 uncerlist.append(
-                    prop.app_weight / prop.robustness / np.abs(
-                    prop.average_diff
-                    )
+                    prop.weight_factor * prop.uncertainty
                 )
         mean_weight = np.mean(np.array(weights))
-        return np.mean(np.array(uncerlist), axis = 0) / mean_weight / \
-               self.scaling
+        return self.uncertainty_scaling * np.mean(np.array(uncerlist), axis=0) \
+            / mean_weight
 
     def get_qm_charge_from_file(self, filename):
         """
