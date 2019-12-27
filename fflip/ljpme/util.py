@@ -57,6 +57,47 @@ def move_traj(fromdir, todir):
     os.system("mv {}/dyn???.dcd {}".format(fromdir, todir))
 
 
+def construct_indexes(inp, properties):
+    if inp=='all' or inp=='All':
+        return list(range(len(properties)))
+    elif ',' in inp:
+        indexes = []
+        values = inp.split(',')
+        for v in values:
+            assert 0 <= int(v) < len(properties)
+            indexes.append(int(v))
+        return indexes
+    elif '-' in inp:
+        first_last = inp.split('-')
+        assert len(first_last) == 2
+        first = int(first_last[0])
+        last = int(first_last[1])
+        assert len(properties) > last > first >= 0
+        return list(range(first, last + 1))
+    else:
+        try:
+            index = int(inp)
+            assert 0 <= index < len(properties)
+            return [index]
+        except:
+            raise Exception('Invalid property index(es)!')
+
+
+def parse_first_last(inp):
+    if ',' in inp:
+        indexes = []
+        values = inp.split(',')
+        for v in values:
+            indexes.append(int(v))
+        return indexes
+    else:
+        try:
+            index = int(inp)
+            return [index]
+        except:
+            raise Exception('Invalid trajectory index(es)!')
+
+
 def on_cluster(executable, executable_args_list, *args, **kwargs):
     out_dir = kwargs['out_dir']
     if os.path.isdir(out_dir):
@@ -74,6 +115,10 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
         ntasks = kwargs['ntasks']
     else:
         ntasks = 1
+    if 'conda_env' in kwargs:
+        conda = kwargs['conda_env']
+    else:
+        conda = 'drude'
     with open(kwargs["submit_script"], 'w+') as f:
         f.write(
             "#!/bin/bash\n" + \
@@ -85,7 +130,7 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
         )
         f.write(
             "source ~/.bashrc\n" + \
-            "conda activate ommrew\n"
+            "conda activate {}\n".format(conda)
         )
         argstring = ''
         for arg in executable_args_list:

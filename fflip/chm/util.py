@@ -5,7 +5,7 @@ from fflip.chm.lipids.dopc import *
 from fflip.chm.lipids.prpc import * 
 
 def parse_lipid(lipname):
-    if lipname.lower() == 'dppc':
+    if lipname.lower() in ['dlpc', 'dppc', 'dmpc']:
         return dppc
     if lipname.lower() == 'prpc':
         return prpc
