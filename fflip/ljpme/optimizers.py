@@ -249,8 +249,10 @@ class PropertyLinearEstimator(Optimizer):
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 else:
                     print(
-                        self.parameter_info[i0].center_names[0], ptype,
-                        "** exceeds drop bound **"
+                        "{0:>5s} {1:>8s} {2:<30f}".format(
+                            self.parameter_info[i0].center_names[0], ptype,
+                            "** exceeds drop bound **"
+                        )
                     )
                     matrix[i][i] = 999999
             elif ptype in forbid:
@@ -275,14 +277,18 @@ class PropertyLinearEstimator(Optimizer):
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 elif exceed_bound:
                     print(
-                        self.parameter_info[i0].center_names[0], ptype,
-                        "** exceeds drop bound **"
+                        "{0:>5s} {1:>8s} {2:<30f}".format(
+                            self.parameter_info[i0].center_names[0], ptype,
+                            "** exceeds drop bound **"
+                        )
                     )
                     matrix[i][i] = 999999
                 else:
                     print(
-                        self.parameter_info[i0].center_names[0], ptype,
-                        "** not allowed to change **"
+                        "{0:>5s} {1:>8s} {2:<30f}".format(
+                            self.parameter_info[i0].center_names[0], ptype,
+                            "** not allowed for changing **"
+                        )
                     )
                     matrix[i][i] = 999999
             else:
