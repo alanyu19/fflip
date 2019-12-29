@@ -243,7 +243,7 @@ class PropertyLinearEstimator(Optimizer):
                     print(
                         "{0:>5s} {1:>8s} {2:>10f}".format(
                             self.parameter_info[i0].center_names[0], ptype,
-                            round(self.uncertainty[i0], 6)
+                            round(max(self.uncertainty[i0], hard_bounds[ptype]), 6)
                         )
                     )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
@@ -271,7 +271,7 @@ class PropertyLinearEstimator(Optimizer):
                     print(
                         "{0:>5s} {1:>8s} {2:>10f}".format(
                             self.parameter_info[i0].center_names[0], ptype,
-                            round(self.uncertainty[i0], 6)
+                            round(max(self.uncertainty[i0], hard_bounds[ptype]), 6)
                         )
                     )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
