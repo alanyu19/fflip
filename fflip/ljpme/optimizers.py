@@ -205,8 +205,8 @@ class PropertyLinearEstimator(Optimizer):
     def get_weight_matrix(
             self, qm_weight=0.01,
             hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
-            drop_bounds={'sigma':999, 'epsilon': 999, 'charge': 999},
-            forbid={'epsilon':['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13'],
+            drop_bounds={'sigma': 999, 'epsilon': 999, 'charge': 999},
+            forbid={'epsilon': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13'],
                     'sigma': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13']}
     ):
         """
@@ -238,11 +238,13 @@ class PropertyLinearEstimator(Optimizer):
         for i0 in range(self.num_parameters):
             ptype = self.parameter_info[i0].par_type
             i = i0 + self.num_all_properties + self.num_qm
-            if not ptype in forbid:
+            if ptype not in forbid:
                 if not self.uncertainty[i0] > drop_bounds[ptype]:
                     print(
-                        self.parameter_info[i0].center_names[0], ptype,
-                        self.uncertainty[i0]
+                        "{0:>5s} {1:>8s} {2:>10f}".format(
+                            self.parameter_info[i0].center_names[0], ptype,
+                            round(self.uncertainty[i0], 6)
+                        )
                     )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 else:
@@ -265,8 +267,10 @@ class PropertyLinearEstimator(Optimizer):
                             continue
                 if allow_change:
                     print(
-                        self.parameter_info[i0].center_names[0], ptype,
-                        self.uncertainty[i0]
+                        "{0:>5s} {1:>8s} {2:>10f}".format(
+                            self.parameter_info[i0].center_names[0], ptype,
+                            round(self.uncertainty[i0], 6)
+                        )
                     )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 elif exceed_bound:
