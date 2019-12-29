@@ -251,7 +251,7 @@ class PropertyLinearEstimator(Optimizer):
                     print(
                         "{0:>5s} {1:>8s} {2:<30s}".format(
                             self.parameter_info[i0].center_names[0], ptype,
-                            "** exceeds drop bound **"
+                            "  ** exceeds drop bound **"
                         )
                     )
                     matrix[i][i] = 999999
@@ -279,7 +279,7 @@ class PropertyLinearEstimator(Optimizer):
                     print(
                         "{0:>5s} {1:>8s} {2:<30s}".format(
                             self.parameter_info[i0].center_names[0], ptype,
-                            "** exceeds drop bound **"
+                            "  ** exceeds drop bound **"
                         )
                     )
                     matrix[i][i] = 999999
@@ -287,7 +287,7 @@ class PropertyLinearEstimator(Optimizer):
                     print(
                         "{0:>5s} {1:>8s} {2:<30s}".format(
                             self.parameter_info[i0].center_names[0], ptype,
-                            "** not allowed for changing **"
+                            "  ** not allowed for changing **"
                         )
                     )
                     matrix[i][i] = 999999
