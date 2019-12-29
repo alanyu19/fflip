@@ -238,29 +238,51 @@ class PropertyLinearEstimator(Optimizer):
         for i0 in range(self.num_parameters):
             ptype = self.parameter_info[i0].par_type
             i = i0 + self.num_all_properties + self.num_qm
-            if not ptype in forbid and \
-                    not self.uncertainty[i0] > drop_bounds[ptype]:
-                print(
-                    self.parameter_info[i0].center_names[0], ptype,
-                    self.uncertainty[i0]
-                )
-                matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
-            elif ptype in forbid and \
-                    not self.uncertainty[i0] > drop_bounds[ptype]:
-                allow_change = True
-                for atom_name in self.parameter_info[i0].center_names:
-                    if atom_name in forbid[ptype]:
-                        matrix[i][i] = 999999
-                        allow_change = False
-                    else:
-                        continue
+            if not ptype in forbid:
+                if not self.uncertainty[i0] > drop_bounds[ptype]:
+                    print(
+                        self.parameter_info[i0].center_names[0], ptype,
+                        self.uncertainty[i0]
+                    )
+                    matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
+                else:
+                    print(
+                        self.parameter_info[i0].center_names[0], ptype,
+                        "** exceeds drop bound **"
+                    )
+                    matrix[i][i] = 999999
+            elif ptype in forbid:
+                if self.uncertainty[i0] > drop_bounds[ptype]:
+                    allow_change = False
+                    exceed_bound = True
+                else:
+                    exceed_bound = False
+                    allow_change = True
+                    for atom_name in self.parameter_info[i0].center_names:
+                        if atom_name in forbid[ptype]:
+                            allow_change = False
+                        else:
+                            continue
                 if allow_change:
                     print(
                         self.parameter_info[i0].center_names[0], ptype,
                         self.uncertainty[i0]
                     )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
+                elif exceed_bound:
+                    print(
+                        self.parameter_info[i0].center_names[0], ptype,
+                        "** exceeds drop bound **"
+                    )
+                    matrix[i][i] = 999999
+                else:
+                    print(
+                        self.parameter_info[i0].center_names[0], ptype,
+                        "** not allowed to change **"
+                    )
+                    matrix[i][i] = 999999
             else:
+                print("???")
                 matrix[i][i] = 999999
         self.W = matrix
 
