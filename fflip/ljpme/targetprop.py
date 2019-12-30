@@ -172,6 +172,7 @@ class TargetProperty(TargetSystem):
                  pot_template,
                  obs_template,
                  obs_file_format,
+                 sim_scheme=SimOptScheme,
                  naming_scheme=FolderNamingScheme,
                  ff='c36'):
         self.name = name
@@ -187,6 +188,7 @@ class TargetProperty(TargetSystem):
         self.obs_template = obs_template
         self.pot_template = pot_template
         self.property_file_format = obs_file_format
+        self.option_scheme = sim_scheme(self)
         self.folder_naming = naming_scheme(self)
         self.exp_dir = self.folder_naming.exp_folder()
         self.reweight_dir = self.folder_naming.reweight_dir()
@@ -286,10 +288,10 @@ class TargetProperty(TargetSystem):
     def reverse_para(self):
         pass
 
-    def simulation(self, iteration, trj_folder, ):
+    def simulation(self, iteration, trj_folder, last_seqno=None):
         super().simulate(
-            self, iteration, trj_folder, change_para=False,
-            solution_file=None, torfix_file=None
+            self, iteration, trj_folder, last_seqno=last_seqno,
+            change_para=False, solution_file=None, torfix_file=None
         )
 
     def recalc_energy(self, iteration, traj_root, overwrite=False, wait=True,
