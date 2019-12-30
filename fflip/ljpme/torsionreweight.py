@@ -65,7 +65,7 @@ def do_torsion_optmization(
     traj_to_compare, first_comp, last_comp,
     traj_to_fix, first_fix, last_fix,
     last_torfix=0,
-    allowed_m=[1,2,3,4,5,6],
+    allowed_m=[1, 2, 3, 4, 5, 6],
     temperature=323.15, nbins=100, plot=True
 ):
     """
@@ -94,11 +94,11 @@ def do_torsion_optmization(
     """
     from matplotlib import pyplot as plt
     target = DihedralTarget(atoms, psf_file, crd_file, parameter_files,
-                             torsionfix=last_torfix)
+                            torsionfix=last_torfix)
     target.get_cosine_series()
     dihdata_fix = target.get_dihedrals(traj_to_fix, first_fix, last_fix)
     dihdata_ref = target.get_dihedrals(traj_to_compare, first_comp, last_comp)
-    dih_f_old = dihedral_function(target.k, target.multp, target.phase)
+    dih_f_old = DihedralFunction(target.k, target.multp, target.phase)
     existing_ks = copy.deepcopy(dih_f_old.k)
     existing_ms = copy.deepcopy(dih_f_old.m)
     existing_ps = copy.deepcopy(dih_f_old.p)
@@ -128,7 +128,7 @@ def do_torsion_optmization(
             new_p = 0.0
         new_ks[m - 1] = new_k
         new_ps[m - 1] = new_p
-        dih_f_free = dihedral_function(new_ks, new_ms, new_ps)
+        dih_f_free = DihedralFunction(new_ks, new_ms, new_ps)
     # first try the fixed-m optimizer
     reweighter = CharmmDihedralReweighter(
         dih_f_old, dih_f_old, temperature=temperature
