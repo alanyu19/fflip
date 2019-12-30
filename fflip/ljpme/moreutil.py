@@ -308,6 +308,10 @@ class SimOptScheme(object):
         )]
 
     @property
+    def intgrt(self):
+        return 'L'
+
+    @property
     def barostat(self):
         if self.ts.system_type != 'bulk':
             return "MCM"
@@ -321,7 +325,7 @@ class SimOptScheme(object):
         elif self.ts.system_type == "bilayer":
             return 0
         else:
-            assert self.ts.system_type == ""
+            assert self.ts.system_type == "bulk"
             return None
 
 

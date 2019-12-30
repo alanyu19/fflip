@@ -57,6 +57,7 @@ class TargetSystem(object):
                  psf_file,
                  crd_file,
                  pot_template,
+                 sim_template=None,
                  option_scheme=SimOptScheme,
                  naming_scheme=FolderNamingScheme,
                  ff='c36'):
@@ -68,20 +69,28 @@ class TargetSystem(object):
         self.psf_file = psf_file
         self.crd_file = crd_file
         self.pot_template = pot_template
+        self.sim_template = sim_template
         self.option_scheme = option_scheme(self)
         self.folder_naming = naming_scheme(self)
         self.ff = ff
 
     def simulate(self, iteration, trj_folder, last_seqno=None,
-                 boxx=None, boxz=None, zmode=None, barostat=None,
+                 boxx=None, boxz=None, zmode=None,
+                 barostat=None, integrator=None,
                  change_para=False, solution_file=None, torfix_file=None,
                  overwrite=False, wait=False):
         """"""
+        if self.sim_template is None:
+            return 0  # exit
+
+        if change_para:
+            assert solution_file is not None and torfix_file is not None
+
         trj_loc = self.folder_naming.trajectory_folder(iteration, trj_folder)
 
         calc = OmmJobGenerator(
             self.crd_file, self.psf_file,
-            template=self.obs_template, work_dir=trj_loc
+            template=self.sim_template, work_dir=trj_loc
         )
         # constructing options dictionary
         options = dict()
@@ -107,10 +116,17 @@ class TargetSystem(object):
             options["barostat"] = barostat
         else:
             options["barostat"] = self.option_scheme.barostat
+        if integrator is not None:
+            options["intgrt"] = integrator
+        else:
+            options["intgrt"] = self.option_scheme.intgrt
         options["change_para"] = 'yes' if change_para else 'no'
-        options["fix_torsion"] = 'yes' if change_para else 'no'
+        if change_para:
+            options["sfile"] = solution_file
+            options["tfile"] = torfix_file
         options["psf"] = self.psf_file
         options["crd"] = self.crd_file
+        options["lipid"] = self.lipname
         if last_seqno is not None:
             options["last_seqno"] = int(last_seqno)
         else:
@@ -172,6 +188,7 @@ class TargetProperty(TargetSystem):
                  pot_template,
                  obs_template,
                  obs_file_format,
+                 sim_template=None,
                  sim_scheme=SimOptScheme,
                  naming_scheme=FolderNamingScheme,
                  ff='c36'):
@@ -187,6 +204,7 @@ class TargetProperty(TargetSystem):
         self.root_dir = root_dir
         self.obs_template = obs_template
         self.pot_template = pot_template
+        self.sim_template = sim_template
         self.property_file_format = obs_file_format
         self.option_scheme = sim_scheme(self)
         self.folder_naming = naming_scheme(self)
