@@ -47,7 +47,9 @@ def short_layer_type(layer_type):
         return 'bulk'
 
 
-def get_avail_exp_prop_names(file_template = '/u/alanyu/c36ljpme/fflow/exp/*.exp'):
+def get_avail_exp_prop_names(
+        file_template='/u/alanyu/c36ljpme/fflow/exp/*.exp'
+):
     exp_props = glob.glob(file_template)
     useful_props = []
     for prop in exp_props:
@@ -56,7 +58,9 @@ def get_avail_exp_prop_names(file_template = '/u/alanyu/c36ljpme/fflow/exp/*.exp
     return useful_props
 
 
-def get_sim_scd_names(file_template = '/u/alanyu/c36ljpme/fflow/runner/scd_dppc/block_data/*'):
+def get_sim_scd_names(
+        file_template='/u/alanyu/c36ljpme/fflow/runner/scd_dppc/block_data/*'
+):
     scd_names = []
     file_names = glob.glob(file_template)
     for name in file_names:
@@ -66,7 +70,9 @@ def get_sim_scd_names(file_template = '/u/alanyu/c36ljpme/fflow/runner/scd_dppc/
     return scd_names
 
 
-def get_rdf_names_as_properties(file_template = '/u/alanyu/c36ljpme/fflow/runner/rdf/block_data/sparse*'):
+def get_rdf_names_as_properties(
+        file_template='/u/alanyu/c36ljpme/fflow/runner/rdf/block_data/sparse*'
+):
     def not_in(a, bb):
         for b in bb:
             if a in b:
@@ -86,10 +92,10 @@ def get_rdf_names_as_properties(file_template = '/u/alanyu/c36ljpme/fflow/runner
 
 
 def rename_row_col(names):
-    dict = {}
+    dictt = {}
     for i, name in enumerate(names):
-        dict[i] = name
-    return dict
+        dictt[i] = name
+    return dictt
 
 
 def order_peak_foot(name):
@@ -99,7 +105,9 @@ def order_peak_foot(name):
     elif splist[1] == 'foot':
         b = 1
     else:
-        raise OtherReweightError('Name of property () is not suitable'.format(name))
+        raise OtherReweightError(
+            'Name of property () is not suitable'.format(name)
+        )
     a = int(splist[2])
     return 2*(a-1) + b
 
@@ -244,7 +252,81 @@ class FolderNamingScheme(object):
             )
         )
 
+
+class SimOptScheme(object):
+    def __init__(self, target_system):
+        self.ts = target_system
+
+    @property
+    def last_seqno(self):
+        finder = {
+            "dppc_bilayer_0_323.15": 300,
+            "dppc_bilayer_-5_323.15": 300,
+            "dppc_bilayer_5_323.15": 300,
+            "dppc_bilayer_0_333.15": 200,
+            "dppc_monolayer_18_321.15": 200,
+            "dppc_monolayer_40_321.15": 200,
+            "dppc_monolayer_55_321.15": 200,
+            "dlpc_bilayer_0_303.15": 200,
+            "prpc_bulk_0_298.15": 100
+        }
+        return finder["{}_{}_{}_{}".format(
+            self.ts.lipname, self.ts.system_type,
+            self.ts.surface_tension, self.ts.temperature
+        )]
+
+    @property
+    def boxx(self):
+        finder = {
+            "dppc_bilayer_0": 48,
+            "dppc_bilayer_-5": 48,
+            "dppc_bilayer_5": 48,
+            "dppc_monolayer_18": 44,
+            "dppc_monolayer_40": 48,
+            "dppc_monolayer_55": 52,
+            "dlpc_bilayer_0": 48,
+            "prpc_bulk_0": 43
+        }
+        return finder["{}_{}_{}".format(
+            self.ts.lipname, self.ts.system_type, self.ts.surface_tension
+        )]
+
+    @property
+    def boxz(self):
+        finder = {
+            "dppc_bilayer_0": 64,
+            "dppc_bilayer_-5": 64,
+            "dppc_bilayer_5": 64,
+            "dppc_monolayer_18": 223,
+            "dppc_monolayer_40": 223,
+            "dppc_monolayer_55": 223,
+            "dlpc_bilayer_0": 62,
+            "prpc_bulk_0": None
+        }
+        return finder["{}_{}_{}".format(
+            self.ts.lipname, self.ts.system_type, self.ts.surface_tension
+        )]
+
+    @property
+    def barostat(self):
+        if self.ts.system_type != 'bulk':
+            return "MCM"
+        else:
+            return "MC"
+
+    @property
+    def zmode(self):
+        if self.ts.system_type == "monolayer":
+            return 1
+        elif self.ts.system_type == "bilayer":
+            return 0
+        else:
+            assert self.ts.system_type == ""
+            return None
+
+
 # ----------------------------- Guess Functions ------------------------------
+# ------------------------------- Delete Later -------------------------------
 
 def make_guess_of_block_size(btype, prop_type):
     if btype == 0:
@@ -302,81 +384,6 @@ def make_guess_of_layertype(name):
         return 'bilayer'
     else:
         return 'bulk'
-
-
-# ------------------------------ Delete Later ----------------------------
-def gen_dppc_bilayer_sim(
-        iteration, surface_tension, change_para, solution_file=None,
-        temperature=323.15, last_seqno=100,
-        where='/gs-scratch/mbs/alanyu/c36ljpme',
-        overwrite=False):
-    md_options = {'surface_tension': surface_tension,
-                  'boxx': 48,
-                  'boxz': 68,
-                  'temperature': temperature,
-                  'zmode': 0,
-                  'barostat': 'MCM',
-                  'change_para': change_para
-                  }
-    job_dir = os.path.join(where, 'iter{}/dppc_bilayer_{}_{}'.format(iteration, surface_tension, temperature))
-    # sim = dppc_bilayer_calc.gensim(job_dir,
-    #                                last_seqno,
-    #                                md_options=md_options,
-    #                                solution_file=solution_file,
-    #                                overwrite=overwrite,
-    #                                template='sim_template')
-    # return sim
-
-
-def gen_dmpc_bilayer_sim(iteration, surface_tension, change_para,
-                         solution_file=None, temperature=303.15, last_seqno=100,
-                         where='/gs-scratch/mbs/alanyu/c36ljpme',
-                         overwrite=False):
-    # md_options = {'surface_tension': surface_tension,
-    #               'boxx': 48,
-    #               'boxz': 68,
-    pass
-
-
-def gen_dopc_bilayer_sim(iteration, surface_tension, change_para,
-                         solution_file=None, temperature=303.1, last_seqno=100,
-                         where='/gs-scratch/mbs/alanyu/c36ljpme',
-                         overwrite=False):
-    # md_options = {'surface_tension': surface_tension,
-    #              'boxx': 50,
-    #              'boxz': 76,
-    pass
-
-
-def gen_dppc_monolayer_sim(iteration, surface_tension, change_para,
-                           solution_file=None, temperature=321.15,
-                           last_seqno=120,
-                           where='/gs-scratch/mbs/alanyu/c36ljpme',
-                           overwrite=False):
-    # md_options = {'surface_tension': surface_tension,
-    #               'boxx': 43, 'zmode': 1?sss
-    #               'boxz': 223,
-    pass
-
-
-def gen_prpc_sim(iteration, surface_tension, change_para, solution_file=None,
-                 temperature=298.15, last_seqno=100,
-                 where='/gs-scratch/mbs/alanyu/c36ljpme', overwrite=False):
-    md_options = {'surface_tension': surface_tension,
-                  'boxx': 43,
-                  'temperature': temperature,
-                  'barostat': 'MC',
-                  'change_para': change_para
-                  }
-    job_dir = os.path.join(where, 'iter{}/prpc_bulk_{}_{}'.format(iteration, surface_tension, temperature))
-    # sim = prpc_calc.gensim(job_dir,
-    #                        last_seqno,
-    #                        md_options=md_options,
-    #                        solution_file=solution_file,
-    #                        overwrite=overwrite,
-    #                        template='sim_template')
-    # return sim
-
 
 
 lipfinder = {

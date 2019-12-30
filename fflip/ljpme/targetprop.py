@@ -24,38 +24,101 @@ class KaGenerator(object):
         self.target_properties = target_properties
 
     def gen_sim(self):
-        deltaA = self.target_properties[1].reweight_target.sim - self.target_properties[2].reweight_target.sim
-        A0 = self.target_properties[0].reweight_target.sim
-        return 2 * A0 * self.deltagamma / deltaA
+        delta_a = self.target_properties[1].reweight_target.sim - \
+                  self.target_properties[2].reweight_target.sim
+        a_0 = self.target_properties[0].reweight_target.sim
+        return 2 * a_0 * self.deltagamma / delta_a
 
     def gen_rew(self):
-        deltaA = self.target_properties[1].reweight_target.rew - self.target_properties[2].reweight_target.rew
-        A0 = self.target_properties[0].reweight_target.rew
-        return 2 * A0 * self.deltagamma / deltaA
+        delta_a = self.target_properties[1].reweight_target.rew - \
+                 self.target_properties[2].reweight_target.rew
+        a_0 = self.target_properties[0].reweight_target.rew
+        return 2 * a_0 * self.deltagamma / delta_a
 
     def gen_sensitivity(self):
-        A0 = self.target_properties[0].reweight_target.sim
-        deltaA = self.target_properties[1].reweight_target.sim - self.target_properties[2].reweight_target.sim
-        sensA0 = self.target_properties[0].sensitivity
-        sensdeltaA = self.target_properties[1].sensitivity - self.target_properties[2].sensitivity
-        return 2 * self.deltagamma * (sensA0 / deltaA - A0 * sensdeltaA / deltaA**2)
+        a_0 = self.target_properties[0].reweight_target.sim
+        delta_a = self.target_properties[1].reweight_target.sim - \
+            self.target_properties[2].reweight_target.sim
+        sens_a0 = self.target_properties[0].sensitivity
+        sens_delta_a = self.target_properties[1].sensitivity - \
+            self.target_properties[2].sensitivity
+        return 2 * self.deltagamma * (
+                sens_a0 / delta_a - a_0 * sens_delta_a / delta_a ** 2
+        )
 
 
 class TargetSystem(object):
-    def __init__(self):
-        pass
+    def __init__(self,
+                 system_type,
+                 lipname,
+                 num_lipids,
+                 temperature,
+                 surface_tension,
+                 psf_file,
+                 crd_file,
+                 pot_template,
+                 option_scheme=SimOptScheme,
+                 naming_scheme=FolderNamingScheme,
+                 ff='c36'):
+        self.system_type = system_type
+        self.lipname = lipname
+        self.num_lipids = num_lipids
+        self.temperature = temperature
+        self.surface_tension = surface_tension
+        self.psf_file = psf_file
+        self.crd_file = crd_file
+        self.pot_template = pot_template
+        self.option_scheme = option_scheme(self)
+        self.folder_naming = naming_scheme(self)
+        self.ff = ff
 
-    def simulate(self, iteration, changepara='no', solution_file=None,
-                 wait=True):
-        """
-        Args:
-            iteration: the iteration number of the optimization
-            changepara: the solution file (of parameter) from last iteration
-            solution_file:
-            wait:
-        Returns:
-        """
-        print(self, iteration, changepara, solution_file)
+    def simulate(self, iteration, trj_folder, last_seqno=None,
+                 boxx=None, boxz=None, zmode=None, barostat=None,
+                 change_para=False, solution_file=None, torfix_file=None,
+                 overwrite=False, wait=False):
+        """"""
+        trj_loc = self.folder_naming.trajectory_folder(iteration, trj_folder)
+
+        calc = OmmJobGenerator(
+            self.crd_file, self.psf_file,
+            template=self.obs_template, work_dir=trj_loc
+        )
+        # constructing options dictionary
+        options = dict()
+        # special treatment to the option file name
+        options["mdo"] = "input.mdo"
+        options["surface_tension"] = self.surface_tension
+        if boxx is not None:
+            options["boxx"] = float(boxx)
+        else:
+            options["boxx"] = self.option_scheme.boxx
+        if boxz is not None:
+            options["boxz"] = boxz
+        elif self.option_scheme.boxz is not None:
+            # for systems, this can be empty
+            options["boxz"] = self.option_scheme.boxz
+        options["temperature"] = self.temperature
+        if zmode is not None:
+            options["zmode"] = int(zmode)
+        elif self.option_scheme.zmode is not None:
+            # for systems, this can be empty
+            options["zmode"] = self.option_scheme.zmode
+        if barostat is not None:
+            options["barostat"] = barostat
+        else:
+            options["barostat"] = self.option_scheme.barostat
+        options["change_para"] = 'yes' if change_para else 'no'
+        options["fix_torsion"] = 'yes' if change_para else 'no'
+        options["psf"] = self.psf_file
+        options["crd"] = self.crd_file
+        if last_seqno is not None:
+            options["last_seqno"] = int(last_seqno)
+        else:
+            options["last_seqno"] = self.option_scheme.last_seqno
+        # get the job run
+        job = calc(0, options, overwrite=overwrite)
+        # job("rflow submit sdyn.sh")
+
         if wait:
             pass
 
@@ -128,7 +191,8 @@ class TargetProperty(TargetSystem):
         self.exp_dir = self.folder_naming.exp_folder()
         self.reweight_dir = self.folder_naming.reweight_dir()
         self.robdir = self.folder_naming.robustness_dir()
-        self.first_trj, self.last_trj = make_guess_of_trajectory_range(self.name)
+        self.first_trj, self.last_trj = \
+            make_guess_of_trajectory_range(self.name)
         self.trj_intvl_e, self.trj_intvl_p = make_guess_of_intervals(self.name)
         # TODO: the lipfinder is loaded from the util, can we get rid of this?
         self.lipid = lipfinder[lipname]
@@ -221,6 +285,12 @@ class TargetProperty(TargetSystem):
 
     def reverse_para(self):
         pass
+
+    def simulation(self, iteration, trj_folder, ):
+        super().simulate(
+            self, iteration, trj_folder, change_para=False,
+            solution_file=None, torfix_file=None
+        )
 
     def recalc_energy(self, iteration, traj_root, overwrite=False, wait=True,
                       last_solution=None):
