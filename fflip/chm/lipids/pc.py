@@ -3,12 +3,12 @@
 from fflip.chm.lipid import *
 
 
-# ***************************************************************************************************************
-# DMPC GROUPS:
-dmpc_gs = list()
+# ******************************************************************************
+# PC GROUPS:
+pc_gs = list()
 # Please note that the CHARMM force field use Rmin/2 intead of sigma,
 # and the unit of epsilon is kcal/mol
-dmpc_gs.append(
+pc_gs.append(
     charmm_group(
         num_atom_category=5,  # NTL, HL, CTL5, CTL2, HL
         atoms=[['N'],
@@ -30,7 +30,7 @@ dmpc_gs.append(
     )
 )
 
-dmpc_gs.append(
+pc_gs.append(
     charmm_group(
         num_atom_category=7,  # CTL2, HAL2, PL, 02L, OSLP, CTL2, HAL2
         atoms=[['C11'],
@@ -53,7 +53,7 @@ dmpc_gs.append(
     )
 )
 
-dmpc_gs.append(
+pc_gs.append(
     charmm_group(
         num_atom_category=7,  # CTL1, HAL1, OSL, CL, OBL, CTL2, HAL2
         atoms=[
@@ -78,7 +78,7 @@ dmpc_gs.append(
     )
 )
 
-dmpc_gs.append(
+pc_gs.append(
     charmm_group(
         num_atom_category=7,  # CTL2, HAL2, OSL, CL, OBL, CTL2, HAL2
         atoms=[['C3'], ['HX', 'HY'], ['O31'], ['C31'], ['O32'],
@@ -97,6 +97,6 @@ dmpc_gs.append(
 
 #  *****************************************************************************
 
-dmpc = lipid(charmm_group_list=dmpc_gs, lipname="DMPC")
+pc = lipid(charmm_group_list=pc_gs, lipname="PC")
 
 #  *****************************************************************************

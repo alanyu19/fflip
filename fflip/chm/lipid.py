@@ -1,20 +1,5 @@
-import os
-import sys
-#import omm_vfswitch
-#import copy
+# -*- coding: utf-8 -*-
 
-import numpy as np
-import simtk.unit as u
-from simtk.openmm import Platform, MonteCarloMembraneBarostat, DrudeLangevinIntegrator
-from simtk.openmm import Context, LangevinIntegrator, NonbondedForce, CustomNonbondedForce
-from simtk.openmm.app import ForceField, Simulation
-from simtk.openmm.app import CharmmPsfFile, CharmmParameterSet, CharmmCrdFile
-from simtk.openmm.app import LJPME, PME, HBonds
-import mdtraj as md
-from openmmtools.testsystems import LennardJonesFluid
-import scipy.optimize
-
-from coffe.omm.playpara import *
 from coffe.omm.paragroup import *
 
 
