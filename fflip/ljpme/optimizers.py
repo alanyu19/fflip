@@ -166,6 +166,19 @@ class PropertyLinearEstimator(Optimizer):
         return dev_dict
 
     @property
+    def robustness(self):
+        roblist = []
+        weights = []
+        for prop in self.target_properties:
+            if hasattr(prop, 'robustness'):
+                weights.append(prop.weight_factor)
+                roblist.append(
+                    prop.weight_factor * prop.robustness
+                )
+        mean_weight = np.mean(np.array(weights))
+        return np.mean(np.array(roblist), axis=0) / mean_weight
+
+    @property
     def uncertainty(self):
         uncerlist = []
         weights = []
