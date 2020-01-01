@@ -5,24 +5,6 @@ from fflip.ljpme.moreutil import *
 import numpy as np
 import pandas as pd
 
-#logfile = 'opt.log'
-
-# what is the level of this logger?
-#logger = logging.Logger('OPTIMIZATION')
-#print_stream = logging.StreamHandler()
-#print_stream.setLevel(logging.INFO)
-#file_stream = logging.FileHandler(logfile)
-#file_stream.setLevel(logging.INFO)
-#logger.addHandler(print_stream)
-#logger.addHandler(file_stream)
-
-def ssr_info(*args):
-    #logger.info("ssr from {} is {}".format(*args))
-    pass
-
-def species_ssr(*args):
-    pass
-
 
 class Optimizer(object):
     def __init__(self, target_properties, special_properties,
