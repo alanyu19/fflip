@@ -48,7 +48,7 @@ class PropertyLinearEstimator(Optimizer):
         self.perturbation_baseline = perturbation_baseline
         self.target_properties = target_properties
         self.special_properties = special_properties
-        self.targets = []  ## might not be useful in the end
+        self.targets = []  # might not be useful in the end
         self.uncertainty_scaling = uncertainty_scaling
 
     @property
@@ -238,7 +238,9 @@ class PropertyLinearEstimator(Optimizer):
                     print(
                         "{0:>5s} {1:>8s} {2:>10f}".format(
                             self.parameter_info[i0].center_names[0], ptype,
-                            round(max(self.uncertainty[i0], hard_bounds[ptype]), 6)
+                            round(
+                                max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                            )
                         )
                     )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
@@ -266,7 +268,9 @@ class PropertyLinearEstimator(Optimizer):
                     print(
                         "{0:>5s} {1:>8s} {2:>10f}".format(
                             self.parameter_info[i0].center_names[0], ptype,
-                            round(max(self.uncertainty[i0], hard_bounds[ptype]), 6)
+                            round(
+                                max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                            )
                         )
                     )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
@@ -384,8 +388,8 @@ class PropertyLinearEstimator(Optimizer):
         for i in range(self.num_parameters):
             if hasattr(self, 'last_solution'):
                 vector.append(0)
-                #vector.appned(-self.last_solution[i]/2)
-                #vector.append(-self.last_solution[i])
+                # vector.appned(-self.last_solution[i]/2)
+                # vector.append(-self.last_solution[i])
             else:
                 vector.append(0)
         self.F = np.array(vector)
@@ -407,17 +411,7 @@ class PropertyLinearEstimator(Optimizer):
                     ptype = self.parameter_info[i0].par_type
                     self.W[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
             else:
-                print('Error in update_weight!')
-                # TODO: Raise Some Error!
-                #count = count + 1
-                #if self.parameter_info[i0].par_type == 'charge':
-                #    self.W[i][i] = max(
-                #        self.uncertainty[i0], hard_bounds[ptype]
-                #    )
-                #else:
-                #    self.W[i][i] = max(
-                #    self.uncertainty[i0], hard_bounds[ptype]
-                #    )
+                raise Exception('Error in update_weight!')
         print('{} parameters changed in total'.format(count))
 
     def __call__(
