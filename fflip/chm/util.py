@@ -2,6 +2,8 @@
 
 from fflip.chm.lipids.dppc import *
 from fflip.chm.lipids.prpc import *
+from fflip.chm.lipids.dmpc import *
+from fflip.chm.lipids.dopc import *
 from fflip.chm.lipids.pe import *
 
 

@@ -252,7 +252,7 @@ class PropertyLinearEstimator(Optimizer):
             ptype = self.parameter_info[i0].par_type
             i = i0 + self.num_all_properties + self.num_qm
             if ptype not in forbid:
-                if not self.uncertainty[i0] > drop_bounds[ptype]:
+                if not self.robustness[i0] < drop_bounds[ptype]:
                     print(
                         "{0:>5s} {1:>8s} {2:>10f}".format(
                             self.parameter_info[i0].center_names[0], ptype,
@@ -269,7 +269,7 @@ class PropertyLinearEstimator(Optimizer):
                     )
                     matrix[i][i] = 999999
             elif ptype in forbid:
-                if self.uncertainty[i0] > drop_bounds[ptype]:
+                if self.robustness[i0] < drop_bounds[ptype]:
                     allow_change = False
                     exceed_bound = True
                 else:
