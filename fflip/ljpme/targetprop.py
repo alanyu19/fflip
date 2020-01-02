@@ -362,6 +362,7 @@ class TargetProperty(TargetSystem):
         options["first_trj"] = self.first_trj
         options["last_trj"] = self.last_trj
         options["block_size"] = self.prop_block_size
+        options["lipname"] = self.lipname
         # get the job run
         job = calc(2, options, overwrite=overwrite)
         job('python submit.py')
