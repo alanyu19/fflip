@@ -341,15 +341,14 @@ class PropertyLinearEstimator(Optimizer):
                     matrix[i][j] = 1
         self.S = matrix
 
-
     def get_deviation_vector(self):
         vector = []
         # Part1. properties
         for p in (self.target_properties + self.special_properties):
             vector.append(p.deviation)
         # Part2. QM
-        qindex = {};
-        count = 0;
+        qindex = {}
+        count = 0
         qparam = []  # used to record the order
         for p in self.parameter_info:
             if p.par_type == 'charge':
@@ -397,7 +396,7 @@ class PropertyLinearEstimator(Optimizer):
     def update_weight(
             self,
             hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
-            thredshold = 0.3
+            thredshold=0.3, use_last_solution=False, factor=2
     ):
         # Only Part3. deviation from original parameter set
         count = 0
@@ -410,25 +409,35 @@ class PropertyLinearEstimator(Optimizer):
                     count = count + 1
                     ptype = self.parameter_info[i0].par_type
                     self.W[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
+                    if use_last_solution and hasattr(self, 'last_solution'):
+                        if self.last_solution[i0] + self.solution[i0] > 10:
+                            # currently very crude (only use plus, even for lj)
+                            print(
+                                "Putting more restriction on {}-{}".format(
+                                    self.parameter_info[i0].center_names[0],
+                                    self.parameter_info[i0].par_type,
+                                )
+                            )
+                            self.W[i][i] = self.W[i][i] * factor
             else:
                 raise Exception('Error in update_weight!')
         print('{} parameters changed in total'.format(count))
 
     def __call__(
             self,
-            save_result = False,
-            result_file = 'linear_solver_result.txt',
-            ssr_file = 'ssr.png'):
+            save_result=False,
+            result_file='linear_solver_result.txt',
+            ssr_file='ssr.png'):
         a = np.matmul(self.W, self.S)
         b = np.matmul(self.W, self.F)
         solution = np.linalg.lstsq(a, b, rcond=None)
         if save_result:
             residual = np.matmul(self.S, solution[0])
-            residual_dict = {}
+            residual_dict = dict()
             residual_dict['before'] = self.F[:self.num_all_properties]
             residual_dict['after'] = residual[:self.num_all_properties]
             residual_dict['remained'] = self.F[:self.num_all_properties] - \
-                                        residual[:self.num_all_properties]
+                residual[:self.num_all_properties]
             residual_dict['%remained'] = \
                 1 - residual[:self.num_all_properties] \
                 / self.F[:self.num_all_properties]
@@ -443,7 +452,7 @@ class PropertyLinearEstimator(Optimizer):
             # Recoding SSR from different sources:
             weighted_residual = np.matmul(a, solution[0]) - b
             from_prop = weighted_residual[:self.num_all_properties]
-            from_qm = weighted_residual[self.num_all_properties :
+            from_qm = weighted_residual[self.num_all_properties:
                                         self.num_all_properties + self.num_qm]
             from_c36 = weighted_residual[self.num_all_properties+self.num_qm:]
             print(
@@ -455,7 +464,11 @@ class PropertyLinearEstimator(Optimizer):
             print("from C36:", np.sum(from_c36**2))
             # ................................................................
             # Detailed for each target property (including special properties):
-            indexes = []; names = []; sr = []; err2 = []; err = []
+            indexes = []
+            names = []
+            sr = []
+            err2 = []
+            err = []
             for i, prop in enumerate(self.all_properties):
                 indexes.append(i*1.2)
                 names.append(prop.name)
@@ -467,12 +480,12 @@ class PropertyLinearEstimator(Optimizer):
             from matplotlib import pyplot as plt
             fig, ax = plt.subplots(figsize=(22, 5))
             ax.bar(
-                np.array(indexes) + 0.3, err2, width =0.3,
+                np.array(indexes) + 0.3, err2, width=0.3,
                 label='scaled error squared'
             )
             ax.bar(np.array(indexes), err, width=0.3, label='scaled error')
             ax.bar(
-                np.array(indexes) - 0.3, sr, width =0.3,
+                np.array(indexes) - 0.3, sr, width=0.3,
                 label='contribution to optimization residue'
             )
             plt.xticks(indexes, names, rotation='vertical')
