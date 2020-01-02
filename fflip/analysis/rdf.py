@@ -328,7 +328,7 @@ class RDF(object):
             verbose=1, print_interval=10, save_blocks_interval=5, save_to=".",
             save_sparse=False, sparse_bin_width=0.02, sparse_subfolder="."
     ):
-        if not recentered:
+        if self.dimension == 2 and not recentered:
             assert up_low_recipe is not None,\
                 "Please provide a recipe for telling upper leaflet from lower!"
 
