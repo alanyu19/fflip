@@ -112,8 +112,8 @@ for name in dppc_scd_names:
             weight_factor=wf,
             temperature=323.15,
             surface_tension=0,
-            psf_file=psf_dir + 'bi_72_dlpc_c36.psf',
-            crd_file=crd_dir + 'bi_72_dlpc_c36.crd',
+            psf_file=psf_dir + 'bi_72_dppc_c36.psf',
+            crd_file=crd_dir + 'bi_72_dppc_c36.crd',
             root_dir=root,
             pot_template=template_dir + "potential",
             obs_template=template_dir + "dppc_scd",  # TODO
