@@ -517,7 +517,8 @@ class TargetProperty(TargetSystem):
             self.uncertainty = std
 
     def get_sensitivity(
-            self, iteration, force_redo=False, use_cluster=True, quit=False):
+            self, iteration, force_redo=False, use_cluster=True, quit=False
+    ):
         if not hasattr(self, 'reweight_target'):
             # which is not the usual case anyway
             self.gen_reweight_target(iteration)
