@@ -435,7 +435,7 @@ class PropertyLinearEstimator(Optimizer):
             residual = np.matmul(self.S, solution[0])
             residual_dict = dict()
             residual_dict['before'] = self.F[:self.num_all_properties]
-            residual_dict['after'] = residual[:self.num_all_properties]
+            residual_dict['changed'] = residual[:self.num_all_properties]
             residual_dict['remained'] = self.F[:self.num_all_properties] - \
                 residual[:self.num_all_properties]
             residual_dict['%remained'] = \
@@ -467,26 +467,31 @@ class PropertyLinearEstimator(Optimizer):
             indexes = []
             names = []
             sr = []
-            err2 = []
-            err = []
+            err_before = []
+            err_after = []
             for i, prop in enumerate(self.all_properties):
                 indexes.append(i*1.2)
                 names.append(prop.name)
                 sr.append((from_prop**2)[i])
-                err.append(
+                err_before.append(
+                    np.sqrt(((residual_dict['before']*prop.scaling)**2)[i])
+                )
+                err_after.append(
                     np.sqrt(((residual_dict['remained']*prop.scaling)**2)[i])
                 )
-                err2.append(((residual_dict['remained']*prop.scaling)**2)[i])
             from matplotlib import pyplot as plt
             fig, ax = plt.subplots(figsize=(22, 5))
             ax.bar(
-                np.array(indexes) + 0.3, err2, width=0.3,
-                label='scaled error squared'
-            )
-            ax.bar(np.array(indexes), err, width=0.3, label='scaled error')
-            ax.bar(
                 np.array(indexes) - 0.3, sr, width=0.3,
                 label='contribution to optimization residue'
+            )
+            ax.bar(
+                np.array(indexes), err_before, width=0.3,
+                label='scaled error before'
+            )
+            ax.bar(
+                np.array(indexes) + 0.3, err_after, width=0.3,
+                label='scaled error remaining'
             )
             plt.xticks(indexes, names, rotation='vertical')
             plt.legend(fontsize=14)
