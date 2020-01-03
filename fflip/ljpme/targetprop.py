@@ -161,9 +161,28 @@ class SpecialProperty(TargetSystem):
         self.exp_dir = os.path.join(root_dir, exp_rel_dir)
         self.parent_properties = parent_properties
         self.options = kwargs
-        self.scaling = make_guess_of_scaling(self.name)
-        self.app_weight = weight_factor
-        self.weight_factor = weight_factor * self.scaling
+        self._scaling = make_guess_of_scaling(self.name)
+        self._app_weight = weight_factor
+
+    @property
+    def exp(self):
+        return np.loadtxt(os.path.join(self.exp_dir, self.name + '.exp'))
+
+    def update_scaling_using_exp(self):
+        self._scaling = 1 / self.exp
+        pass
+
+    @property
+    def app_weight_factor(self):
+        return self._app_weight
+
+    @property
+    def scaling(self):
+        return self._scaling
+
+    @property
+    def weight_factor(self):
+        return self.app_weight_factor * self.scaling
 
     def get_sensitivity(self, iteration, generator=KaGenerator):
         for p in self.parent_properties:
@@ -171,7 +190,6 @@ class SpecialProperty(TargetSystem):
         generator = generator(self.parent_properties, **self.options)
         self.rew = generator.gen_rew()
         self.sim = generator.gen_sim()
-        self.exp = np.loadtxt(os.path.join(self.exp_dir, self.name + '.exp'))
         self.deviation = self.exp - self.sim
         self.sensitivity = generator.gen_sensitivity()
 
