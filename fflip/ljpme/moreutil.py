@@ -123,9 +123,10 @@ def combine_peak_foot_indexes(peak_indexes, foot_indexes):
     comb = []
     while i < len(peak_indexes) and i < len(foot_indexes):
         comb.append(peak_indexes[i])
+        comb.append(foot_indexes[i])
         i += 1
     if i < len(peak_indexes):
-        comb.append(i)
+        comb.append(peak_indexes[i])
     return comb
 
 
