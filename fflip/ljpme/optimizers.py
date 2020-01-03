@@ -396,21 +396,22 @@ class PropertyLinearEstimator(Optimizer):
     def update_weight(
             self,
             hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
-            thredshold=0.3, use_last_solution=False, factor=2
+            lower_bound=0.3, use_last_solution=False, soft_upper_bound=5, factor=2
     ):
         # Only Part3. deviation from original parameter set
         count = 0
         for i0 in range(self.num_parameters):
             i = i0 + self.num_all_properties + self.num_qm
             if hasattr(self, 'solution'):
-                if np.abs(self.solution[i0]) < thredshold:
+                if np.abs(self.solution[i0]) < lower_bound:
                     self.W[i][i] = 100000
                 else:
                     count = count + 1
                     ptype = self.parameter_info[i0].par_type
                     self.W[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                     if use_last_solution and hasattr(self, 'last_solution'):
-                        if self.last_solution[i0] + self.solution[i0] > 10:
+                        sub = soft_upper_bound
+                        if self.last_solution[i0] + self.solution[i0] > sub:
                             # currently very crude (only use plus, even for lj)
                             print(
                                 "Putting more restriction on {}-{}".format(
