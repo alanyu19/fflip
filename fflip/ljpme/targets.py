@@ -47,6 +47,7 @@ for temperature, surface_tension, wt in zip(
         root_dir=root,
         pot_template=template_dir + "potential",
         obs_template=template_dir + "area",
+        sim_template=template_dir + "sim",
         # TODO: pass this to the calc_observable function of TargetProperty
         obs_file_format="area_{}.dat"
     )
@@ -67,6 +68,7 @@ prop = TargetProperty(
     root_dir=root,
     pot_template=template_dir + 'potential',
     obs_template=template_dir + 'area',
+    sim_template=template_dir + "sim",
     obs_file_format='area_{}.dat'
 )
 properties.append(prop)
@@ -87,6 +89,7 @@ for temperature, surface_tension in zip([321.15, 321.15, 321.15], [18, 40, 55]):
         root_dir=root,
         pot_template=template_dir + "potential",
         obs_template=template_dir + "area",
+        sim_template=template_dir + "sim",
         obs_file_format="area_{}.dat"
     )
     properties.append(prop)
@@ -116,7 +119,7 @@ for name in dppc_scd_names:
             crd_file=crd_dir + 'bi_72_dppc_c36.crd',
             root_dir=root,
             pot_template=template_dir + "potential",
-            obs_template=template_dir + "dppc_scd",  # TODO
+            obs_template=template_dir + "scd_dppc",
             obs_file_format=name + '_{}.dat'
         )
         properties.append(prop)
@@ -136,8 +139,9 @@ for name in rdf_names:
         psf_file=psf_dir + 'bulk_9_prpc_c36.psf',
         crd_file=crd_dir + 'bulk_9_prpc_c36.crd',
         root_dir=root,
-        pot_template=1,  # TODO
-        obs_template=1,  # TODO
+        pot_template=template_dir + "potential",
+        obs_template=template_dir + "rdf",
+        sim_template=template_dir + "sim",
         obs_file_format='sparse-' + short_name + '-{}.txt'
     )
     properties.append(prop)

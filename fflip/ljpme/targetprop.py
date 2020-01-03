@@ -309,9 +309,9 @@ class TargetProperty(TargetSystem):
     @property
     def exp(self):
         if not hasattr(self, 'exchanged_exp'):
-            return extract_exp(self._exp)
+            return extract_exp(self.name, self._exp)
         else:
-            return extract_exp(self.exchanged_exp)
+            return extract_exp(self.name, self.exchanged_exp)
 
     @property
     def parameters(self):
