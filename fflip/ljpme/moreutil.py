@@ -434,6 +434,8 @@ def make_guess_of_scaling(name):
         return 1 / 0.15
     elif 'ka' in name:
         return 1 / 200
+    elif 'delta_area' in name:
+        return 1 / 0.02
 
 
 def make_guess_of_layertype(name):

@@ -394,9 +394,9 @@ class PropertyLinearEstimator(Optimizer):
         self.F = np.array(vector)
 
     def update_weight(
-            self,
-            hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
-            lower_bound=0.3, use_last_solution=False, soft_upper_bound=5, factor=2
+        self,
+        hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
+        lower_bound=0.3, use_last_solution=False, soft_upper_bound=5, factor=2
     ):
         # Only Part3. deviation from original parameter set
         count = 0

@@ -47,6 +47,34 @@ class KaGenerator(object):
         )
 
 
+class DeltaGenerator(object):
+    def __init__(self, target_properties, **kwargs):
+        """
+        Currently used for temperature dependence
+        Args:
+            target_properties:  a list contains two TargetProperty object
+            **kwargs:
+        Returns
+            the deviation and sensitivity
+        """
+        self.target_properties = target_properties
+
+    def gen_sim(self):
+        delta = self.target_properties[1].reweight_target.sim - \
+            self.target_properties[0].reweight_target.sim
+        return delta
+
+    def gen_rew(self):
+        delta = self.target_properties[1].reweight_target.rew - \
+            self.target_properties[0].reweight_target.rew
+        return delta
+
+    def gen_sensitivity(self):
+        sens_delta = self.target_properties[1].sensitivity - \
+            self.target_properties[0].sensitivity
+        return sens_delta
+
+
 class TargetSystem(object):
     def __init__(self,
                  system_type,
