@@ -327,11 +327,11 @@ class SensitivityEvaluator(object):
             Things like rdf which contain both positions and magnitudes
             """
             x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp_x, self.exp, first_n_peaks=self.n_peaks,
+                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=3
             )
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks=self.n_peaks,
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             return x_sim - x_exp, y_sim - y_exp
@@ -348,11 +348,11 @@ class SensitivityEvaluator(object):
             Things like rdf which contain both positions and magnitudes
             """
             x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp_x, self.exp, first_n_peaks=self.n_peaks,
+                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=3
             )
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks=self.n_peaks,
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             return (x_sim - x_exp)/x_exp, (y_sim - y_exp)/y_exp
@@ -365,11 +365,11 @@ class SensitivityEvaluator(object):
             return rew - sim_tiled
         elif self.sens_type == 2:
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks=self.n_peaks,
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
-                self.sim_x, self.rew, first_n_peaks=self.n_peaks,
+                self.rew, self.sim_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             diff_list = []
@@ -385,15 +385,15 @@ class SensitivityEvaluator(object):
             return (rew - sim_tiled) / self.exp
         elif self.sens_type == 2:
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks=self.n_peaks,
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
-                self.sim_x, self.rew, first_n_peaks=self.n_peaks,
+                self.rew, self.sim_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp_x, self.exp, first_n_peaks=self.n_peaks,
+                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=3
             )
             rel_diff_list = []

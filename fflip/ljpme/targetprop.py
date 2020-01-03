@@ -309,9 +309,9 @@ class TargetProperty(TargetSystem):
     @property
     def exp(self):
         if not hasattr(self, 'exchanged_exp'):
-            return self._exp
+            return extract_exp(self._exp)
         else:
-            return self.exchanged_exp
+            return extract_exp(self.exchanged_exp)
 
     @property
     def parameters(self):
@@ -405,7 +405,7 @@ class TargetProperty(TargetSystem):
             energy_dir=self.folder_naming.potential_data_folder(iteration),
             property_file_template=self.property_file_format,
             result_dir=self.folder_naming.reweighting_folder(iteration),
-            exp=self.exp,
+            exp=self._exp,
             exp_dir=self.exp_dir,
             lipid=self.lipid
         )

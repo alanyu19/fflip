@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import time
-import math
+import numpy as np
 import os
 import glob
-import pandas as pd
 
 from coffe.omm.exceptions import *
 from fflip.chm import *
@@ -157,14 +155,23 @@ def find_foot_position(x, first_n_foots = 1):
     return return_list
 
 
-def find_rdf_peaks_and_foots(r, rdf, first_n_peaks = 2, first_n_foots = 1, smooth_window_size = 1):
+def find_rdf_peaks_and_foots(rdf, r=None, first_n_peaks=2, first_n_foots=1,
+                             smooth_window_size=1, no_r=False):
     """
+
     Args:
         r: numpy.array, (n,), radius of the rdf
         rdf: numpy.array, (m,n), the rdf
         first_n_peaks: integer, number of the nearest peaks to find ()
+        first_n_foots: integer, number of the nearest foots to find ()
+        smooth_window_size: integer, as named, number of data point
+        no_r: bool, if return the position, if False, only return the
+    Returns:
+
     """
-    r = np.array(r)
+    if not no_r:
+        assert r is not None
+        r = np.array(r)
     rdf = np.array(rdf)
     shape_original = np.shape(rdf)
     if len(shape_original) == 2:
@@ -172,19 +179,52 @@ def find_rdf_peaks_and_foots(r, rdf, first_n_peaks = 2, first_n_foots = 1, smoot
         r_list = []
         for i in range(int(shape_original[0])):
             copy_of_rdf = rdf[i, :]
-            peak_indexes_smoothed = find_peak_position(smooth(copy_of_rdf, smooth_window_size), first_n_peaks)
-            foot_indexes_smoothed = find_foot_position(smooth(copy_of_rdf, smooth_window_size), first_n_foots)
+            peak_indexes_smoothed = find_peak_position(
+                smooth(copy_of_rdf, smooth_window_size), first_n_peaks
+            )
+            foot_indexes_smoothed = find_foot_position(
+                smooth(copy_of_rdf, smooth_window_size), first_n_foots
+            )
+
             peak_indexes = find_peak_position(copy_of_rdf, first_n_peaks)
             foot_indexes = find_foot_position(copy_of_rdf, first_n_foots)
-            r_list.append(r[np.array(peak_indexes_smoothed + foot_indexes_smoothed)])
-            value_list.append(copy_of_rdf[np.array(peak_indexes + foot_indexes)])
-        return r_list, value_list
+            if not no_r:
+                r_list.append(
+                    r[np.array(peak_indexes_smoothed + foot_indexes_smoothed)]
+                )
+            value_list.append(
+                copy_of_rdf[np.array(peak_indexes + foot_indexes)]
+            )
+        if not no_r:
+            return r_list, value_list
+        else:
+            return value_list
     else:
-        peak_indexes_smoothed = find_peak_position(smooth(rdf, smooth_window_size), first_n_peaks)
-        foot_indexes_smoothed = find_foot_position(smooth(rdf, smooth_window_size), first_n_foots)
+        peak_indexes_smoothed = find_peak_position(
+            smooth(rdf, smooth_window_size), first_n_peaks
+        )
+        foot_indexes_smoothed = find_foot_position(
+            smooth(rdf, smooth_window_size), first_n_foots
+        )
         peak_indexes = find_peak_position(rdf, first_n_peaks)
         foot_indexes = find_foot_position(rdf, first_n_foots)
-        return r[np.array(peak_indexes_smoothed + foot_indexes_smoothed)], rdf[np.array(peak_indexes + foot_indexes)]
+        if not no_r:
+            return r[np.array(peak_indexes_smoothed + foot_indexes_smoothed)], \
+                rdf[np.array(peak_indexes + foot_indexes)]
+        else:
+            return rdf[np.array(peak_indexes + foot_indexes)]
+
+
+def extract_exp(name, exp):
+    if 'peak' in name.lower() or 'foot' in name.lower():
+        pfs = find_rdf_peaks_and_foots(
+            exp, r=None, first_n_peaks=2, first_n_foots=1,
+            smooth_window_size=1, no_r=True
+        )
+        order = order_peak_foot(name)
+        return pfs[order]
+    else:
+        return exp
 
 
 class FolderNamingScheme(object):
