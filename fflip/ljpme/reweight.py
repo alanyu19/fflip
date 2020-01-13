@@ -4,7 +4,6 @@ from coffe.omm.reweightprop import *
 from coffe.omm.util import check_and_make_dir
 
 from fflip.ljpme.util import *
-from fflip.chm import *
 
 
 class ReweightTarget(object):

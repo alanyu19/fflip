@@ -135,7 +135,8 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
 
 
 class sensitivity_evaluator(object):
-    def __init__(self, ngroups, exp_x, exp, sim_x, sim, rew, sens_type = 1, n_peaks = 2, n_foots = 1):
+    def __init__(self, ngroups, exp_x, exp, sim_x, sim, rew,
+                 sens_type=1, n_peaks=2, n_foots=1):
         """
         Args:
             -- exp: the experimental value(s)
@@ -166,10 +167,12 @@ class sensitivity_evaluator(object):
             Things like rdf which contain both positions and magnitudes
             """
             x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp_x, self.exp, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 3
+                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=3
             )
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=1
             )
             return x_sim - x_exp, y_sim - y_exp
 
@@ -185,10 +188,12 @@ class sensitivity_evaluator(object):
             Things like rdf which contain both positions and magnitudes
             """
             x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp_x, self.exp, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 3
+                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=3
             )
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=1
             )
             return (x_sim - x_exp)/x_exp, (y_sim - y_exp)/y_exp
 
@@ -200,10 +205,12 @@ class sensitivity_evaluator(object):
             return rew - sim_tiled
         elif self.sens_type == 2:
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks=self.n_peaks, first_n_foots=self.n_foots, smooth_window_size=1
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=1
             )
             r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
-                self.sim_x, self.rew, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+                self.rew, self.sim_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=1
             )
             diff_list = []
             for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
@@ -218,13 +225,16 @@ class sensitivity_evaluator(object):
             return (rew - sim_tiled) /self.exp
         elif self.sens_type == 2:
             x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim_x, self.sim, first_n_peaks=self.n_peaks, first_n_foots=self.n_foots, smooth_window_size=1
+                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=1
             )
             r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
-                self.sim_x, self.rew, first_n_peaks = self.n_peaks, first_n_foots = self.n_foots, smooth_window_size = 1
+                self.rew, self.sim_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=1
             )
             x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp_x, self.exp, first_n_peaks=self.n_peaks, first_n_foots=self.n_foots, smooth_window_size=3
+                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
+                first_n_foots=self.n_foots, smooth_window_size=3
             )
             rel_diff_list = []
             for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
