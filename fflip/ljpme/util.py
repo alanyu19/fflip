@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import os
+
 import time
-import numpy as np
-import glob
+from fflip.ljpme.moreutil import *
 import pandas as pd
 
 
@@ -41,7 +40,6 @@ class FutureResult(object):
         if delete == True:
             os.system("rm -rf {}".format(path_to_file))
         return result
-
 
 
 def move_traj(fromdir, todir):
@@ -134,8 +132,6 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
     os.system('sbatch {}'.format(kwargs['submit_script']))
     time.sleep(1)
     os.system("rm -f {}".format(kwargs['submit_script']))
-
-
 
 
 class sensitivity_evaluator(object):
