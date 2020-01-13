@@ -301,7 +301,7 @@ class PropertyLinearEstimator(Optimizer):
         matrix = np.zeros((rows, cols))
         # Part1. properties
         for i, prop in enumerate(
-                self.target_properties + self.special_properties
+            self.target_properties + self.special_properties
         ):
             matrix[i] = prop.sensitivity
         # Part2. QM (not diagonal)

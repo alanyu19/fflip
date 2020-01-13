@@ -169,7 +169,7 @@ class TargetSystem(object):
 
 class SpecialProperty(TargetSystem):
     def __init__(self, name, temperature, weight_factor, root_dir,
-                 parent_properties, exp_rel_dir='exp', **kwargs):
+                 parent_properties, generator, exp_rel_dir='exp', **kwargs):
         """
         The (sensitivity) evaluator for compressibility of membrane, 
         based on differential of Ka = 2A0 * (d_gamma / dA)
@@ -188,6 +188,7 @@ class SpecialProperty(TargetSystem):
         self.root_dir = root_dir
         self.exp_dir = os.path.join(root_dir, exp_rel_dir)
         self.parent_properties = parent_properties
+        self.generator = generator
         self.options = kwargs
         self._scaling = make_guess_of_scaling(self.name)
         self._app_weight = weight_factor
@@ -212,10 +213,10 @@ class SpecialProperty(TargetSystem):
     def weight_factor(self):
         return self.app_weight_factor * self.scaling
 
-    def get_sensitivity(self, iteration, generator=KaGenerator):
+    def get_sensitivity(self, iteration):
         for p in self.parent_properties:
             p.get_sensitivity(iteration)
-        generator = generator(self.parent_properties, **self.options)
+        generator = self.generator(self.parent_properties, **self.options)
         self.rew = generator.gen_rew()
         self.sim = generator.gen_sim()
         self.deviation = self.exp - self.sim
