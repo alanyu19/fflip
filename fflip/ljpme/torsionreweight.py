@@ -208,17 +208,17 @@ def do_torsion_optmization(
                 atoms[0].upper(), atoms[1].upper(),
                 atoms[2].upper(), atoms[3].upper()
             ),
-            fontsize = 24, fontname = 'URW Gothic'
+            fontsize=24, fontname='URW Gothic'
         )
-        plt.xticks(fontsize = 22, fontname = 'URW Gothic')
-        plt.yticks(fontsize = 22, fontname = 'URW Gothic')
-        plt.xlabel('Dihedral Angle', fontsize = 24, fontname = 'URW Gothic')
-        plt.ylabel('Population', fontsize = 24, fontname = 'URW Gothic')
-        plt.legend(fontsize = 18)
+        plt.xticks(fontsize=22, fontname='URW Gothic')
+        plt.yticks(fontsize=22, fontname='URW Gothic')
+        plt.xlabel('Dihedral Angle', fontsize=24, fontname='URW Gothic')
+        plt.ylabel('Population', fontsize=24, fontname='URW Gothic')
+        plt.legend(fontsize=18)
         plt.savefig(
             os.path.join(save_plot_to, 'tfix-{}-{}-{}-{}.png'.format(
                 atoms[0], atoms[1], atoms[2], atoms[3]
-            )),dpi = 200, bbox_inches = 'tight'
+            )), dpi=200, bbox_inches='tight'
         )
         plt.show()
     return return_dic
