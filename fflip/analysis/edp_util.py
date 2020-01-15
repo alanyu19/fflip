@@ -191,10 +191,12 @@ def combine_to_average(psf_file, path_to_data='.'):
     # averaging data for each res + atom
     for fn, resn in zip(atom_folders, resf):
         atoms = find_atoms_from_psf(psf_file, resn)
+        zdata = np.loadtxt(os.path.join(fn, 'z.txt'))
         for atom in atoms:
             data = []
             afiles = glob.glob(os.path.join(fn, 'blocks/{}_*.dat'.format(atom)))
             for af in afiles:
                 data.append(np.loadtxt(af))
             atom_average = np.mean(np.array(data), axis=0)
-            np.savetxt(os.path.join(fn, '{}.dat'.format(atom)), atom_average)
+            to_save = np.array([zdata, atom_average]).transpose()
+            np.savetxt(os.path.join(fn, '{}.dat'.format(atom)), to_save)
