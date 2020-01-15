@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import scipy.optimize as sopt
 from coffe.omm.torsionfuncs import *
 
@@ -66,7 +67,8 @@ def do_torsion_optmization(
     traj_to_fix, first_fix, last_fix,
     last_torfix=0,
     allowed_m=[1, 2, 3, 4, 5, 6],
-    temperature=323.15, nbins=100, plot=True
+    temperature=323.15, nbins=100, plot=True,
+    save_plot_to='/u/alanyu/tools/jplots'
 ):
     """
 
@@ -214,9 +216,9 @@ def do_torsion_optmization(
         plt.ylabel('Population', fontsize = 24, fontname = 'URW Gothic')
         plt.legend(fontsize = 18)
         plt.savefig(
-            '/u/alanyu/jplots/tfix-{}-{}-{}-{}.png'.format(
-            atoms[0], atoms[1], atoms[2], atoms[3]),
-            dpi = 200, bbox_inches = 'tight'
+            os.path.join(save_plot_to, 'tfix-{}-{}-{}-{}.png'.format(
+                atoms[0], atoms[1], atoms[2], atoms[3]
+            )),dpi = 200, bbox_inches = 'tight'
         )
         plt.show()
     return return_dic
