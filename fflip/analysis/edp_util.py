@@ -2,6 +2,7 @@
 
 from rflow.trajectory import *
 
+
 def find_resnames_from_psf(psf_file):
     res_list = []
     reading = False
@@ -15,11 +16,13 @@ def find_resnames_from_psf(psf_file):
                 _atmname = l.strip().split()[4]
                 if _resname not in res_list: 
                     res_list.append(_resname)
-            if '!NBOND' in lines[l_number+3] or '!NBOND' in lines[l_number+2] or '!NBOND' in lines[l_number+1]:
+            if '!NBOND' in lines[l_number+3] or '!NBOND' in lines[l_number+2] \
+                    or '!NBOND' in lines[l_number+1]:
                 break
             if '!NATOM' in l:
                 reading = True
     return res_list
+
 
 def find_atoms_from_psf(psf_file, resname):
     # constructing atom list from atlml file
@@ -33,17 +36,22 @@ def find_atoms_from_psf(psf_file, resname):
                 _resid = l.strip().split()[2]
                 _resname = l.strip().split()[3]
                 _atmname = l.strip().split()[4]
-                if resname.lower() == _resname.lower() and _atmname.lower() not in atom_list: 
+                if resname.lower() == _resname.lower() and \
+                        _atmname.lower() not in atom_list:
                     atom_list.append(_atmname.lower())
-            if '!NBOND' in lines[l_number+3] or '!NBOND' in lines[l_number+2] or '!NBOND' in lines[l_number+1]:
+            if '!NBOND' in lines[l_number+3] or '!NBOND' in lines[l_number+2]\
+                    or '!NBOND' in lines[l_number+1]:
                 break
             if '!NATOM' in l:
                 reading = True
     return atom_list
 
-def gddradd(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2, bins=500, verbose='v'):
+
+def gddradd(topology_file, traj_template, first, last, resn, atmn, bounds,
+            axis=2, bins=500, verbose='v'):
     # Get Density Distribution by Resname and Atomname
-    # units are in nanometer (could write a wrapper to make full use of the simtk.unit)
+    # units are in nanometer (could write a wrapper to
+    # make full use of the simtk.unit)
     psf = CharmmPsfFile(topology_file)
     trajs = TrajectoryIterator(
         first_sequence=first, last_sequence=last,
@@ -65,12 +73,15 @@ def gddradd(topology_file, traj_template, first, last, resn, atmn, bounds, axis=
         else:
             bin_size = bin_size * (bds[1] - bds[0]) / list(bins)[bindex]
     omm_topology = md.Topology.from_openmm(psf.topology)
-    selection = omm_topology.select('name {} and resname {}'.format(atmn.upper(), resn.upper()))
+    selection = omm_topology.select(
+        'name {} and resname {}'.format(atmn.upper(), resn.upper())
+    )
     if len(selection) == 0:
         print("Error: No atom selected, please check your selection words")
     num_selection = len(list(selection))
     
-    # find out the axis that are not used in histograming and use it (them) for weights
+    # find out the axis that are not used in histograming
+    # and use it (them) for weights
     other_axis = []
     for i in [0, 1, 2]:
         if i not in axis:
@@ -88,7 +99,9 @@ def gddradd(topology_file, traj_template, first, last, resn, atmn, bounds, axis=
         sample = onaxis[:, selection, :]
         sample = sample.reshape(-1, len(axis))
         total_frames += traj.n_frames
-        h, edges = np.histogramdd(sample, bins=bins, range=bounds, weights=weights, density=None)
+        h, edges = np.histogramdd(
+            sample, bins=bins, range=bounds, weights=weights, density=None
+        )
         if i == 0:
             H = h
         else:
@@ -96,9 +109,11 @@ def gddradd(topology_file, traj_template, first, last, resn, atmn, bounds, axis=
     return H / total_frames, edges
 
 
-def gddra(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2, bins=500, verbose='v'):
+def gddra(topology_file, traj_template, first, last, resn, atmn, bounds,
+          axis=2, bins=500, verbose='v'):
     # Get Density Distribution by Resname and Atomname
-    # units are in nanometer (could write a wrapper to make full use of the simtk.unit)
+    # units are in nanometer (could write a wrapper
+    # to make full use of the simtk.unit)
     psf = CharmmPsfFile(topology_file)
     trajs = TrajectoryIterator(
         first_sequence=first, last_sequence=last,
@@ -106,7 +121,7 @@ def gddra(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2,
         topology_file=topology_file,
         atom_selection="all", load_function=md.load_dcd)
     """
-    use vector for lb & up when your axis is list, e.g. calculating 2D/3D density
+    use vector for lb & up when your axis is list, e.g. calculating 2/3D density
     """
     if not type(axis) == int:
         axis = list(axis)
@@ -132,12 +147,15 @@ def gddra(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2,
         selection = np.array(atmindxs)
         print(selection)
     else:
-        selection = omm_topology.select('name {} and resname {}'.format(atmn.upper(), resn.upper()))
+        selection = omm_topology.select(
+            'name {} and resname {}'.format(atmn.upper(), resn.upper())
+        )
     if len(selection) == 0:
         print("Error: No atom selected, please check your selection words")
     num_selection = len(list(selection))
     
-    # find out the axis that are not used in histograming and use it (them) for weights
+    # find out the axis that are not used in histograming
+    # and use it (them) for weights
     other_axis = []
     for i in [0, 1, 2]:
         if i not in axis:
@@ -157,22 +175,30 @@ def gddra(topology_file, traj_template, first, last, resn, atmn, bounds, axis=2,
         total_frames += traj.n_frames
         weights = weights.reshape(-1, 1)
         print(sample.shape, weights.shape)
-        h, edges = np.histogram(sample, bins=bins, range=bounds[0], weights=weights, density=None)
+        h, edges = np.histogram(
+            sample, bins=bins, range=bounds[0], weights=weights, density=None
+        )
         if i == 0:
             H = h
         else:
             H = H + h
     return H / total_frames, edges
 
-def get_atom_density_along_z_axis_for_residue(psf_file, traj_template, first, last, resname, bounds, axis, bins, 
-                                              save_to_where='.', verbose='v'):
+
+def get_atom_density_along_z_axis_for_residue(
+        psf_file, traj_template, first, last, resname, bounds, axis, bins,
+        save_to_where='.', verbose='v'
+):
     # ONLY for jbk group EDP purpose
     binsize = 0.2
     resdir = os.path.join(save_to_where, 'atoms_{}_mdtraj'.format(resname.lower()))
     os.system('mkdir {}'.format(resdir))
     atoms = find_atoms_from_psf(psf_file, resname)
     for atm in atoms:
-        H, e = gddra(psf_file, traj_template, first, last, resname, atm, bounds=[(-5, 5)], axis=2, bins=500, verbose=verbose)
+        H, e = gddra(
+            psf_file, traj_template, first, last, resname, atm,
+            bounds=[(-5, 5)], axis=2, bins=500, verbose=verbose
+        )
         # unit conversion from nanometer to Angstrom
         data = np.swapaxes(np.array([10 * e[1:] - 0.1, H / 1000]), 0, 1)
         np.savetxt(resdir + '/{}_{}_{}.dat'.format(atm, first, last), data)
@@ -197,7 +223,8 @@ def combine_to_average(psf_file, path_to_data='.', z_unit_in_A=True):
             zdata = 10 * zdata
         for atom in atoms:
             data = []
-            afiles = glob.glob(os.path.join(fn, 'blocks/{}_*.dat'.format(atom)))
+            afiles = glob.glob(os.path.join(fn, 'blocks/{}_*[!_edp].dat'.format(
+                atom)))
             for af in afiles:
                 data.append(np.loadtxt(af))
             atom_average = np.mean(np.array(data), axis=0)
