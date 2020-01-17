@@ -49,44 +49,44 @@ def reassign_tail_lj_parameters(system, topology, new_parameters, sn1, sn2):
     for atom_id in atom_sele_ch2:
         reassign_epsilon_by_id(
             force, int(atom_id), round(
-                (1/2)**(1/6) * new_parameters["ch2_epsilon"] * 0.2, 5
+                new_parameters["ch2_epsilon"] * 4.184, 4
             )
         )
         reassign_sigma_by_id(
             force, int(atom_id), round(
-                new_parameters["ch2_half_r_min"] * 4.184, 4
+                (1/2)**(1/6) * new_parameters["ch2_half_r_min"] * 4.184, 4
             )
         )
     for atom_id in atom_sele_ch3:
         reassign_epsilon_by_id(
             force, int(atom_id),  round(
-                (1/2)**(1/6) * new_parameters["ch3_epsilon"] * 0.2, 5
+                new_parameters["ch3_epsilon"] * 4.184, 4
             )
         )
         reassign_sigma_by_id(
             force, int(atom_id), round(
-                new_parameters["ch3_half_r_min"] * 4.184, 4
+                (1/2)**(1/6) * new_parameters["ch3_half_r_min"] * 4.184, 4
             )
         )
     for atom_id in atom_sele_h2:
         reassign_epsilon_by_id(
             force, int(atom_id), round(
-                (1/2)**(1/6) * new_parameters["h2_epsilon"] * 0.2, 5
+                new_parameters["h2_epsilon"] * 4.184, 4
             )
         )
         reassign_sigma_by_id(
             force, int(atom_id), round(
-                new_parameters["h2_half_r_min"] * 4.184, 4
+                (1/2)**(1/6) * new_parameters["h2_half_r_min"] * 4.184, 4
             )
         )
     for atom_id in atom_sele_h3:
         reassign_epsilon_by_id(
             force, int(atom_id),  round(
-                (1/2)**(1/6) * new_parameters["h3_epsilon"] * 0.2, 5
+                new_parameters["h3_epsilon"] * 4.184, 4
             )
         )
         reassign_sigma_by_id(
             force, int(atom_id), round(
-                new_parameters["h3_half_r_min"] * 4.184, 4
+                (1/2)**(1/6) * new_parameters["h3_half_r_min"] * 4.184, 4
             )
         )
