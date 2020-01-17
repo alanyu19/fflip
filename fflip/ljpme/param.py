@@ -23,7 +23,7 @@ def reassign_tail_lj_parameters(system, topology, new_parameters, sn1, sn2):
         sn2:
 
     Returns:
-
+        the new system
     """
     ch2 = ['C3{}'.format(i) for i in range(2, sn1)] + \
           ['C2{}'.format(i) for i in range(2, sn2)]
@@ -90,3 +90,4 @@ def reassign_tail_lj_parameters(system, topology, new_parameters, sn1, sn2):
                 (1/2)**(1/6) * new_parameters["h3_half_r_min"] * 4.184, 4
             )
         )
+    return system
