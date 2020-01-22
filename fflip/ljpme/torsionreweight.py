@@ -225,8 +225,8 @@ def do_torsion_optmization(
 
 
 def perturb_4_ctl2(psf_file, crd_file, parameter_files,
-                         traj_template, trj_index, sn2=(2, 15), sn1=(2, 15),
-                         perturbation=0.01):
+                   traj_template, trj_index, sn2=(2, 15), sn1=(2, 15),
+                   perturbation=0.01):
     print("Preparing Dihedral Targets ...")
     dt_list = []
     for i in range(sn2[0], sn2[1] - 2):
