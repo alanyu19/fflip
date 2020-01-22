@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
 import scipy.optimize as sopt
 from coffe.omm.torsionfuncs import *
 
@@ -225,4 +224,99 @@ def do_torsion_optmization(
     return return_dic
 
 
+def perturb_4_ctl2(psf_file, crd_file, parameter_files,
+                         traj_template, trj_index, sn2=(2, 15), sn1=(2, 15),
+                         perturbation=0.01):
+    print("Preparing Dihedral Targets ...")
+    dt_list = []
+    for i in range(sn2[0], sn2[1] - 2):
+        dt = DihedralTarget(
+            ['C2{}'.format(i), 'C2{}'.format(i+1),
+             'C2{}'.format(i+2), 'C2{}'.format(i+3)],
+            psf_file, crd_file,
+            parameter_files=parameter_files, torsionfix=0
+        )
+        if i==sn2[0]:
+            dt.create_system()
+            dt.get_cosine_series()
+        else:
+            dt.system = dt_list[0].system
+            dt.multp = dt_list[0].multp
+            dt.phase = dt_list[0].phase
+            dt.k = dt_list[0].k
+            dt.k_kcal_per_mole = dt_list[0].k_kcal_per_mole
+        dt_list.append(dt)
+    for i in range(sn1[0], sn1[1] - 2):
+        dt = DihedralTarget(
+            ['C3{}'.format(i), 'C3{}'.format(i+1),
+             'C3{}'.format(i+2), 'C3{}'.format(i+3)],
+            psf_file, crd_file,
+            parameter_files=parameter_files, torsionfix=0
+        )
+        dt.system = dt_list[0].system
+        dt.multp = dt_list[0].multp
+        dt.phase = dt_list[0].phase
+        dt.k = dt_list[0].k
+        dt.k_kcal_per_mole = dt_list[0].k_kcal_per_mole
+        dt_list.append(dt)
+    print('Finished')
+    # start to get the dihedrals and energies
+    tj = trj_index
+    oelist = []
+    pelist = [[] for _ in range(len(dt_list[0].k))]
+    for dt in dt_list:
+        dd = dt.get_dihedrals(traj_template, tj, tj)
+        dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
+        e_old = dih_f_old(dd)
+        oelist.append(e_old)
+        for ki in range(len(dt.k)):
+            ptbd_k = list(np.array(dt.k))
+            ptbd_k[ki] += perturbation
+            dih_f_ptbd = DihedralFunction(ptbd_k, dt.multp, dt.phase)
+            e_new = dih_f_ptbd(dd)
+            pelist[ki].append(e_new)
+    return oelist, pelist
 
+
+def perturb_ctl2_ctl2_ctl2_ctl3(
+    psf_file, crd_file, parameter_files,
+    traj_template, trj_index, sn2=16, sn1=16,
+    perturbation=0.01
+):
+    print("Preparing Dihedral Targets ...")
+    dt_list = []
+    dt = DihedralTarget(
+        ['C2{}'.format(sn2-3), 'C2{}'.format(sn2-2),
+         'C2{}'.format(sn2-1), 'C2{}'.format(sn2)],
+        psf_file, crd_file,
+        parameter_files=parameter_files, torsionfix=0
+    )
+    dt.create_system()
+    dt.get_cosine_series()
+    dt_list.append(dt)
+    dt = DihedralTarget(
+        ['C3{}'.format(sn1 - 3), 'C3{}'.format(sn1 - 2),
+         'C3{}'.format(sn1 - 1), 'C3{}'.format(sn1)],
+        psf_file, crd_file,
+        parameter_files=parameter_files, torsionfix=0
+    )
+    dt.create_system()
+    dt.get_cosine_series()
+    dt_list.append(dt)
+    print('Finished')
+    # start to get the dihedrals and energies
+    tj = trj_index
+    oelist = []
+    pelist = [[] for _ in range(len(dt_list[0].k))]  # assume homogeneous
+    for dt in dt_list:
+        dd = dt.get_dihedrals(traj_template, tj, tj)
+        dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
+        e_old = dih_f_old(dd)
+        oelist.append(e_old)
+        for ki in range(len(dt.k)):
+            ptbd_k = list(np.array(dt.k))
+            ptbd_k[ki] += perturbation
+            dih_f_ptbd = DihedralFunction(ptbd_k, dt.multp, dt.phase)
+            e_new = dih_f_ptbd(dd)
+            pelist[ki].append(e_new)
+    return oelist, pelist
