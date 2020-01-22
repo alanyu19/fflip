@@ -62,13 +62,13 @@ class DihedralOptimizer:
 
 
 def do_torsion_optmization(
-    atoms, psf_file, crd_file, parameter_files,
-    traj_to_compare, first_comp, last_comp,
-    traj_to_fix, first_fix, last_fix,
-    last_torfix=0,
-    allowed_m=[1, 2, 3, 4, 5, 6],
-    temperature=323.15, nbins=100, plot=True,
-    save_plot_to='/u/alanyu/tools/jplots'
+        atoms, psf_file, crd_file, parameter_files,
+        traj_to_compare, first_comp, last_comp,
+        traj_to_fix, first_fix, last_fix,
+        last_torfix=0,
+        allowed_m=[1, 2, 3, 4, 5, 6],
+        temperature=323.15, nbins=100, plot=True,
+        save_plot_to='/u/alanyu/tools/jplots'
 ):
     """
 
@@ -95,8 +95,9 @@ def do_torsion_optmization(
         [phase, force_constant] as content
     """
     from matplotlib import pyplot as plt
-    target = DihedralTarget(atoms, psf_file, crd_file, parameter_files,
-                            torsionfix=last_torfix)
+    target = DihedralTarget(
+        atoms, psf_file, crd_file, parameter_files, torsionfix=last_torfix
+    )
     target.get_cosine_series()
     dihdata_fix = target.get_dihedrals(traj_to_fix, first_fix, last_fix)
     dihdata_ref = target.get_dihedrals(traj_to_compare, first_comp, last_comp)
