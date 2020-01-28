@@ -60,7 +60,7 @@ def function(
     with open(tot_file_template.format(index_trj), 'w') as f:
         f.write('%s\t%s\t%s\t%s\t%s\n' % ('Idyn', 'If1', 'Nlf', 'Ncf', 'Nlca'))
         for string in info1s:
-            f.write(info1s)
+            f.write(string)
 
 
 def func2(Data, left, right, Dcut, index_trj, frame, nlip):
