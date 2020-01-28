@@ -15,7 +15,7 @@ def add_a_new_group(existing_groups, new_group):
 class charmm_group():
     def __init__(self, **kwargs):
         self.num_atom_category = kwargs["num_atom_category"]
-        self.atoms = kwargs["atoms"] # should be list inside list structure
+        self.atoms = kwargs["atoms"]  # should be list inside list structure
         self.charges = kwargs["charges"]
         self.half_r_mins = kwargs["half_r_mins"]
         self.epsilons = kwargs["epsilons"]
