@@ -21,7 +21,7 @@ def res_info(x_pt, y_pt, block_data):
             return resn, resid, nim
 
 
-def function(
+def cluster_calculation(
         index_trj, leaflet, nlip, nframe,
         box_file_template="{}/box-{}.txt", xy_file_temlate="{}/xy-{}.dat",
         num_file_template="num-{}.txt", tot_file_template="tot-{}.txt"
@@ -43,7 +43,7 @@ def function(
     info1s = []
     info2s = []
     for fr in range(nframe):
-        info1, info2 = func2(
+        info1, info2 = cluster_bridge(
             Data, left_all_frame[fr], right_all_frame[fr],
             index_trj, fr, leaflet, nlip
         )
@@ -63,7 +63,7 @@ def function(
             f.write(string)
 
 
-def func2(Data, left, right, Dcut, index_trj, frame, nlip):
+def cluster_bridge(Data, left, right, Dcut, index_trj, frame, nlip):
     Idyn = index_trj
     lpf = nlip * 9  # lines per frame
     Fr = int(frame)  # starts from 0
