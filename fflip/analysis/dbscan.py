@@ -22,7 +22,7 @@ def res_info(x_pt, y_pt, block_data):
 
 
 def cluster_calculation(
-        index_trj, leaflet, nlip, nframe,
+        Dcut, index_trj, leaflet, nlip, nframe,
         box_file_template="{}/box-{}.txt", xy_file_temlate="{}/xy-{}.dat",
         num_file_template="num-{}.txt", tot_file_template="tot-{}.txt"
 ):
@@ -45,7 +45,7 @@ def cluster_calculation(
     for fr in range(nframe):
         info1, info2 = cluster_bridge(
             Data, left_all_frame[fr], right_all_frame[fr],
-            index_trj, fr, leaflet, nlip
+            Dcut, index_trj, fr, nlip
         )
         if info1 is not None:
             info1s.append(info1)
