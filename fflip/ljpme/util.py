@@ -134,7 +134,7 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
     os.system("rm -f {}".format(kwargs['submit_script']))
 
 
-class sensitivity_evaluator(object):
+class SensitivityEvaluator(object):
     def __init__(self, ngroups, exp_x, exp, sim_x, sim, rew,
                  sens_type=1, n_peaks=2, n_foots=1):
         """
@@ -142,7 +142,7 @@ class sensitivity_evaluator(object):
             -- exp: the experimental value(s)
             -- sim: the simulated value(s)
             -- rew: the reweighted value(s)
-            -- sens_type: the catagory of the property (1: area/scd, 2: rdf)
+            -- sens_type: the catagory of the property (1: area/scd/db, 2: rdf)
         """
         self.ngroups = ngroups
         self.sim = sim
@@ -159,7 +159,7 @@ class sensitivity_evaluator(object):
     def diff_sim_exp(self):
         if self.sens_type == 1:
             """
-            Area / Order parameter
+            Area / Order parameter / DB (thickness)
             """
             return self.sim - self.exp
         elif self.sens_type == 2:
@@ -180,7 +180,7 @@ class sensitivity_evaluator(object):
     def rel_diff_sim_exp(self):
         if self.sens_type == 1:
             """
-            Area / Order parameter
+            Area / Order parameter / DB
             """
             return (self.sim - self.exp) /self.exp
         elif self.sens_type == 2:

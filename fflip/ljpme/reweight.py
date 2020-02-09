@@ -223,7 +223,7 @@ class ReweightTarget(object):
                 )
                 # this is ugly, change later ...
                 if not ('area' in self.name or 'scd' in self.name):
-                    evaluator = sensitivity_evaluator(
+                    evaluator = SensitivityEvaluator(
                         self.ngroups, self.exp_x, self.exp, self.sim_x,
                         original, perturbed, sens_type=self.property_type,
                         n_peaks=2
@@ -260,12 +260,12 @@ class ReweightTarget(object):
             self.sim = np.array(self.sim)
             self.rew = np.array(self.rew)
         if self.name == 'O2-OW' or self.name == 'Ob-OW':
-            evaluator = sensitivity_evaluator(
+            evaluator = SensitivityEvaluator(
                 self.ngroups, self.exp_x, self.exp, self.sim_x, self.sim,
                 self.rew, sens_type=self.property_type, n_peaks=1
             )
         else:
-            evaluator = sensitivity_evaluator(
+            evaluator = SensitivityEvaluator(
                 self.ngroups, self.exp_x, self.exp, self.sim_x, self.sim,
                 self.rew, sens_type=self.property_type
             )

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Contains master class of training target (area, rdf, scd ...)
+# Contains master class of training target (area, rdf, scd, db ...)
 
 from fflip.ljpme.reweight import *
 from fflip.ljpme.moreutil import *
@@ -496,7 +496,7 @@ class TargetProperty(TargetSystem):
                 self.perturbation, first, last,
                 self.trj_intvl_e, self.trj_intvl_p, **kwargs
             )
-            if 'area' in self.name or 'scd' in self.name:
+            if 'area' in self.name or 'scd' in self.name or 'db' in self.name:
                 self.robustness = np.abs(
                     np.mean(np.array(diff), axis=0) /
                     np.std(np.array(diff), axis=0)

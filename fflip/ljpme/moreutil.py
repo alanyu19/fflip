@@ -112,7 +112,7 @@ def order_peak_foot(name):
 
 
 def smooth(y, box_pts):
-    box = np.ones(box_pts)/box_pts
+    box = np.ones(box_pts) / box_pts
     y_smooth = np.convolve(y, box, mode='same')
     return y_smooth
 
@@ -418,6 +418,8 @@ def make_guess_of_intervals(name):
         return 10, 10
     elif 'area' in name:
         return 10, 10
+    elif 'db' in name:
+        return 10, 10
     else:
         return 10, 1
 
@@ -432,6 +434,8 @@ def make_guess_of_scaling(name):
         return 1 / 0.5
     elif 'scd' in name:
         return 1 / 0.15
+    elif 'db' in name:
+        return 1 / 40
     elif 'ka' in name:
         return 1 / 200
     elif 'delta_area' in name:
