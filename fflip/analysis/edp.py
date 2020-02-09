@@ -6,6 +6,7 @@ import mdtraj as md
 from rflow.edp import *
 from fflip.analysis.edp_util import *
 
+
 class ElectronDensityFactory():
     """
     Do production calculation and grouping
