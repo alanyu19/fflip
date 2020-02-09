@@ -317,7 +317,7 @@ class SimOptScheme(object):
     @property
     def last_seqno(self):
         finder = {
-            "dppc_bilayer_0_323.15": 300,
+            "dppc_bilayer_0_323.15": 200,
             "dppc_bilayer_-5_323.15": 300,
             "dppc_bilayer_5_323.15": 300,
             "dppc_bilayer_0_333.15": 200,
@@ -325,6 +325,8 @@ class SimOptScheme(object):
             "dppc_monolayer_40_321.15": 200,
             "dppc_monolayer_55_321.15": 200,
             "dlpc_bilayer_0_303.15": 200,
+            "dmpc_bilayer_0_303.15": 200,
+            "popc_bilayer_0_303.15": 200,
             "prpc_bulk_0_298.15": 100
         }
         return finder["{}_{}_{}_{}".format(
@@ -342,6 +344,8 @@ class SimOptScheme(object):
             "dppc_monolayer_40": 48,
             "dppc_monolayer_55": 52,
             "dlpc_bilayer_0": 48,
+            "dmpc_bilayer_0": 48,
+            "popc_bilayer_0": 49,
             "prpc_bulk_0": 43
         }
         return finder["{}_{}_{}".format(
@@ -358,6 +362,8 @@ class SimOptScheme(object):
             "dppc_monolayer_40": 223,
             "dppc_monolayer_55": 223,
             "dlpc_bilayer_0": 62,
+            "dmpc_bilayer_0": 63,
+            "popc_bilayer_0": 65,
             "prpc_bulk_0": None
         }
         return finder["{}_{}_{}".format(
@@ -454,11 +460,12 @@ def make_guess_of_layertype(name):
 
 
 lipfinder = {
-    'dppc': dppc,
-    'prpc': prpc,
-    'dmpc': dmpc,
-    'dopc': dopc,
-    'dlpc': dppc
+    'dppc': pc,
+    'prpc': pc,
+    'dmpc': pc,
+    'dopc': pc,
+    'popc': pc,
+    'dlpc': pc
 }
 
 
