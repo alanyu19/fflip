@@ -185,7 +185,7 @@ def do_torsion_optmization(
                 dihdata_fix, dihdata_ref, optim2.x
             )
         xaxis = np.arange(-180, 180, 3.6)
-        plt.figure(figsize=(12,7))
+        plt.figure(figsize=(8, 5))
         plt.plot(
             xaxis, ref_distrib, label='Reference (PME)',
             alpha=0.75, linewidth=5, color='red'
