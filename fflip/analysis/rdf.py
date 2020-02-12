@@ -3,6 +3,31 @@
 import os
 import numpy as np
 import mdtraj as md
+from simtk.openmm.app import CharmmPsfFile
+
+
+def manually_select_res_atom(topology_file, atom_selection):
+    if "\'" in atom_selection:
+        # Do our own selection to avoid error in mdtraj for H3' and O3' in
+        # sterols and possible future bad naming of atoms
+        select_words = atom_selection.split()
+        atom_names = []
+        res_names = []
+        for iw, w in enumerate(select_words):
+            if 'resname' in w:
+                res_names.append(select_words[iw + 1])
+            if 'name' in w and "\'" in select_words[iw + 1]:
+                atom_names.append(select_words[iw + 1])
+        atom_ids = []
+        with open(topology_file, 'r') as topfile:
+            lines = topfile.readlines()
+        for line in lines:
+            for res in res_names:
+                if res.upper() in line:
+                    for atom in atom_names:
+                        if atom.upper() in line:
+                            atom_ids.append(int(line.strip().split()[0]))
+        return np.array(atom_ids)
 
 
 class RDF(object):
@@ -12,7 +37,7 @@ class RDF(object):
                  method='yalun', save_blocks=True):
         """
         Args:
-            psf: str, the psf file
+            psf: the psf file (str) or CharmmPsfFile
             name: str, the name users give to the RDF
             atom_selections:
             r_range: list of two floats, in nanometer
@@ -22,14 +47,30 @@ class RDF(object):
             method: str, 'mdtraj' or 'yalun' (default)
             save_blocks: bool, if saving the block data
         """
+        if isinstance(psf, CharmmPsfFile):
+            psf = psf
+        else:
+            assert isinstance(psf, str)
+            self.psf_file = psf
+            psf = CharmmPsfFile(psf)
         self.topology = md.Topology.from_openmm(psf.topology)
         self.r_range = list(r_range)
         self.bin_width = bin_width
         self.bins = np.arange(self.r_range[0], self.r_range[1], self.bin_width)
         self.name = name
         self.sele_words = atom_selections
-        self.atom1 = self.topology.select(atom_selections[0])
-        self.atom2 = self.topology.select(atom_selections[1])
+        if "\'" in atom_selections[0]:
+           self.atom1 = manually_select_res_atom(
+               self.psf_file, atom_selections[0]
+           )
+        else:
+            self.atom1 = self.topology.select(atom_selections[0])
+        if "\'" in atom_selections[1]:
+            self.atom2 = manually_select_res_atom(
+                self.psf_file, atom_selections[1]
+            )
+        else:
+            self.atom2 = self.topology.select(atom_selections[1])
         self.natom1 = self.atom1.shape[0]
         self.natom2 = self.atom2.shape[0]
         self.dimension = dimension
@@ -323,10 +364,10 @@ class RDF(object):
         np.savetxt('{}/r.txt'.format(subfolder), np.array(radius))
 
     def __call__(
-            self, traj, first_trj_index=1,
-            recentered=False, up_low_recipe=None,
-            verbose=1, print_interval=10, save_blocks_interval=5, save_to=".",
-            save_sparse=False, sparse_bin_width=0.02, sparse_subfolder="."
+        self, traj, first_trj_index=1,
+        recentered=False, up_low_recipe=None,
+        verbose=1, print_interval=10, save_blocks_interval=5, save_to=".",
+        save_sparse=False, sparse_bin_width=0.02, sparse_subfolder="."
     ):
         if self.dimension == 2 and not recentered:
             assert up_low_recipe is not None,\
@@ -523,8 +564,7 @@ class Coordination(object):
             self.atom2[np.where(traj.xyz[int(n_frames/2), self.atom2, 2] <= zmean_2)]
         )[0]
         return natom1_upper, natom2_upper, natom1_lower, natom2_lower
-        
-             
+
     def box_edges(self, traj):
         return traj.unitcell_lengths[:,:]
     
