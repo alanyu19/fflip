@@ -26,7 +26,8 @@ def manually_select_res_atom(topology_file, atom_selection):
                 if res.upper() in line:
                     for atom in atom_names:
                         if atom.upper() in line:
-                            atom_ids.append(int(line.strip().split()[0]))
+                            # mdtraj uses python indexing (starting from 0)
+                            atom_ids.append(int(line.strip().split()[0]) - 1)
         return np.array(atom_ids)
 
 
