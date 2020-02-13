@@ -61,6 +61,7 @@ class ElectronDensityFactory:
                     atom_selection="resname {} name {}".format(
                         res.upper(), atom.upper()
                     ),
+                    nbins=int(500 * (self.box_size / 10)),
                     com_selection=self.com_selection,
                     box_length_fixed=self.box_size,
                     topology_file=self.psf_file
