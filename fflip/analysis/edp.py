@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import os
-import mdtraj as md
+
 from rflow.edp import *
 from fflip.analysis.edp_util import *
 
@@ -60,7 +58,9 @@ class ElectronDensityFactory:
             atoms = find_atoms_from_psf(self.psf_file, res)
             for atom in atoms:
                 edc = ElectronDensityCalculator(
-                    atom_selection="name {}".format(atom.upper()),
+                    atom_selection="resname {} name {}".format(
+                        res.upper(), atom.upper()
+                    ),
                     com_selection=self.com_selection,
                     box_length_fixed=self.box_size,
                     topology_file=self.psf_file
