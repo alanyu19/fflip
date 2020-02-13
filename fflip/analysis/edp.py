@@ -7,12 +7,13 @@ from rflow.edp import *
 from fflip.analysis.edp_util import *
 
 
-class ElectronDensityFactory():
+class ElectronDensityFactory:
     """
     Do production calculation and grouping
     """
     def __init__(self, psf_file, traj_template,
-                 com_selection="not water", save_to_folder='.'):
+                 com_selection=None, box_size=10,
+                 save_to_folder='.'):
         """
         Args:
             psf_file: str, the psf file
@@ -30,6 +31,7 @@ class ElectronDensityFactory():
         if not os.path.isdir(save_to_folder):
             os.mkdir(save_to_folder)
         self.save_to_folder = save_to_folder
+        self.box_size = box_size
 
     def __call__(self, first, last):
         """
@@ -60,7 +62,7 @@ class ElectronDensityFactory():
                 edc = ElectronDensityCalculator(
                     atom_selection="name {}".format(atom.upper()),
                     com_selection=self.com_selection,
-                    box_length_fixed=10,
+                    box_length_fixed=self.box_size,
                     topology_file=self.psf_file
                 )
                 for traj in trajs:

@@ -648,7 +648,7 @@ class Coordination(object):
             else:
                 self.coordination_number_avg = (self.coordination_number_avg * (self.count_traj - 1
                                                                                ) + coordination_number_avg
-                                           )/ self.count_traj
+                                           ) / self.count_traj
             return None # Currently don't support per frame calculation
         elif self.method == 'count':
             coordination_number_per_frame, coordination_number_avg = self.calc(traj, calc_avg)
