@@ -58,7 +58,7 @@ class ElectronDensityFactory:
             atoms = find_atoms_from_psf(self.psf_file, res)
             for atom in atoms:
                 edc = ElectronDensityCalculator(
-                    atom_selection="resname {} name {}".format(
+                    atom_selection="resname {} and name {}".format(
                         res.upper(), atom.upper()
                     ),
                     nbins=int(500 * (self.box_size / 10)),

@@ -8,14 +8,14 @@ def plot_area(file_to_save, data, skip_ns = 0, interval = 0.002, area_range = (3
     lg = ['instantaneous','cumulative']
     colors = ['slateblue', 'darkorange']
     csfont = {'fontname':'Comic Sans MS'}
-    font = {'fontname': 'serif', 'weight': 700}
+    font = {'fontname': 'serif', 'weight': 500}
     fig, ax = plt.subplots(figsize=(10, 7))
     
     x = np.arange(0, data.shape[0] * interval, interval)
     plt.xlim((0, data.shape[0] * interval))
     plt.ylim(area_range)
-    plt.xlabel("Time [ns]", fontsize=28, **font,) #verticalalignment="center")
-    plt.ylabel("Area / Lipid [$\AA$$^2$]", fontsize=28, **font,)# rotation=90,)
+    plt.xlabel("Time [ns]", fontsize=32, **font,) #verticalalignment="center")
+    plt.ylabel("Area / Lipid [$\AA$$^2$]", fontsize=32, **font,)# rotation=90,)
     plt.xticks(np.arange(0, data.shape[0] * interval, 
                          int(((data.shape[0] + 1) * interval)/10) + 5), **font
     )
@@ -37,4 +37,4 @@ def plot_area(file_to_save, data, skip_ns = 0, interval = 0.002, area_range = (3
             tick.label.set_fontsize(28)
     ax.text(.5,.9, title, fontsize=36, horizontalalignment='center', 
             transform=ax.transAxes)
-    plt.savefig(file_to_save, dpi = 150, bbox_inches = 'tight')
+    plt.savefig(file_to_save, dpi=200, bbox_inches = 'tight')
