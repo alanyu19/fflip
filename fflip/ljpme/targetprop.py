@@ -376,7 +376,7 @@ class TargetProperty(TargetSystem):
         options = dict()
         options["option_file"] = "potcalc.inp"
         options["lipname"] = self.lipname
-        options["stepsize"] = self.perturbation
+        options["percentage"] = self.perturbation
         options["trj_location"] = trj_loc
         options["first_trj"] = self.first_trj
         options["last_trj"] = self.last_trj
