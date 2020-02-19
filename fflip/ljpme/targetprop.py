@@ -360,7 +360,7 @@ class TargetProperty(TargetSystem):
         )
 
     def recalc_energy(self, iteration, traj_root, overwrite=False, wait=True,
-                      last_solution=None):
+                      last_solution=None, torfix=None):
 
         print("parameter perturbation: ~ {}%".format(self.perturbation))
 
@@ -384,6 +384,7 @@ class TargetProperty(TargetSystem):
         if last_solution is not None:
             assert os.path.isfile(last_solution)
         options["solution"] = last_solution
+        options["torfix"] = torfix
         job = calc(1, options, overwrite=overwrite)
         job('python submit.py')
         if wait:
