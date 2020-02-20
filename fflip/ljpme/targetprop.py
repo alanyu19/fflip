@@ -383,10 +383,10 @@ class TargetProperty(TargetSystem):
         options["block_size"] = self.pot_block_size
         if last_solution is not None:
             assert os.path.isfile(last_solution)
-            os.system("cp {} {}".format(last_solution, work_dir))
+            # os.system("cp {} {}".format(last_solution, work_dir))
         if torfix is not None:
             assert os.path.isfile(torfix)
-            os.system("cp {} {}".format(torfix, work_dir))
+            # os.system("cp {} {}".format(torfix, work_dir))
         options["solution"] = last_solution
         options["torfix"] = torfix
         job = calc(1, options, overwrite=overwrite)
