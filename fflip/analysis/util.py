@@ -131,3 +131,33 @@ def gen_scd_pairs(scd_res_dict, special_carbons_for_residues={}):
                         res_list.append((carbon, [bond[1]]))
         return_dict[res] = res_list
     return return_dict
+
+
+def hard_up_low_atoms(atoms, recipe):
+    if 'explicit_grouping' in recipe:
+        groups = recipe['explicit_grouping']
+        assert isinstance(groups, tuple)
+        assert len(groups) == 2
+        assert isinstance(groups[0], list)
+        assert isinstance(groups[1], list)
+        upper_atoms = []
+        lower_atoms = []
+        for atom in atoms:
+            if atom in groups[0]:
+                upper_atoms.append(atom)
+            else:
+                assert atom in groups[1]
+                lower_atoms.append(atom)
+        return upper_atoms, lower_atoms
+    elif 'hard_border' in recipe:
+        assert isinstance(recipe['hard_border'], int)
+        upper_atoms = []
+        lower_atoms = []
+        for atom in atoms:
+            if atom <= recipe['hard_border']:
+                upper_atoms.append(atom)
+            else:
+                lower_atoms.append(atom)
+        return upper_atoms, lower_atoms
+    else:
+        pass  # being stupid for now
