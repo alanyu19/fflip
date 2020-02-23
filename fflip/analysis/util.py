@@ -154,7 +154,7 @@ def hard_up_low_atoms(atoms, recipe):
         upper_atoms = []
         lower_atoms = []
         for atom in atoms:
-            if atom <= recipe['hard_border']:
+            if atom < recipe['hard_border']:
                 upper_atoms.append(atom)
             else:
                 lower_atoms.append(atom)
