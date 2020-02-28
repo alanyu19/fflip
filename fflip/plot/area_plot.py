@@ -28,7 +28,7 @@ def plot_area(file_to_save, data, skip_ns = 0, interval = 0.002, area_range = (3
     x = np.arange(0, data.shape[0] * interval, interval)
     
     for i, y in enumerate([data, cumulative]):
-        ax.plot(x, y, pattern[i], linewidth = linewidth[i], markersize = markersize[i], 
+        ax.plot(x[:], y, pattern[i], linewidth = linewidth[i], markersize = markersize[i], 
                 label = lg[i], color = colors[i])
         ax.legend(loc='lower left', fontsize =20, handlelength=2)
         for tick in ax.xaxis.get_major_ticks():
