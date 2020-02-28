@@ -117,8 +117,8 @@ class AngleDistribution(object):
                         vector1_up.shape[0], vector1_up.shape[1], 1
                     )  # duplicated by number of frames and residues
                 )
-                vector2_low = np.tile(
-                    -self.constant_vector, (
+                vector2_low = -np.tile(
+                    self.constant_vector, (
                         vector1_low.shape[0], vector1_low.shape[1], 1
                     )  # duplicated by number of frames and residues
                 )
