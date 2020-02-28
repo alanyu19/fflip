@@ -85,7 +85,8 @@ class AngleDistribution(object):
             vector1 = atom1 - atom2
             if self.constant_second_vector:
                 vector2 = np.tile(
-                    self.constant_vector, (vector1.shape[0], vector1.shape[1])
+                    self.constant_vector,
+                    (vector1.shape[0], vector1.shape[1], 1)
                 )  # duplicated by number of frames and residues
             else:
                 atom3 = traj.xyz[:, self.sele3]
@@ -113,12 +114,12 @@ class AngleDistribution(object):
             if self.constant_second_vector:
                 vector2_up = np.tile(
                     self.constant_second_vector, (
-                        vector1_up.shape[0], vector1_up.shape[1]
+                        vector1_up.shape[0], vector1_up.shape[1], 1
                     )  # duplicated by number of frames and residues
                 )
                 vector2_low = np.tile(
                     -self.constant_second_vector, (
-                        vector1_low.shape[0], vector1_low.shape[1]
+                        vector1_low.shape[0], vector1_low.shape[1], 1
                     )  # duplicated by number of frames and residues
                 )
             else:
