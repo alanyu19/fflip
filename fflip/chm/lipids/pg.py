@@ -6,30 +6,36 @@ from fflip.chm.lipid import *
 # ******************************************************************************
 # PE GROUPS:
 
-pe_gs = list()
+pg_gs = list()
 
 # Please note that the CHARMM force field use Rmin/2 intead of sigma,
 # and the unit of epsilon is kcal/mol
-pe_gs.append(
+pg_gs.append(
     CharmmGroup(
         num_atom_category=5,  # NH3L, HCL, CTL2, HAL2
-        atoms=[['N'],
-               ['HN1', 'HN2', 'HN3'],
+        atoms=[['C13'],
+               ['H13A', 'H13B'],
+               ['OC3'],  # OHL
+               ['HO3'],  # HOL
                ['C12'],
-               ['H12A', 'H12B']],
-        charges=[-0.3, 0.33, 0.13, 0.09],
-        half_r_mins=[1.85, 0.2245, 2.010, 0.7],
-        epsilons=[-0.20, -0.046, -0.0560, -0.046],
-        add_charge_gtcnp=[True, True, True, False],
+               ['H12A'],
+               ['OC2'],
+               ['HO2']],
+        charges=[0.05, 0.09, -0.65, 0.42, 0.14, 0.09, -0.65, 0.42],
+        half_r_mins=[2.010, 1.3400, 1.77, 0.2245, 2.275, 1.320, 1.77, 0.2245],
+        epsilons=[
+            -0.0560, -0.028, -0.1521, -0.046, -0.0200, -0.022, -0.1521, -0.046
+        ],
+        add_charge_gtcnp=[True, True, True, True, False, True, True, True],
         atoms_same_charge=None,
-        neighbors=[[2], [0], [3], []],
+        neighbors=[[4], [0], [0], [2], [], [4], [4], [6]],
         cooperators=None,
-        add_lj_gtcnp=[True, True, False, False],
-        atoms_same_lj=[[], [], [], []]
+        add_lj_gtcnp=[False, False, True, True, False, False, False, False],
+        atoms_same_lj=[[], [], ['OC2'], ['HO2'], [], [], [], []]
     )
 )
 
-pe_gs.append(
+pg_gs.append(
     CharmmGroup(
         num_atom_category=7,  # CTL2, HAL2, PL, O2L, OSLP, CTL2, HAL2
         atoms=[['C11'],
@@ -54,7 +60,7 @@ pe_gs.append(
     )
 )
 
-pe_gs.append(
+pg_gs.append(
     CharmmGroup(
         num_atom_category=7,  # CTL1, HAL1, OSL, CL, OBL, CTL2, HAL2
         atoms=[
@@ -80,7 +86,7 @@ pe_gs.append(
     )
 )
 
-pe_gs.append(
+pg_gs.append(
     CharmmGroup(
         num_atom_category=7,  # CTL2, HAL2, OSL, CL, OBL, CTL2, HAL2
         atoms=[['C3'], ['HX', 'HY'], ['O31'], ['C31'], ['O32'],
@@ -99,6 +105,6 @@ pe_gs.append(
 
 #  *****************************************************************************
 
-pe = Lipid(CharmmGroup_list=pe_gs, lipname="PE")
+pg = Lipid(CharmmGroup_list=pg_gs, lipname="PG")
 
 #  *****************************************************************************

@@ -9,7 +9,7 @@ dppc_gs = list()
 # Please note that the CHARMM force field use Rmin/2 intead of sigma,
 # and the unit of epsilon is kcal/mol
 dppc_gs.append(
-    charmm_group(
+    CharmmGroup(
         num_atom_category=5,  # NTL, HL, CTL5, CTL2, HL
         atoms=[['N'],
                ['H13A', 'H13B', 'H13C', 'H14A', 'H14B', 'H14C', 'H15A', 'H15B',
@@ -31,7 +31,7 @@ dppc_gs.append(
 )
 
 dppc_gs.append(
-    charmm_group(
+    CharmmGroup(
         num_atom_category=7,  # CTL2, HAL2, PL, 02L, OSLP, CTL2, HAL2
         atoms=[['C11'],
                ['H11A', 'H11B'],
@@ -54,7 +54,7 @@ dppc_gs.append(
 )
 
 dppc_gs.append(
-    charmm_group(
+    CharmmGroup(
         num_atom_category=7,  # CTL1, HAL1, OSL, CL, OBL, CTL2, HAL2
         atoms=[
             ['C2'], ['HS'], ['O21'], ['C21'], ['O22'], ['C22'], ['H2R', 'H2S']
@@ -79,7 +79,7 @@ dppc_gs.append(
 )
 
 dppc_gs.append(
-    charmm_group(
+    CharmmGroup(
         num_atom_category=7,  # CTL2, HAL2, OSL, CL, OBL, CTL2, HAL2
         atoms=[['C3'], ['HX', 'HY'], ['O31'], ['C31'], ['O32'],
                ['C32'], ['H2X', 'H2Y']],
@@ -97,6 +97,6 @@ dppc_gs.append(
 
 #  *****************************************************************************
 
-dppc = lipid(charmm_group_list=dppc_gs, lipname="DPPC")
+dppc = Lipid(CharmmGroup_list=dppc_gs, lipname="DPPC")
 
 #  *****************************************************************************

@@ -12,7 +12,7 @@ def add_a_new_group(existing_groups, new_group):
     existing_groups.append(new_group)
 
 
-class charmm_group():
+class CharmmGroup:
     def __init__(self, **kwargs):
         self.num_atom_category = kwargs["num_atom_category"]
         self.atoms = kwargs["atoms"]  # should be list inside list structure
@@ -29,8 +29,7 @@ class charmm_group():
             self.exclusion = kwargs["exclusion"]
     
 
-class lipid():
-
+class Lipid:
     def __init__(self, **kwargs):
         assert "charmm_group_list" in kwargs
         self.charmm_group_list = kwargs["charmm_group_list"]

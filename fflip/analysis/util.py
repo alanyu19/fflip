@@ -3,6 +3,7 @@
 import numpy as np
 from pymbar import timeseries
 
+
 def find_block_size(ineff_in_step, step_size, block_length_in_ns = 5):
     """
     Find the closest length of time (in 5 ns) to the statistical ieffeciency 'g'
