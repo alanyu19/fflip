@@ -12,7 +12,7 @@ pe_gs = list()
 # and the unit of epsilon is kcal/mol
 pe_gs.append(
     CharmmGroup(
-        num_atom_category=5,  # NH3L, HCL, CTL2, HAL2
+        num_atom_category=4,  # NH3L, HCL, CTL2, HAL2
         atoms=[['N'],
                ['HN1', 'HN2', 'HN3'],
                ['C12'],

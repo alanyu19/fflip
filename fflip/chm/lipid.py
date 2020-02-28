@@ -46,9 +46,13 @@ class Lipid:
         else:
             pass
 
-    def parse_gtcnp(self, print_level=0):
+    def parse_gtcnp(self, groups=None, print_level=0):
         gs = []
         for counter, chm_gp in enumerate(self.cgroups):
+            if groups is not None:
+                assert isinstance(groups, list)
+                if counter not in groups:
+                    continue
             self.level_print(
                 "Creating 'gtcnp's for {} group {} ... ".format(
                     self.lipname, counter+1
