@@ -97,6 +97,6 @@ dopc_gs.append(
 
 #  *****************************************************************************
 
-dopc = Lipid(CharmmGroup_list=dopc_gs, lipname="DOPC")
+dopc = Lipid(charmm_group_list=dopc_gs, lipname="DOPC")
 
 #  *****************************************************************************

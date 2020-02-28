@@ -12,7 +12,7 @@ pg_gs = list()
 # and the unit of epsilon is kcal/mol
 pg_gs.append(
     CharmmGroup(
-        num_atom_category=5,  # NH3L, HCL, CTL2, HAL2
+        num_atom_category=8,  # NH3L, HCL, CTL2, HAL2
         atoms=[['C13'],
                ['H13A', 'H13B'],
                ['OC3'],  # OHL
@@ -105,6 +105,6 @@ pg_gs.append(
 
 #  *****************************************************************************
 
-pg = Lipid(CharmmGroup_list=pg_gs, lipname="PG")
+pg = Lipid(charmm_group_list=pg_gs, lipname="PG")
 
 #  *****************************************************************************
