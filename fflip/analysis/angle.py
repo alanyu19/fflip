@@ -113,12 +113,12 @@ class AngleDistribution(object):
             vector1_low = atom1_low - atom2_low
             if self.constant_second_vector:
                 vector2_up = np.tile(
-                    self.constant_second_vector, (
+                    self.constant_vector, (
                         vector1_up.shape[0], vector1_up.shape[1], 1
                     )  # duplicated by number of frames and residues
                 )
                 vector2_low = np.tile(
-                    -self.constant_second_vector, (
+                    -self.constant_vector, (
                         vector1_low.shape[0], vector1_low.shape[1], 1
                     )  # duplicated by number of frames and residues
                 )
