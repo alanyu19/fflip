@@ -32,7 +32,7 @@ class AngleDistribution(object):
     """
     def __init__(self, topology, first_vector, constant_second_vector=True,
                  second_vector=[0, 0, 1], sep_leaflet=False, recipe=None,
-                 nbins=90):
+                 nbins=180):
         """
         Args:
             topology: the mdtraj topology
@@ -96,10 +96,11 @@ class AngleDistribution(object):
             vector1 = unit_vector(vector1)
             vector2 = unit_vector(vector2)
             angles = angle(vector1, vector2)
+            angles_normalized = angles / np.pi
             distribution, edges = np.histogram(
-                angles, bins=self.nbins, range=(0, np.pi)
+                angles_normalized, bins=self.nbins, range=(0, 1)
             )
-            self.edges = edges
+            self.edges = edges * np.pi
             self.distribution = self.n_frames * self.distribution + \
                 distribution * traj.n_frames
             self.n_frames += traj.n_frames
@@ -136,13 +137,15 @@ class AngleDistribution(object):
             vector2_low = unit_vector(vector2_low)
             angles_up = angle(vector1_up, vector2_up)
             angles_low = angle(vector1_low, vector2_low)
+            angles_up_normalized = angles_up / np.pi
+            angles_low_normalized = angles_low / np.pi
             distribution_up, edges = np.histogram(
-                angles_up, bins=self.nbins, range=(0, np.pi)
+                angles_up_normalized, bins=self.nbins, range=(0, 1)
             )
             distribution_low, edges = np.histogram(
-                angles_low, bins=self.nbins, range=(0, np.pi)
+                angles_low_normalized, bins=self.nbins, range=(0, 1)
             )
-            self.edges = edges
+            self.edges = edges * np.pi
             self.distribution_up = self.n_frames * self.distribution_up + \
                 distribution_up * traj.n_frames
             self.distribution_low = self.n_frames * self.distribution_low + \
