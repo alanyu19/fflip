@@ -247,8 +247,8 @@ class FolderNamingScheme(object):
     def __init__(self, target_property):
         self.tp = target_property
 
-    def exp_folder(self):
-        return os.path.join(self.tp.root_dir, 'exp')
+    def exp_folder(self, rel_dir='exp'):
+        return os.path.join(self.tp.root_dir, rel_dir)
 
     def robustness_dir(self):
         return os.path.join(self.tp.root_dir, "robustness")
@@ -465,7 +465,9 @@ lipfinder = {
     'dmpc': pc,
     'dopc': pc,
     'popc': pc,
-    'dlpc': pc
+    'dlpc': pc,
+    'pope': pe,
+    'dhpce': pce
 }
 
 

@@ -238,7 +238,13 @@ class TargetProperty(TargetSystem):
                  sim_template=None,
                  sim_scheme=SimOptScheme,
                  naming_scheme=FolderNamingScheme,
-                 ff='c36'):
+                 ff='c36',
+                 parse_groups='all',
+                 **misc_kwargs):
+        """
+        misc_kwargs can contain:
+        exp_rel_dir, ... (more to come)
+        """
         self.name = name
         self.prop_type = prop_type
         self.system_type = system_type
@@ -255,7 +261,12 @@ class TargetProperty(TargetSystem):
         self.property_file_format = obs_file_format
         self.option_scheme = sim_scheme(self)
         self.folder_naming = naming_scheme(self)
-        self.exp_dir = self.folder_naming.exp_folder()
+        if not 'exp_rel_dir' in misc_kwargs:
+            self.exp_dir = self.folder_naming.exp_folder()
+        else:
+            self.exp_dir = self.folder_naming.exp_folder(
+                rel_dir=misc_kwargs['exp_rel_dir']
+            )
         self.reweight_dir = self.folder_naming.reweight_dir()
         self.robdir = self.folder_naming.robustness_dir()
         self.first_trj, self.last_trj = \
@@ -264,6 +275,7 @@ class TargetProperty(TargetSystem):
         # TODO: the lipfinder is loaded from the util, can we get rid of this?
         self.lipid = lipfinder[lipname]
         self.ff = ff
+        self.groups = parse_groups
         self._prop_block_size = make_guess_of_block_size(0, self.prop_type)
         self._pot_block_size = make_guess_of_block_size(1, self.prop_type)
         self._scaling = make_guess_of_scaling(self.name)
@@ -344,7 +356,7 @@ class TargetProperty(TargetSystem):
 
     @property
     def parameters(self):
-        return self.lipid.parse_gtcnp()
+        return self.lipid.parse_gtcnp(groups=self.groups)
 
     @property
     def num_parameters(self):
@@ -441,7 +453,8 @@ class TargetProperty(TargetSystem):
             result_dir=self.folder_naming.reweighting_folder(iteration),
             exp=self._exp,
             exp_dir=self.exp_dir,
-            lipid=self.lipid
+            lipid=self.lipid,
+            parse_groups=self.groups
         )
 
     def reweight(

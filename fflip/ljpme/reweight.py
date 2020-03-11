@@ -8,7 +8,8 @@ from fflip.ljpme.util import *
 
 class ReweightTarget(object):
     def __init__(self, name, temperature, property_dir, energy_dir,
-                 property_file_template, result_dir, exp, lipid, exp_dir,
+                 property_file_template, result_dir,
+                 exp, lipid, exp_dir, parse_groups,
                  sim_rdf_r_range=(0.0015, 0.999), sim_rdf_r_intvl=0.003
                  ):
         """
@@ -36,6 +37,7 @@ class ReweightTarget(object):
         self.sim = None
         self.rew = None
         self.lipid = lipid
+        self.groups = parse_groups
         self.sim_rdf_r_range = sim_rdf_r_range
         self.sim_rdf_r_intvl = sim_rdf_r_intvl
         if not os.path.isdir(self.result_dir):
@@ -56,7 +58,14 @@ class ReweightTarget(object):
         """
         Get the numebr of perturbed parameters
         """
-        return len(self.lipid.parse_gtcnp())
+        if self.groups == 'all':
+            return len(self.lipid.parse_gtcnp())
+        elif isinstance(self.groups, list):
+            return len(
+                self.lipid.parse_gtcnp(groups=self.groups)
+            )
+        else:
+            raise Exception
 
     @property
     def property_type(self):

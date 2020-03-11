@@ -185,7 +185,7 @@ class PropertyLinearEstimator(Optimizer):
         charge_info = pd.read_csv(filename)
         self.qm_info = {}
         for atom, charge in zip(
-                charge_info['atom'].tolist(), charge_info['charge'].tolist()
+            charge_info['atom'].tolist(), charge_info['charge'].tolist()
         ):
             self.qm_info[atom] = charge
         num_qm_charge = 0
