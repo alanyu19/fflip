@@ -30,6 +30,7 @@ drude_pc_charge_groups.append(
         alphas=[-0.829, 0, -1.793, -1.393, 0],
         tholes=[0.793, 0, 1.099, 0.862, 0],
         add_group=[True, True, True, True, False],
+        add_alpha=[True, False, True, True, False],
         neighbors=[[2, 3], [4], [1], [4], []],
         atoms_same_charge=None,
         atoms_same_alpha=None

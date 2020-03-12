@@ -88,8 +88,10 @@ class DrudeLipid:
         self.lipname = lipname
         self.charge_groups = charge_groups
         self.lj_groups = lj_groups
-        self.num_charge_groups = len(self.charge_groups)
-        self.num_lj_groups = len(self.lj_groups)
+        if charge_groups:
+            self.num_charge_groups = len(self.charge_groups)
+        if lj_groups:
+            self.num_lj_groups = len(self.lj_groups)
             
     @staticmethod
     def level_print(content, level, print_level):
@@ -98,7 +100,7 @@ class DrudeLipid:
         else:
             pass
 
-    def parse_groups(self, print_level=0, chg_offset=0.2, alpha_offset=0.00001):
+    def parse_groups(self, print_level=0, chg_offset=0.2, alpha_offset=0.02):
         gs = []
         for counter, chggp in enumerate(self.charge_groups):
             self.level_print("Parsing {} charge group {} ...".format(
@@ -162,22 +164,22 @@ class DrudeLipid:
                         for atom_combo in chggp.atoms_same_alpha[i]:
                             drude_atoms.append(atom_combo[0])
                             heavy_atoms.append(atom_combo[1])
-                        add_a_new_group(
-                            gs, DrudeParameter(
-                                par_type="alpha", center_names=heavy_atoms,
-                                original_p=chggp.alphas[i],
-                                targeted_range=[
-                                    round(chggp.alphas[i] - alpha_offset, 9),
-                                    round(chggp.alphas[i] + alpha_offset, 9)],
-                                drude_particles=drude_atoms
-                            )
+                    add_a_new_group(
+                        gs, DrudeParameter(
+                            par_type="alpha", center_names=heavy_atoms,
+                            original_p=chggp.alphas[i],
+                            targeted_range=[
+                                round(chggp.alphas[i] - alpha_offset, 9),
+                                round(chggp.alphas[i] + alpha_offset, 9)],
+                            drude_particles=drude_atoms
                         )
-                    else:
-                        self.level_print(
-                            "Skipping alpha(s) for {} ...".format(
-                                chggp.drude_particles[i]
-                            ), 2, print_level
-                        )
+                    )
+                else:
+                    self.level_print(
+                        "Skipping alpha(s) for {} ...".format(
+                            chggp.atom_groups[i]
+                        ), 2, print_level
+                    )
             self.level_print("", 1, print_level)
             """
             if chm_gp.add_lj_gtcnp[i]:
