@@ -77,7 +77,7 @@ class DrudeNBFIX:
 
 
 class DrudeLipid:
-    def __init__(self, lipname, charge_groups, lj_groups):
+    def __init__(self, lipname, charge_groups=None, lj_groups=None):
         """
         DRUDE Lipid, NBFIX to come
         Args:
