@@ -35,7 +35,7 @@ class Lipid:
         self.charmm_group_list = kwargs["charmm_group_list"]
         self.num_charmm_groups = len(self.charmm_group_list)
         assert "lipname" in kwargs
-        self.lipname= kwargs["lipname"]
+        self.lipname = kwargs["lipname"]
         self.cgroups = []
         for group in self.charmm_group_list:
             self.cgroups.append(group)
