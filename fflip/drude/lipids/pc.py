@@ -37,72 +37,105 @@ drude_pc_charge_groups.append(
     )
 )
 
-"""
-pc_gs.append(
-    CharmmGroup(
-        num_atom_category=7,  # CTL2, HAL2, PL, 02L, OSLP, CTL2, HAL2
-        atoms=[['C11'],
-               ['H11A', 'H11B'],
-               ['P'],
-               ['O13', 'O14'],
-               ['O11', 'O12'],
-               ['C1'],
-               ['HA', 'HB']],
-        charges=[-0.08, 0.09, 1.50, -0.78, -0.57, -0.08, 0.09],
-        half_r_mins=[2.010, 1.3400, 2.15, 1.70, 1.6500, 2.010, 1.3400],
-        epsilons=[-0.0560, -0.028, -0.585, -0.12, -0.1000, -0.0560, -0.028],
-        add_charge_gtcnp=[True, True, True, True, True, True, False],
+
+drude_pc_charge_groups.append(
+    DrudeChargeGroup(
+        atom_groups=[
+            ['C11', 'C1'],
+            ['H11A', 'H11B', 'HA', 'HB'],
+            ['P'],
+            ['O13', 'O14'],
+            ['O11', 'O12']
+        ],
+        drude_particles=[
+            ['DC11', 'DC1'],
+            None,
+            ['DP'],
+            ['DO13', 'DO14'],
+            ['DO11', 'DO12']
+        ],
+        charges=[0.1985, 0.026, 1.191, -0.876, -0.470],
+        alphas=[-1.642, 0, -0.974, -0.931, -0.901],
+        tholes=[0.862, 2.098, 1.083, 0.181, 0.862],
+        add_group=[True, True, True, True, True],
+        add_alpha=[True, False, True, True, True],
+        neighbors=[[4], [0], [3], [], [2]],
         atoms_same_charge=None,
-        neighbors=[[2], [0], [3, 4], [4], [5], [6], []],
-        cooperators=None,
-        add_lj_gtcnp=[False, True, True, True, True, False, False],
-        atoms_same_lj=[[], ['HA', 'HB', 'H2R', 'H2S', 'HX', 'HY', 'H2X', 'H2Y'],
-                       [], [], [], [], []]
+        atoms_same_alpha=None
     )
 )
 
-pc_gs.append(
-    CharmmGroup(
-        num_atom_category=7,  # CTL1, HAL1, OSL, CL, OBL, CTL2, HAL2
-        atoms=[
-            ['C2'], ['HS'], ['O21'], ['C21'], ['O22'], ['C22'], ['H2R', 'H2S']
+drude_pc_charge_groups.append(
+    DrudeChargeGroup(
+        atom_groups=[
+            ['C2'], ['HS'], ['O21'], ['C21'], ['O22'], ['C22'], ['H2R', 'H2S'],
+            ['LP1A'], ['LP1B'], ['LPMA', 'LPMB']  # Virtual Sites (Lone Pairs)
         ],
-        charges=[0.17, 0.09, -0.49, 0.90, -0.63, -0.22, 0.09],
-        half_r_mins=[2.275, 1.3200, 1.6500, 2.00, 1.70, 2.010, 1.3400],
-        epsilons=[-0.0200, -0.022, -0.1000, -0.0700, -0.12, -0.0560, -0.028],
-        add_charge_gtcnp=[True, False, True, True, True, True, True],
+        drude_particles=[
+            ['DC2'], None, ['DO21'], ['DC21'], ['DO22'], ['DC22'], None,
+            None, None, None
+        ],
+        charges=[
+            0.202, 0.116, 0.000, 0.697, 0.000, -0.206, 0.069,
+            -0.349, -0.258, -0.170
+        ],
+        alphas=[-1.797, 0, -0.732, -1.370, -0.904, -1.993, 0, 0, 0, 0],
+        tholes=[0.410, 0, 0.601, 1.747, 0.565, 0.410, 0, 0, 0, 0],
+        add_group=[
+            True, False, False, True, False, True, True,
+            True, True, True
+        ],
+        add_alpha=[
+            True, False, True, True, True, True, False,
+            False, False, False
+        ],
+        neighbors=[[1], [], [], [9, 5], [], [9], [5], [8, 3], [7, 3], [0]],
         # When add_charge_gtcnp is False but atoms_same_charge is not empty,
         # the later is used in neighbors/cooperators.
         # 'C3' is needed here (although the charge is not equal to C2)
         # since 'O31' will exchange charge with it
         # it will get skipped by the exclusion argument
         atoms_same_charge=[
-            ['C3'], [], ['O31'], ['C31'], ['O32'], ['C32'], ['H2X', 'H2Y']],
+            ['C3'], [], ['O31'], ['C31'], ['O32'], ['C32'], ['H2X', 'H2Y'],
+            ['LP1C'], ['LP1D'], ['LPMC', 'LPMD']
+        ],
         exclusion=[0],
-        neighbors=[[1], [], [0], [2, 4, 5], [3], [3], [5]],
-        cooperators=None,
-        add_lj_gtcnp=[True, True, True, True, True, False, False],
-        atoms_same_lj=[[], [], ['O31'], ['C31'], ['O32'], [], []]
+        atoms_same_alpha=[
+            [('DC3', 'C3')], [], [('DO31', 'O31')], [('DC31', 'C31')],
+            [('DO32', 'O32')], [('DC32', 'C32')], [], [], [], []
+        ]
     )
 )
 
-pc_gs.append(
-    CharmmGroup(
-        num_atom_category=7,  # CTL2, HAL2, OSL, CL, OBL, CTL2, HAL2
-        atoms=[['C3'], ['HX', 'HY'], ['O31'], ['C31'], ['O32'],
-               ['C32'], ['H2X', 'H2Y']],
-        charges=[0.08, 0.09, -0.49, 0.90, -0.63, -0.22, 0.09],
-        half_r_mins=[2.275, 1.3200, 1.6500, 2.00, 1.70, 2.010, 1.3400],
-        epsilons=[-0.0200, -0.022, -0.1000, -0.0700, -0.12, -0.0560, -0.028],
-        add_charge_gtcnp=[True, False, False, False, False, False, False],
+drude_pc_charge_groups.append(
+    DrudeChargeGroup(
+        atom_groups=[
+            ['C3'], ['HX', 'HY'], ['O31'], ['C31'], ['O32'], ['C32'],
+            ['H2X', 'H2Y'], ['LP1C'], ['LP1D'], ['LPMC', 'LPMD']
+            # last three are Virtual Sites (Lone Pairs)
+        ],
+        drude_particles=[
+            ['DC3'], None, ['DO31'], ['DC31'], ['DO32'], ['DC32'], None,
+            None, None, None
+        ],
+        charges=[
+            0.086, 0.116, 0.000, 0.697, 0.000, -0.206, 0.069,
+            -0.349, -0.258, -0.170
+        ],
+        alphas=[-1.797, 0, -0.732, -1.370, -0.904, -1.993, 0, 0, 0, 0],
+        tholes=[0.410, 0, 0.601, 1.747, 0.565, 0.410, 0, 0, 0, 0],
+        add_group=[
+            True, False, False, False, False, False, False,
+            False, False, False],
+        add_alpha=[
+            False, False, False, False, False, False, False,
+            False, False, False
+        ],
+        neighbors=[[1], [], [], [], [], [], [], [], [], []],
         atoms_same_charge=None,
-        neighbors=[[1], [], [], [], [], [], []],
-        cooperators=None,
-        add_lj_gtcnp=[False, False, False, False, False, False, False],
-        atoms_same_lj=None
+        atoms_same_alpha=None
     )
 )
-"""
 
 #  *****************************************************************************
 
