@@ -137,8 +137,9 @@ elif index > 0:
     )
     to_calc = TimeSeries(
         evaluator=energy_evaluator,
-        filename="./block_data/perturbed_{}_{}.dat".format(
-            starting_traj, pgroup.cgid, pgroup.internal_id)
+        filename="./block_data/perturbed_{}_{}_{}.dat".format(
+            starting_traj, pgroup.cgid, pgroup.internal_id
+        )
     )
     # TODO: parameter set name would be better than just index?
 
