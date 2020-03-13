@@ -3,10 +3,8 @@
 # Contains master class of training target (area, rdf, scd, db ...)
 
 from fflip.ljpme.reweight import *
-from fflip.ljpme.moreutil import *
-
 from coffe.omm.genclac import OmmJobGenerator
-from fflip.chm import *
+from fflip.ljpme.scheme import *
 
 
 class KaGenerator(object):

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from coffe.omm.util import filter_solution
-from fflip.ljpme.moreutil import *
 import numpy as np
 import pandas as pd
+from fflip.ljpme.util import get_sign, rename_row_col
 
 
 class Optimizer(object):
     def __init__(self, target_properties, special_properties,
-                 perturbation_baseline = 1):
+                 perturbation_baseline=1):
         pass
 
     def exchange_exp_value(self, pname1, pname2):
