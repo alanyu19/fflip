@@ -143,6 +143,5 @@ elif index > 0:
     )
     # TODO: parameter set name would be better than just index?
 
-
 for traj in trajs:
     to_calc(traj)
