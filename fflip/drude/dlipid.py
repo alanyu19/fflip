@@ -14,12 +14,14 @@ def add_a_new_group(existing_groups, new_group):
 
 
 class DrudeChargeGroup:
-    def __init__(self, atom_groups, drude_particles, charges, alphas, tholes,
-                 add_group, neighbors, atoms_same_charge, atoms_same_alpha,
+    def __init__(self, _id, atom_groups, drude_particles,
+                 charges, alphas, tholes, add_group, neighbors,
+                 atoms_same_charge, atoms_same_alpha,
                  add_alpha=None, exclusion=None):
         """
         The class for defining drude FF charge group.
         Args:
+            id: int, the id within the lipid
             atom_groups: list of list, each sub-list contains atoms sharing the
             same charge.
             drude_particles: list of the Drude Particle names
@@ -36,6 +38,7 @@ class DrudeChargeGroup:
         Example:
             dcg = DrudeChargeGroup()
         """
+        self.id = _id
         self.atom_groups = atom_groups  # should be list inside list structure
         self.drude_particles = drude_particles
         self.charges = charges
@@ -56,17 +59,19 @@ class DrudeChargeGroup:
 
 
 class LJGroup:
-    def __init__(self, atom_type_dict, half_r_mins=None, epsilons=None):
+    def __init__(self, _id, atom_type_dict, half_r_mins=None, epsilons=None):
         """
         The class for defining all parametrizable LJ interactions, NBFIX is
         not included in this class and can be set separately using the
         DrudeNBFIX class
         Args:
+            id: int, the id within the lipid
             atom_type_dict: a dict contains all atom types and their related
             atom names.
             half_r_mins: can be the original parameters for half_r_mins (A)
             epsilons: can be the original parameters for epsilon (kcal/mol)
         """
+        self.id = _id
         self.atom_type_dict = atom_type_dict
         self.half_r_mins = half_r_mins
         self.epsilons = epsilons
@@ -100,12 +105,17 @@ class DrudeLipid:
         else:
             pass
 
-    def parse_groups(self, print_level=0, chg_offset=0.2, alpha_offset=0.02):
+    def parse_groups(self, print_level=0, chg_offset=0.2, alpha_offset=0.02,
+                     id_allowed='all'):
         gs = []
         for counter, chggp in enumerate(self.charge_groups):
+            if id_allowed is not 'all' and chggp.id not in id_allowed:
+                continue
             self.level_print("Parsing {} charge group {} ...".format(
                 self.lipname, counter + 1
             ), 1, print_level)
+            # used to record the indexing of the parameter within the group
+            internal_id = 0
             for i in range(len(chggp.atom_groups)):
                 if chggp.add_group[i]:
                     center_names = []
@@ -132,14 +142,22 @@ class DrudeLipid:
                         ron.append(round(-len(center_names)/len(nbr_names), 5))
                     # for r in range(len(roc)):
                     #     roc.append(1)
+                    internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            par_type="charge", center_names=center_names,
+                            lipidname=self.lipname.lower(),
+                            cgid=chggp.id,
+                            internal_id=internal_id,
+                            par_type="charge",
+                            center_names=center_names,
                             original_p=chggp.charges[i],
                             targeted_range=[
                                 round(chggp.charges[i] - chg_offset, 4),
-                                round(chggp.charges[i] + chg_offset, 4)],
-                            neighbors=nbr_names, drude_particles=None, ron=ron
+                                round(chggp.charges[i] + chg_offset, 4)
+                            ],
+                            neighbors=nbr_names,
+                            drude_particles=None,
+                            ron=ron
                         )
                     )
                 else:
@@ -164,13 +182,19 @@ class DrudeLipid:
                         for atom_combo in chggp.atoms_same_alpha[i]:
                             drude_atoms.append(atom_combo[0])
                             heavy_atoms.append(atom_combo[1])
+                    internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            par_type="alpha", center_names=heavy_atoms,
+                            lipidname=self.lipname.lower(),
+                            cgid=chggp.id,
+                            internal_id=internal_id,
+                            par_type="alpha",
+                            center_names=heavy_atoms,
                             original_p=chggp.alphas[i],
                             targeted_range=[
                                 round(chggp.alphas[i] - alpha_offset, 9),
-                                round(chggp.alphas[i] + alpha_offset, 9)],
+                                round(chggp.alphas[i] + alpha_offset, 9)
+                            ],
                             drude_particles=drude_atoms
                         )
                     )

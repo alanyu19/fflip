@@ -11,6 +11,7 @@ drude_pc_charge_groups = list()
 
 drude_pc_charge_groups.append(
     DrudeChargeGroup(
+        id=1,
         atom_groups=[
             ['N'],
             ['H13A', 'H13B', 'H13C', 'H14A', 'H14B',
@@ -40,6 +41,7 @@ drude_pc_charge_groups.append(
 
 drude_pc_charge_groups.append(
     DrudeChargeGroup(
+        id=2,
         atom_groups=[
             ['C11', 'C1'],
             ['H11A', 'H11B', 'HA', 'HB'],
@@ -67,6 +69,7 @@ drude_pc_charge_groups.append(
 
 drude_pc_charge_groups.append(
     DrudeChargeGroup(
+        id=3,
         atom_groups=[
             ['C2'], ['HS'], ['O21'], ['C21'], ['O22'], ['C22'], ['H2R', 'H2S'],
             ['LP1A'], ['LP1B'], ['LPMA', 'LPMB']  # Virtual Sites (Lone Pairs)
@@ -109,6 +112,7 @@ drude_pc_charge_groups.append(
 
 drude_pc_charge_groups.append(
     DrudeChargeGroup(
+        id=4,
         atom_groups=[
             ['C3'], ['HX', 'HY'], ['O31'], ['C31'], ['O32'], ['C32'],
             ['H2X', 'H2Y'], ['LP1C'], ['LP1D'], ['LPMC', 'LPMD']
@@ -139,6 +143,6 @@ drude_pc_charge_groups.append(
 
 #  *****************************************************************************
 
-drude_pc = DrudeLipid(lipname="PC", charge_groups=drude_pc_charge_groups)
+drude_pc = DrudeLipid(lipname="DRUDE_PC", charge_groups=drude_pc_charge_groups)
 
 #  *****************************************************************************
