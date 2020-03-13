@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-
-import time
-from fflip.ljpme.moreutil import *
-import pandas as pd
+import os
+import math
+import glob
+import numpy as np
 
 
 class ReweightingError(Exception):
@@ -13,12 +13,16 @@ class ReweightingError(Exception):
 
 class NoSimDataError(ReweightingError):
     def __init__(self):
-        print('There is no simulated data, please run the reweight method first!')
+        print(
+            'There is no simulated data, please run the reweight method first!'
+        )
 
 
 class NoRewDataError(ReweightingError):
     def __init__(self):
-        print('There is no  reweighted data, please run the reweight method first!')
+        print(
+            'There is no reweighted data, please run the reweight method first!'
+        )
 
 
 class OtherReweightError(ReweightingError):
@@ -26,20 +30,91 @@ class OtherReweightError(ReweightingError):
         print(message)
 
 
-class FutureResult(object):
-    def get_result(self, path_to_file, file_name, time_to_wait, loading_method, delete = False):
-        while not os.path.isfile(path_to_file + file_name):
-            time.sleep(time_to_wait)
-        if loading_method == 'numpy':
-            result = np.genfromtxt(path_to_file + file_name)
-        elif loading_method == 'pandas':
-            result = pd.read_csv(path_to_file + file_name)
-        else:
-            with open(path_to_file + file_name, 'r') as file:
-                result = file.readlines()
-        if delete == True:
-            os.system("rm -rf {}".format(path_to_file))
-        return result
+def get_sign(x):
+    return math.copysign(1, x)
+
+
+def copy_folder(sample, destination):
+    des_parent = '/'.join(destination.split('/')[:-2])
+    if not os.path.isdir(des_parent):
+        os.system("mkdir -p " + des_parent)
+    os.system("cp -r {} {}".format(sample, destination))
+
+
+def combine_solutions(solutions, param):
+    addone = []
+    for s in solutions:
+        addone.append(0.01 * s + 1)
+    current = addone[0]
+    for nexts in addone[1:]:
+        temp = []
+        for i, j, p in zip(current, nexts, param):
+            if p.par_type == 'charge':
+                temp.append(i + j -1)
+            else:
+                temp.append(i * j)
+        current = np.array(temp)
+    return (current - 1) * 100
+
+
+def short_layer_type(layer_type):
+    if layer_type == 'bilayer':
+        return 'bi'
+    elif layer_type == 'monolayer':
+        return 'mono'
+    elif layer_type == 'bulk':
+        return 'bulk'
+
+
+def get_avail_exp_prop_names(
+        file_template='/u/alanyu/c36ljpme/fflow/exp/*.exp'
+):
+    exp_props = glob.glob(file_template)
+    useful_props = []
+    for prop in exp_props:
+        name = prop.split('/')[-1].strip().split('.')[0]
+        useful_props.append(name)
+    return useful_props
+
+
+def get_sim_scd_names(
+        file_template='/u/alanyu/c36ljpme/fflow/runner/scd_dppc/block_data/*'
+):
+    scd_names = []
+    file_names = glob.glob(file_template)
+    for name in file_names:
+        scd_name = name.strip().split('/')[-1].split('_')[0]
+        if scd_name not in scd_names:
+            scd_names.append(scd_name)
+    return scd_names
+
+
+def get_rdf_names_as_properties(
+        file_template='/u/alanyu/c36ljpme/fflow/runner/rdf/block_data/sparse*'
+):
+    def not_in(a, bb):
+        for b in bb:
+            if a in b:
+                return False
+        return True
+    rdf_names = []
+    file_names = glob.glob(file_template)
+    for name in file_names:
+        name_parts = name.strip().split('/')[-1].split('-')
+        rdf_name = name_parts[1] + '-' + name_parts[2]
+        if not_in(rdf_name, rdf_names) and 'Os2' not in rdf_name:
+            rdf_names.append(rdf_name + '_peak_1')
+            rdf_names.append(rdf_name + '_foot_1')
+            if not (rdf_name == 'O2-OW' or rdf_name == 'Ob-OW'):
+                rdf_names.append(rdf_name + '_peak_2')
+    return rdf_names
+
+
+def rename_row_col(names):
+    dictt = {}
+    for i, name in enumerate(names):
+        dictt[i] = name
+    return dictt
 
 
 def move_traj(fromdir, todir):
@@ -88,155 +163,3 @@ def parse_first_last(inp):
             return [index]
         except:
             raise Exception('Invalid trajectory index(es)!')
-
-
-def on_cluster(executable, executable_args_list, *args, **kwargs):
-    out_dir = kwargs['out_dir']
-    if os.path.isdir(out_dir):
-        os.system("rm -rf {}".format(out_dir))
-    os.system("mkdir {}".format(out_dir))
-    if 'job_time' in kwargs:
-        run_time = kwargs['job_time']
-    else:
-        run_time = '01:00:00'
-    if 'partition' in kwargs:
-        partition = kwargs['partition']
-    else:
-        partition = "ivy,sbr,hpodall,spodall"
-    if 'ntasks' in kwargs:
-        ntasks = kwargs['ntasks']
-    else:
-        ntasks = 1
-    if 'conda_env' in kwargs:
-        conda = kwargs['conda_env']
-    else:
-        conda = 'drude'
-    with open(kwargs["submit_script"], 'w+') as f:
-        f.write(
-            "#!/bin/bash\n" + \
-            "#SBATCH --output=./{}/{}.out\n".format(out_dir, kwargs["slurm_name"]) + \
-            "#SBATCH --error=./{}/{}.err\n".format(out_dir, kwargs["slurm_name"]) + \
-            "#SBATCH --time={}\n".format(run_time) + \
-            "#SBATCH --partition={}\n".format(partition) + \
-            "#SBATCH --ntasks={}\n".format(ntasks) + '\n'
-        )
-        f.write(
-            "source ~/.bashrc\n" + \
-            "conda activate {}\n".format(conda)
-        )
-        argstring = ''
-        for arg in executable_args_list:
-            argstring += ' {}'.format(str(arg))
-        argstring += ' {}'.format(kwargs['out_dir'])
-        f.write("\n" + "python " + executable + " " + argstring + " >& ./{}/{}.out".format(out_dir, kwargs["exec_name"]))
-    os.system('sbatch {}'.format(kwargs['submit_script']))
-    time.sleep(1)
-    os.system("rm -f {}".format(kwargs['submit_script']))
-
-
-class SensitivityEvaluator(object):
-    def __init__(self, ngroups, exp_x, exp, sim_x, sim, rew,
-                 sens_type=1, n_peaks=2, n_foots=1):
-        """
-        Args:
-            -- exp: the experimental value(s)
-            -- sim: the simulated value(s)
-            -- rew: the reweighted value(s)
-            -- sens_type: the catagory of the property (1: area/scd/db, 2: rdf)
-        """
-        self.ngroups = ngroups
-        self.sim = sim
-        self.exp = exp
-        if sens_type == 2:
-            self.exp_x = exp_x
-            self.sim_x = sim_x
-        self.rew = rew
-        self.sens_type = sens_type
-        self.n_peaks = n_peaks
-        self.n_foots = n_foots
-
-    @property
-    def diff_sim_exp(self):
-        if self.sens_type == 1:
-            """
-            Area / Order parameter / DB (thickness)
-            """
-            return self.sim - self.exp
-        elif self.sens_type == 2:
-            """
-            Things like rdf which contain both positions and magnitudes
-            """
-            x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=3
-            )
-            x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=1
-            )
-            return x_sim - x_exp, y_sim - y_exp
-
-    @property
-    def rel_diff_sim_exp(self):
-        if self.sens_type == 1:
-            """
-            Area / Order parameter / DB
-            """
-            return (self.sim - self.exp) /self.exp
-        elif self.sens_type == 2:
-            """
-            Things like rdf which contain both positions and magnitudes
-            """
-            x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=3
-            )
-            x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=1
-            )
-            return (x_sim - x_exp)/x_exp, (y_sim - y_exp)/y_exp
-
-    @property
-    def diff_rew_sim(self):
-        if self.sens_type == 1:
-            rew = self.rew
-            sim_tiled = np.tile(self.sim, self.ngroups)
-            return rew - sim_tiled
-        elif self.sens_type == 2:
-            x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=1
-            )
-            r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
-                self.rew, self.sim_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=1
-            )
-            diff_list = []
-            for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
-                diff_list.append(np.array([r - x_sim, pfv - y_sim]))
-            return np.array(diff_list)
-
-    @property
-    def rel_diff_rew_sim(self):
-        if self.sens_type == 1:
-            rew = self.rew
-            sim_tiled = np.tile(self.sim, self.ngroups)
-            return (rew - sim_tiled) /self.exp
-        elif self.sens_type == 2:
-            x_sim, y_sim = find_rdf_peaks_and_foots(
-                self.sim, self.sim_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=1
-            )
-            r_list, peak_foot_value_list = find_rdf_peaks_and_foots(
-                self.rew, self.sim_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=1
-            )
-            x_exp, y_exp = find_rdf_peaks_and_foots(
-                self.exp, self.exp_x, first_n_peaks=self.n_peaks,
-                first_n_foots=self.n_foots, smooth_window_size=3
-            )
-            rel_diff_list = []
-            for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
-                rel_diff_list.append(np.array([(r - x_sim) /x_exp, (pfv - y_sim) /y_exp]))
-            return np.array(rel_diff_list)

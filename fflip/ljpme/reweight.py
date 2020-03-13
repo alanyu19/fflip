@@ -3,6 +3,8 @@
 from coffe.omm.reweightprop import *
 from coffe.omm.util import check_and_make_dir
 
+from fflip.ljpme.jobhandle import *
+from fflip.ljpme.rdfhandle import *
 from fflip.ljpme.util import *
 
 
@@ -10,8 +12,7 @@ class ReweightTarget(object):
     def __init__(self, name, temperature, property_dir, energy_dir,
                  property_file_template, result_dir,
                  exp, lipid, exp_dir, parse_groups,
-                 sim_rdf_r_range=(0.0015, 0.999), sim_rdf_r_intvl=0.003
-                 ):
+                 sim_rdf_r_range=(0.0015, 0.999), sim_rdf_r_intvl=0.003):
         """
         Args:
             name:
@@ -159,7 +160,9 @@ class ReweightTarget(object):
     def robustness_analysis(self, perturbation, first_trj, last_trj,
                             trj_interval_energy, trj_interval_prop=None,
                             block_size=30, use_cluster=True):
-        org = []; ptb = []; diff = []
+        org = []
+        ptb = []
+        diff = []
         if not use_cluster:
             for starting_trj in range(first_trj, last_trj, block_size):
                 original, perturbed = reweight_many_params(
@@ -195,7 +198,7 @@ class ReweightTarget(object):
                          self.energy_dir, 'block_data/original_{}.dat'
                      ),
                      os.path.join(
-                         self.energy_dir,'block_data/perturbed_{}_{}.dat'
+                         self.energy_dir, 'block_data/perturbed_{}_{}.dat'
                      ),
                      starting_trj, starting_trj + block_size - 1,
                      trj_interval_energy, trj_interval_prop],
@@ -307,10 +310,10 @@ class SensitivityEvaluator(object):
                  sens_type=1, n_peaks=2, n_foots=1):
         """
         Args:
-            exp: the experimental value(s)
-            sim: the simulated value(s)
-            rew: the reweighted value(s)
-            sens_type: the catagory of the property (1: area/scd, 2: rdf)
+            -- exp: the experimental value(s)
+            -- sim: the simulated value(s)
+            -- rew: the reweighted value(s)
+            -- sens_type: the catagory of the property (1: area/scd/db, 2: rdf)
         """
         self.ngroups = ngroups
         self.sim = sim
@@ -327,7 +330,7 @@ class SensitivityEvaluator(object):
     def diff_sim_exp(self):
         if self.sens_type == 1:
             """
-            Area / Order parameter
+            Area / Order parameter / DB (thickness)
             """
             return self.sim - self.exp
         elif self.sens_type == 2:
@@ -348,9 +351,9 @@ class SensitivityEvaluator(object):
     def rel_diff_sim_exp(self):
         if self.sens_type == 1:
             """
-            Area / Order parameter
+            Area / Order parameter / DB
             """
-            return (self.sim - self.exp) /self.exp
+            return (self.sim - self.exp) / self.exp
         elif self.sens_type == 2:
             """
             Things like rdf which contain both positions and magnitudes
@@ -407,11 +410,9 @@ class SensitivityEvaluator(object):
             rel_diff_list = []
             for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
                 rel_diff_list.append(
-                    np.array([(r - x_sim) /x_exp, (pfv - y_sim) / y_exp])
+                    np.array([(r - x_sim) / x_exp, (pfv - y_sim) / y_exp])
                 )
             return np.array(rel_diff_list)
-
-
 
             
 
