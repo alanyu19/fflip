@@ -24,7 +24,7 @@ def save_offsets(groups, offsets, file="./offsets.log"):
     for g, off in zip(groups, offsets):
         with open(file, 'a') as f:
             f.write(
-                "{0:>9} {1:>6} {2:>9} {3:>10.4f}\n".format(
+                "{0:>9} {1:>6} {2:>9} {3:>12.7f}\n".format(
                     g.lipid, g.center_names[0], g.par_type, off
                 )
             )

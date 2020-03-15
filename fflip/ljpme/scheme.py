@@ -2,6 +2,7 @@
 
 import os
 from fflip.chm import *
+from fflip.drude import *
 
 
 class FolderNamingScheme(object):
@@ -227,5 +228,6 @@ lipfinder = {
     'popc': pc,
     'dlpc': pc,
     'pope': pe,
-    'dhpce': pce
+    'dhpce': pce,
+    'drude_dppc': drude_pc
 }
