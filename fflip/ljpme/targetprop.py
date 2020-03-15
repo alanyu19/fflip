@@ -272,6 +272,7 @@ class TargetProperty(TargetSystem):
         self.trj_intvl_e, self.trj_intvl_p = make_guess_of_intervals(self.name)
         # TODO: the lipfinder is loaded from the util, can we get rid of this?
         self.lipid = lipfinder[lipname]
+        self.lipid_scheme = LipidScheme(self.lipid)
         self.ff = ff
         self.groups = parse_groups
         self._prop_block_size = make_guess_of_block_size(0, self.prop_type)

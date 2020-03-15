@@ -6,6 +6,7 @@ from coffe.omm.util import check_and_make_dir
 from fflip.ljpme.jobhandle import *
 from fflip.ljpme.rdfhandle import *
 from fflip.ljpme.util import *
+from fflip.ljpme.scheme import LipidScheme
 
 
 class ReweightTarget(object):
@@ -38,6 +39,7 @@ class ReweightTarget(object):
         self.sim = None
         self.rew = None
         self.lipid = lipid
+        self.lipid_scheme = LipidScheme(lipid)
         self.groups = parse_groups
         self.sim_rdf_r_range = sim_rdf_r_range
         self.sim_rdf_r_intvl = sim_rdf_r_intvl
@@ -60,10 +62,10 @@ class ReweightTarget(object):
         Get the numebr of perturbed parameters
         """
         if self.groups == 'all':
-            return len(self.lipid.parse_gtcnp())
+            return len(self.lipid_scheme.parse())
         elif isinstance(self.groups, list):
             return len(
-                self.lipid.parse_gtcnp(groups=self.groups)
+                self.lipid_scheme.parse(groups=self.groups)
             )
         else:
             raise Exception
