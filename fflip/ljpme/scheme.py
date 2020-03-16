@@ -2,6 +2,7 @@
 
 import os
 from fflip.chm import *
+from fflip.drude import *
 
 
 class FolderNamingScheme(object):
@@ -153,6 +154,17 @@ class SimOptScheme(object):
             return None
 
 
+class LipidScheme(object):
+    def __init__(self, lipid_):
+        self.lipid_ = lipid_
+
+    def parse(self, **kwargs):
+        if type(self.lipid_) == DrudeLipid:
+            return self.lipid_.parse_groups(**kwargs)
+        elif type(self.lipid_) == Lipid:
+            return self.lipid_.parse_gtcnp(**kwargs)
+
+
 # -------------------------------- Defaults ---------------------------------
 
 def make_guess_of_block_size(btype, prop_type):
@@ -227,5 +239,6 @@ lipfinder = {
     'popc': pc,
     'dlpc': pc,
     'pope': pe,
-    'dhpce': pce
+    'dhpce': pce,
+    'drude_dppc': drude_pc
 }

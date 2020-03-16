@@ -14,7 +14,7 @@ def add_a_new_group(existing_groups, new_group):
 
 
 class DrudeChargeGroup:
-    def __init__(self, _id, atom_groups, drude_particles,
+    def __init__(self, id_, atom_groups, drude_particles,
                  charges, alphas, tholes, add_group, neighbors,
                  atoms_same_charge, atoms_same_alpha,
                  add_alpha=None, exclusion=None):
@@ -38,7 +38,7 @@ class DrudeChargeGroup:
         Example:
             dcg = DrudeChargeGroup()
         """
-        self.id = _id
+        self.id = id_
         self.atom_groups = atom_groups  # should be list inside list structure
         self.drude_particles = drude_particles
         self.charges = charges
