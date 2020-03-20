@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import time
 from coffe.omm.reweightprop import *
 from coffe.omm.util import check_and_make_dir
 
@@ -99,10 +100,11 @@ class ReweightTarget(object):
 
     def reweight(self, perturbation, starting_traj, ending_traj,
                  traj_interval_energy, traj_interval_prop=None,
-                 use_cluster=False):
+                 use_cluster=False, **kwargs):
+        param_ids = self.lipid_scheme.param_ids(**kwargs)
         if not use_cluster:
             original, perturbed = reweight_many_params(
-                self.ngroups, self.temperature,
+                param_ids, self.temperature,
                 os.path.join(
                     self.property_dir, 'block_data', self.property_file_template
                 ),
@@ -116,7 +118,7 @@ class ReweightTarget(object):
         else:
             on_cluster(
                 '/u/alanyu/bin/on_cluster/on_cluster_reweight.py',
-                [self.ngroups, self.temperature,
+                [param_ids, self.temperature,
                  os.path.join(
                      self.property_dir, 'block_data',
                      self.property_file_template

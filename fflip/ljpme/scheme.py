@@ -163,6 +163,17 @@ class LipidScheme(object):
             return self.lipid_.parse_groups(**kwargs)
         elif type(self.lipid_) == Lipid:
             return self.lipid_.parse_gtcnp(**kwargs)
+    def param_ids(self, **kwargs):
+        if type(self.lipid_) == DrudeLipid:
+            groups = self.lipid_.parse_groups(**kwargs)
+            ids = []
+            for g in groups:
+                ids.append(str(g.cgid) + '_' + str(g.internal_id))
+            return ids
+        elif type(self.lipid_) == Lipid:
+            return list(
+                range(1, len(self.lipid_.parse_gtcnp(**kwargs)) + 1)
+            )
 
 
 # -------------------------------- Defaults ---------------------------------
