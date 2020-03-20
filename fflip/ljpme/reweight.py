@@ -98,9 +98,10 @@ class ReweightTarget(object):
         else:
             return None
 
-    def reweight(self, perturbation, starting_traj, ending_traj,
+    def reweight(self, starting_traj, ending_traj,
                  traj_interval_energy, traj_interval_prop=None,
-                 use_cluster=False, **kwargs):
+                 use_cluster=False, partition='ivy,sbr',
+                 **kwargs):
         param_ids = self.lipid_scheme.param_ids(**kwargs)
         if not use_cluster:
             original, perturbed = reweight_many_params(
@@ -116,43 +117,30 @@ class ReweightTarget(object):
             self.sim = np.array(original)
             self.rew = np.array(perturbed)
         else:
-            on_cluster(
-                '/u/alanyu/bin/on_cluster/on_cluster_reweight.py',
-                [param_ids, self.temperature,
-                 os.path.join(
-                     self.property_dir, 'block_data',
-                     self.property_file_template
-                 ),
-                 os.path.join(self.energy_dir, 'block_data/original_{}.dat'),
-                 os.path.join(
-                     self.energy_dir, 'block_data/perturbed_{}_{}.dat'
-                 ),
-                 starting_traj, ending_traj,
-                 traj_interval_energy, traj_interval_prop],
-                submit_script='reweight_{}_{}_{}_{}.sh'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ),
-                out_dir='on_cluster_out_reweight_{}_{}_{}_{}'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ),
-                slurm_name='slurm_reweight_{}_{}_{}_{}'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ),
-                exec_name='reweight_{}_{}_{}_{}'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                )
+            from dask.distributed import Client
+            from dask_jobqueue import SLURMCluster
+            cluster = SLURMCluster(
+                queue=partition,
+                cores=1,
+                walltime="00:30:00",
+                shebang='#!/usr/bin/bash',
+                memory="4 GB"
             )
-            fr = FutureResult()
-            self.sim = fr.get_result(
-                'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ), 'original.txt', 10, 'numpy'
+            cluster.scale(jobs=1)
+            client = Client(cluster)
+            future_result = client.submit(
+                reweight_many_params,
+                param_ids, self.temperature,
+                os.path.join(
+                    self.property_dir, 'block_data', self.property_file_template
+                ),
+                os.path.join(self.energy_dir, 'block_data/original_{}.dat'),
+                os.path.join(self.energy_dir, 'block_data/perturbed_{}_{}.dat'),
+                starting_traj, ending_traj,
+                traj_interval_energy, traj_interval_prop
             )
-            self.rew = fr.get_result(
-                'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ), 'perturbed.txt', 10, 'numpy'
-            )
+            self.sim = future_result.result()[0]
+            self.rew = future_result.result()[1]
 
     def save_reweighted(self):
         check_and_make_dir(os.path.abspath(self.result_dir))

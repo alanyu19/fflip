@@ -457,8 +457,9 @@ class TargetProperty(TargetSystem):
         )
 
     def reweight(
-            self, use_cluster=True, force_to=False, save_result=True,
-            quit=False
+            self, use_cluster=True, partition='ivy,sbr',
+            force_to=False, save_result=True,
+            quit=False, **kwargs
     ):
         """
         Args:
@@ -471,9 +472,10 @@ class TargetProperty(TargetSystem):
         """
         if (not self.reweight_target.done_reweighting and not quit) or force_to:
             self.reweight_target.reweight(
-                self.perturbation, self.first_trj, self.last_trj,
+                self.first_trj, self.last_trj,
                 self.trj_intvl_e, self.trj_intvl_p,
-                use_cluster=use_cluster
+                use_cluster=use_cluster, partition=partition,
+                **kwargs
             )
             if save_result:
                 self.reweight_target.save_reweighted()
