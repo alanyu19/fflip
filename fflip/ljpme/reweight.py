@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import time
+import warnings
 from coffe.omm.reweightprop import *
 from coffe.omm.util import check_and_make_dir
-
-from fflip.ljpme.jobhandle import *
 from fflip.ljpme.rdfhandle import *
 from fflip.ljpme.util import *
 from fflip.ljpme.scheme import LipidScheme
@@ -149,16 +147,20 @@ class ReweightTarget(object):
         to_save = np.atleast_1d(self.rew)
         np.savetxt(os.path.join(self.result_dir, self.name + '.rew'), to_save)
 
-    def robustness_analysis(self, perturbation, first_trj, last_trj,
+    def robustness_analysis(self, first_trj, last_trj,
                             trj_interval_energy, trj_interval_prop=None,
-                            block_size=30, use_cluster=True):
+                            block_size=50, use_cluster=True,
+                            partition='ivy,sbr',
+                            **kwargs):
         org = []
         ptb = []
         diff = []
         if not use_cluster:
+            warnings.warn("This part of code is not up to date, use cluster!")
+            param_ids = self.lipid_scheme.param_ids(**kwargs)
             for starting_trj in range(first_trj, last_trj, block_size):
                 original, perturbed = reweight_many_params(
-                    self.ngroups, self.temperature,
+                    param_ids, self.temperature,
                     os.path.join(
                         self.property_dir, 'block_data',
                         self.property_file_template
@@ -178,53 +180,34 @@ class ReweightTarget(object):
             return (np.mean(np.array(diff), axis=0) /
                     np.std(np.array(diff), axis=0)) ** 2
         else:
+            from dask.distributed import Client
+            from dask_jobqueue import SLURMCluster
+            param_ids = self.lipid_scheme.param_ids(**kwargs)
             for starting_trj in range(first_trj, last_trj, block_size):
-                on_cluster(
-                    '/u/alanyu/bin/on_cluster/on_cluster_reweight.py',
-                    [self.ngroups, self.temperature,
-                     os.path.join(
-                         self.property_dir, 'block_data',
-                         self.property_file_template
-                     ),
-                     os.path.join(
-                         self.energy_dir, 'block_data/original_{}.dat'
-                     ),
-                     os.path.join(
-                         self.energy_dir, 'block_data/perturbed_{}_{}.dat'
-                     ),
-                     starting_trj, starting_trj + block_size - 1,
-                     trj_interval_energy, trj_interval_prop],
-                    submit_script='reweight_{}_{}_{}_{}.sh'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                     ),
-                    out_dir='on_cluster_out_reweight_{}_{}_{}_{}'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
+                cluster = SLURMCluster(
+                    queue=partition,
+                    cores=1,
+                    walltime="00:30:00",
+                    shebang='#!/usr/bin/bash',
+                    memory="4 GB"
+                )
+                cluster.scale(jobs=1)
+                client = Client(cluster)
+                future_result = client.submit(
+                    reweight_many_params,
+                    param_ids, self.temperature,
+                    os.path.join(
+                        self.property_dir, 'block_data',
+                        self.property_file_template
                     ),
-                    slurm_name='slurm_reweight_{}_{}_{}_{}'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    ),
-                    exec_name='reweight_{}_{}_{}_{}'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    )
+                    os.path.join(self.energy_dir, 'block_data/original_{}.dat'),
+                    os.path.join(self.energy_dir,
+                                 'block_data/perturbed_{}_{}.dat'),
+                    starting_trj, starting_trj + block_size - 1,
+                    trj_interval_energy, trj_interval_prop
                 )
-            for starting_trj in range(first_trj, last_trj, block_size):
-                fr = FutureResult()
-                original = fr.get_result(
-                    'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    ), 'original.txt', 10, 'numpy'
-                )
-                perturbed = fr.get_result(
-                    'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    ), 'perturbed.txt', 10, 'numpy'
-                )
+                original = future_result.result()[0]
+                perturbed = future_result.result()[1]
                 # this is ugly, change later ...
                 if not ('area' in self.name or 'scd' in self.name):
                     evaluator = SensitivityEvaluator(

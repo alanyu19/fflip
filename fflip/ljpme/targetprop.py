@@ -490,7 +490,9 @@ class TargetProperty(TargetSystem):
     def get_robustness(self, iteration, fromfile=True, **kwargs):
         """
         The robustness here is the reciprocal of the standard DEVIATION of
-        the sensitivity, which is not a solid definition ...
+        the sensitivity, which is not a rigorous definition ... but an useful
+        one.
+        Note: block_size can be passed through kwargs.
         """
         if not hasattr(self, 'reweight_target'):
             self.gen_reweight_target(iteration)
@@ -512,8 +514,7 @@ class TargetProperty(TargetSystem):
                     )
                 )
             diff = self.reweight_target.robustness_analysis(
-                self.perturbation, first, last,
-                self.trj_intvl_e, self.trj_intvl_p, **kwargs
+                first, last, self.trj_intvl_e, self.trj_intvl_p, **kwargs
             )
             if 'area' in self.name or 'scd' in self.name or 'db' in self.name:
                 self.robustness = np.abs(
