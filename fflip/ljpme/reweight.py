@@ -182,6 +182,7 @@ class ReweightTarget(object):
         else:
             from dask.distributed import Client
             from dask_jobqueue import SLURMCluster
+            dask_futures = []
             param_ids = self.lipid_scheme.param_ids(**kwargs)
             for starting_trj in range(first_trj, last_trj, block_size):
                 cluster = SLURMCluster(
@@ -193,22 +194,28 @@ class ReweightTarget(object):
                 )
                 cluster.scale(jobs=1)
                 client = Client(cluster)
-                future_result = client.submit(
-                    reweight_many_params,
-                    param_ids, self.temperature,
-                    os.path.join(
-                        self.property_dir, 'block_data',
-                        self.property_file_template
-                    ),
-                    os.path.join(self.energy_dir, 'block_data/original_{}.dat'),
-                    os.path.join(self.energy_dir,
-                                 'block_data/perturbed_{}_{}.dat'),
-                    starting_trj, starting_trj + block_size - 1,
-                    trj_interval_energy, trj_interval_prop
+                dask_futures.append(
+                    client.submit(
+                        reweight_many_params,
+                        param_ids, self.temperature,
+                        os.path.join(
+                            self.property_dir, 'block_data',
+                            self.property_file_template
+                        ),
+                        os.path.join(
+                            self.energy_dir, 'block_data/original_{}.dat'
+                        ),
+                        os.path.join(
+                            self.energy_dir, 'block_data/perturbed_{}_{}.dat'
+                        ),
+                        starting_trj, starting_trj + block_size - 1,
+                        trj_interval_energy, trj_interval_prop
+                    )
                 )
+                # this is ugly, change later ...
+            for future_result in dask_futures:
                 original = future_result.result()[0]
                 perturbed = future_result.result()[1]
-                # this is ugly, change later ...
                 if not ('area' in self.name or 'scd' in self.name):
                     evaluator = SensitivityEvaluator(
                         self.ngroups, self.exp_x, self.exp, self.sim_x,
