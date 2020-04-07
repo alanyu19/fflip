@@ -251,5 +251,6 @@ lipfinder = {
     'dlpc': pc,
     'pope': pe,
     'dhpce': pce,
-    'drude_dppc': drude_pc
+    'drude_dppc': drude_pc,
+    'drude_prpc': drude_pc
 }
