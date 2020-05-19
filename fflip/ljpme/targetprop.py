@@ -457,8 +457,9 @@ class TargetProperty(TargetSystem):
         )
 
     def reweight(
-            self, use_cluster=True, force_to=False, save_result=True,
-            quit=False
+            self, use_cluster=True, partition='ivy,sbr',
+            force_to=False, save_result=True,
+            quit=False, **kwargs
     ):
         """
         Args:
@@ -471,9 +472,10 @@ class TargetProperty(TargetSystem):
         """
         if (not self.reweight_target.done_reweighting and not quit) or force_to:
             self.reweight_target.reweight(
-                self.perturbation, self.first_trj, self.last_trj,
+                self.first_trj, self.last_trj,
                 self.trj_intvl_e, self.trj_intvl_p,
-                use_cluster=use_cluster
+                use_cluster=use_cluster, partition=partition,
+                **kwargs
             )
             if save_result:
                 self.reweight_target.save_reweighted()
@@ -488,7 +490,9 @@ class TargetProperty(TargetSystem):
     def get_robustness(self, iteration, fromfile=True, **kwargs):
         """
         The robustness here is the reciprocal of the standard DEVIATION of
-        the sensitivity, which is not a solid definition ...
+        the sensitivity, which is not a rigorous definition ... but an useful
+        one.
+        Note: block_size can be passed through kwargs.
         """
         if not hasattr(self, 'reweight_target'):
             self.gen_reweight_target(iteration)
@@ -510,8 +514,7 @@ class TargetProperty(TargetSystem):
                     )
                 )
             diff = self.reweight_target.robustness_analysis(
-                self.perturbation, first, last,
-                self.trj_intvl_e, self.trj_intvl_p, **kwargs
+                first, last, self.trj_intvl_e, self.trj_intvl_p, **kwargs
             )
             if 'area' in self.name or 'scd' in self.name or 'db' in self.name:
                 self.robustness = np.abs(

@@ -16,8 +16,8 @@ def add_a_new_group(existing_groups, new_group):
 class DrudeChargeGroup:
     def __init__(self, id_, atom_groups, drude_particles,
                  charges, alphas, tholes, add_group, neighbors,
-                 atoms_same_charge, atoms_same_alpha,
-                 add_alpha=None, exclusion=None):
+                 atoms_same_charge, atoms_same_alpha, atoms_same_thole=None,
+                 add_alpha=None, add_thole=None, exclusion=None):
         """
         The class for defining drude FF charge group.
         Args:
@@ -48,10 +48,18 @@ class DrudeChargeGroup:
         self.neighbors = neighbors
         self.atoms_same_charge = atoms_same_charge
         self.atoms_same_alpha = atoms_same_alpha
+        if atoms_same_thole is None:
+            self.atoms_same_thole = self.atoms_same_alpha
+        else:
+            self.atoms_same_thole = atoms_same_thole
         if add_alpha is None:
             self.add_alpha = add_group
         else:
             self.add_alpha = add_alpha
+        if add_thole is None:
+            self.add_thole = self.add_alpha
+        else:
+            self.add_thole = add_thole
         if exclusion is None:
             self.exclusion = []
         else:
@@ -106,7 +114,7 @@ class DrudeLipid:
             pass
 
     def parse_groups(self, print_level=0, chg_offset=0.2, alpha_offset=0.02,
-                     id_allowed='all'):
+                     thole_offset=0.02, id_allowed='all'):
         gs = []
         for counter, chggp in enumerate(self.charge_groups):
             if id_allowed is not 'all' and chggp.id not in id_allowed:
@@ -204,39 +212,47 @@ class DrudeLipid:
                             chggp.atom_groups[i]
                         ), 2, print_level
                     )
+                if chggp.add_thole[i]:
+                    assert chggp.drude_particles[i] is not None
+                    drude_atoms = []
+                    heavy_atoms = []
+                    assert len(chggp.atom_groups[i]) == \
+                        len(chggp.drude_particles[i])
+                    for hatom, datom in zip(
+                            chggp.atom_groups[i], chggp.drude_particles[i]
+                    ):
+                        drude_atoms.append(datom)
+                        heavy_atoms.append(hatom)
+                    if chggp.atoms_same_thole is not None:
+                        # atom_combo is a set like (drude_atom, heavy_atom)
+                        for atom_combo in chggp.atoms_same_thole[i]:
+                            drude_atoms.append(atom_combo[0])
+                            heavy_atoms.append(atom_combo[1])
+                    internal_id += 1
+                    add_a_new_group(
+                        gs, DrudeParameter(
+                            lipidname=self.lipname.lower(),
+                            cgid=chggp.id,
+                            internal_id=internal_id,
+                            par_type="thole",
+                            center_names=heavy_atoms,
+                            original_p=chggp.tholes[i],
+                            targeted_range=[
+                                round(chggp.tholes[i] - thole_offset, 9),
+                                round(chggp.tholes[i] + thole_offset, 9)
+                            ],
+                            drude_particles=drude_atoms
+                        )
+                    )
+                else:
+                    self.level_print(
+                        "Skipping thole(s) for {} ...".format(
+                            chggp.atom_groups[i]
+                        ), 2, print_level
+                    )
             self.level_print("", 1, print_level)
-            """
-            if chm_gp.add_lj_gtcnp[i]:
-                atom_list = []
-                for atom in chm_gp.atoms[i]:
-                    atom_list.append(atom)
-                for atom in chm_gp.atoms_same_lj[i]:
-                    atom_list.append(atom)
-                add_a_new_group(
-                    gs, gtcnp(
-                        par_type="sigma", center_names=atom_list,
-                        original_p=round(
-                            (1/2)**(1/6) * chm_gp.half_r_mins[i] * 0.2, 5
-                        ),
-                        targeted_range=[0.8, 1.2]
-                    )
-                )
-                add_a_new_group(
-                    gs, gtcnp(
-                        par_type="epsilon", center_names=atom_list,
-                        original_p=round(chm_gp.epsilons[i] * 4.184, 4), 
-                        targeted_range=[0.8, 1.2]
-                    )
-                )
-            else:
-                self.level_print(
-                    "Skipping LJ parameters for {} ...".format(
-                    chm_gp.atoms[i]
-                    ), 2, print_level
-                )
-            """
         self.level_print(
-            "Total {} DrudeParameter created for {}\n".format(
+            "Total {} DrudeParameters created for {}\n".format(
                 len(gs), self.lipname
             ), 1, print_level
         )

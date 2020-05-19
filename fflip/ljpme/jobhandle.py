@@ -46,7 +46,7 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
     if 'conda_env' in kwargs:
         conda = kwargs['conda_env']
     else:
-        conda = 'drude'
+        conda = str(os.environ['CONDA_DEFAULT_ENV']) 
     with open(kwargs["submit_script"], 'w+') as f:
         f.write(
             "#!/bin/bash\n" +
@@ -71,7 +71,7 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
         f.write("\n" + "python " + executable + " " + argstring +
                 " >& ./{}/{}.out".format(out_dir, kwargs["exec_name"]))
     os.system('sbatch {}'.format(kwargs['submit_script']))
-    time.sleep(1)
-    os.system("rm -f {}".format(kwargs['submit_script']))
+    time.sleep(10)
+    # os.system("rm -f {}".format(kwargs['submit_script']))
 
 
