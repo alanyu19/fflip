@@ -46,10 +46,10 @@ class Lipid:
         else:
             pass
 
-    def parse_gtcnp(self, groups=None, print_level=0):
+    def parse_gtcnp(self, groups='all', print_level=0):
         gs = []
         for counter, chm_gp in enumerate(self.cgroups):
-            if groups is not None:
+            if groups is not 'all':
                 assert isinstance(groups, list)
                 if counter not in groups:
                     continue
