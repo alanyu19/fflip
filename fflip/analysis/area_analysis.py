@@ -3,8 +3,16 @@ from fflip.plot.area_plot import *
 from fflip.analysis.util import *
 import numpy as np
 
-def get_area_and_ka(nlipid, temperature, block_size, step_size, force_calc = False, force_fraction = 0.6, plot = True,
-        file_to_read = 'area.dat', data_col = -1, time_to_skip = 10, plot_title=''):
+def get_area_and_ka(nlipid, temperature, block_size, step_size, force_calc=False, force_fraction=0.6, plot=True,
+        file_to_read='area.dat', data_col=-1, time_to_skip=10, plot_title='', plot_only=False):
+    if plot_only:
+        data0 = np.loadtxt(file_to_read)
+        data0 = 100 * data0
+        file_to_save = 'sa.png'
+        y_max = int(data0.max() + (data0.max() - data0.min())*0.3)
+        y_min = int(data0.min() - (data0.max() - data0.min())*0.3)
+        plot_area(file_to_save, data0, skip_ns=0, interval=step_size, area_range=(y_min, y_max), title=plot_title)
+        return
     data0 = np.loadtxt(file_to_read)
     data_dimension = len(list(data0.shape))
     if data_dimension == 1:

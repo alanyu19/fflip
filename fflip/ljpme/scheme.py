@@ -79,6 +79,8 @@ class SimOptScheme(object):
     @property
     def last_seqno(self):
         finder = {
+            "drude_dppc_bilayer_0_323.15": 200,
+            "drude_dppc_bilayer_5_323.15": 200,
             "dppc_bilayer_0_323.15": 200,
             "dppc_bilayer_-5_323.15": 300,
             "dppc_bilayer_5_323.15": 300,
@@ -99,6 +101,9 @@ class SimOptScheme(object):
     @property
     def boxx(self):
         finder = {
+            "drude_dppc_bilayer_0": 48,
+            "drude_dppc_bilayer_-5": 48,
+            "drude_dppc_bilayer_5": 48,
             "dppc_bilayer_0": 48,
             "dppc_bilayer_-5": 48,
             "dppc_bilayer_5": 48,
@@ -117,6 +122,9 @@ class SimOptScheme(object):
     @property
     def boxz(self):
         finder = {
+            "drude_dppc_bilayer_0": 64,
+            "drude_dppc_bilayer_-5": 64,
+            "drude_dppc_bilayer_5": 64,
             "dppc_bilayer_0": 64,
             "dppc_bilayer_-5": 64,
             "dppc_bilayer_5": 64,

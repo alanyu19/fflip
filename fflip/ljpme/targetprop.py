@@ -330,7 +330,7 @@ class TargetProperty(TargetSystem):
         pass
 
     def parameter_offsets(self):
-        parameter_sets = self.lipid.parse_gtcnp()
+        parameter_sets = self.lipid.parse_groups()
         offsets = [
             gen_sensitivity_offset(
                 ps, percentage=self.perturbation
@@ -355,7 +355,7 @@ class TargetProperty(TargetSystem):
 
     @property
     def parameters(self):
-        return self.lipid.parse_gtcnp(groups=self.groups)
+        return self.lipid.parse_groups(id_allowed=self.groups)
 
     @property
     def num_parameters(self):

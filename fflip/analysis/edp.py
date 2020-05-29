@@ -31,7 +31,7 @@ class ElectronDensityFactory:
         self.save_to_folder = save_to_folder
         self.box_size = box_size
 
-    def __call__(self, first, last):
+    def __call__(self, first, last, skip=[]):
         """
         Args:
             first: int, the first trajectory index
@@ -46,6 +46,8 @@ class ElectronDensityFactory:
             atom_selection="all", load_function=md.load_dcd
         )
         for res in self.residues:
+            if res.lower() in skip:
+                continue
             subdir = os.path.join(
                 self.save_to_folder,
                 './atoms_{}'.format(res.lower())
@@ -84,3 +86,4 @@ class ElectronDensityFactory:
                     edc.num_bins
                 )
                        )
+
