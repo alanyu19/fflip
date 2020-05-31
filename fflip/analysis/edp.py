@@ -158,7 +158,9 @@ class ElectronDensityFactory:
             if self.sep is None:
                 z_bin_file = os.path.join(subdir, 'z.txt')
                 if not os.path.isfile(z_bin_file):
-                    np.savetxt(z_bin_file, np.linspace(
+                    np.savetxt(
+
+                        z_bin_file, np.linspace(
                         -edc.box_length_fixed / 2 + edc.box_length_fixed / edc.num_bins / 2,
                         edc.box_length_fixed / 2 - edc.box_length_fixed / edc.num_bins / 2,
                         edc.num_bins
