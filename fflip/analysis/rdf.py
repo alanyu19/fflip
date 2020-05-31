@@ -61,9 +61,9 @@ class RDF(object):
         self.name = name
         self.sele_words = atom_selections
         if "\'" in atom_selections[0]:
-           self.atom1 = manually_select_res_atom(
-               self.psf_file, atom_selections[0]
-           )
+            self.atom1 = manually_select_res_atom(
+                self.psf_file, atom_selections[0]
+            )
         else:
             self.atom1 = self.topology.select(atom_selections[0])
         if "\'" in atom_selections[1]:
@@ -279,6 +279,9 @@ class RDF(object):
         return np.sqrt(r2_min)
                
     def calc(self, traj, recentered, up_low_recipe, save_sparse):
+        """
+        A custom calculator for 2D-rdf, quite flexible
+        """
         abc = self.box_edges(traj)
         # get bulk density, assume that the 2d density is on x-y plane
         volumns = (abc[:, 0] * abc[:, 1] * abc[:, 2]) if self.dimension == 3 \
@@ -320,6 +323,9 @@ class RDF(object):
                 up_pairs, low_pairs = self.hard_up_low_pairs(up_low_recipe)
                 natom1_upper, natom2_upper, natom1_lower, natom2_lower = \
                     self.hard_natom_up_low(up_low_recipe)
+            # flag for empty void leaflet
+            do_up = up_pairs.size != 0
+            do_low = low_pairs.size != 0
             # bulk density
             dens_bulk_upper = natom2_upper / volumns if not \
                 np.array_equal(self.atom1, self.atom2) else \
@@ -327,27 +333,46 @@ class RDF(object):
             dens_bulk_lower = natom2_lower / volumns if not \
                 np.array_equal(self.atom1, self.atom2) else \
                 (natom2_lower - 1) / volumns
-            r2_min_upper = self.get_distances(abc, traj.xyz, up_pairs)
-            r2_min_lower = self.get_distances(abc, traj.xyz, low_pairs)
-            rdf_upper = np.zeros(int(self.bins.shape[0] - 1))
-            rdf_lower = np.zeros(int(self.bins.shape[0] - 1))
+            if do_up:
+                r2_min_upper = self.get_distances(abc, traj.xyz, up_pairs)
+                rdf_upper = np.zeros(int(self.bins.shape[0] - 1))
+            if do_low:
+                r2_min_lower = self.get_distances(abc, traj.xyz, low_pairs)
+                rdf_lower = np.zeros(int(self.bins.shape[0] - 1))
             for i in range(traj.n_frames):
-                hist_upper = np.histogram(r2_min_upper[:, i], self.bins)
-                hist_lower = np.histogram(r2_min_lower[:, i], self.bins)
-                rdf_upper = rdf_upper + hist_upper[0] / (
-                        self.v_bin_size * (
-                            self.bins[:-1] + self.bin_width/ 2
-                        ) ** (int(self.dimension - 1))
-                ) / dens_bulk_upper[i] / natom1_upper
-                rdf_lower = rdf_lower + hist_lower[0] / (
-                        self.v_bin_size * (
-                            self.bins[:-1] + self.bin_width / 2
-                        )**(int(self.dimension - 1))
-                ) / dens_bulk_lower[i] / natom1_lower
-            rdf_upper = rdf_upper / traj.n_frames
-            rdf_lower = rdf_lower / traj.n_frames
-            rdf_avg = (rdf_upper * natom1_upper + rdf_lower * natom1_lower) / \
-                      (natom1_upper + natom1_lower)
+                if do_up:
+                    hist_upper = np.histogram(r2_min_upper[:, i], self.bins)
+                    rdf_upper = rdf_upper + hist_upper[0] / (
+                            self.v_bin_size * (
+                                self.bins[:-1] + self.bin_width/ 2
+                            ) ** (int(self.dimension - 1))
+                    ) / dens_bulk_upper[i] / natom1_upper
+                if do_low:
+                    hist_lower = np.histogram(r2_min_lower[:, i], self.bins)
+                    rdf_lower = rdf_lower + hist_lower[0] / (
+                            self.v_bin_size * (
+                                self.bins[:-1] + self.bin_width / 2
+                            )**(int(self.dimension - 1))
+                    ) / dens_bulk_lower[i] / natom1_lower
+            if do_up:
+                rdf_upper = rdf_upper / traj.n_frames
+            else:
+                rdf_upper = 0
+            if do_low:
+                rdf_lower = rdf_lower / traj.n_frames
+            else:
+                rdf_lower = 0
+            # The avgi doesn't have too much sense for asymmetric membrane
+            rdf_avg = (
+                rdf_upper * natom1_upper * natom2_upper + rdf_lower * natom1_lower * natom2_lower) / \
+                (natom1_upper * natom2_upper + natom1_lower * natom2_lower
+            )
+            if not do_up:
+                assert do_low
+                rdf_upper = 0 * rdf_lower  # just for convenience in saving
+            if not do_low:
+                assert do_up
+                rdf_lower = 0 * rdf_upper
             return self.bins[:-1] + self.bin_width, \
                 np.array([rdf_avg, rdf_upper, rdf_lower])
 

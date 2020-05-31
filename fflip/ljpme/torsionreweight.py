@@ -320,3 +320,33 @@ def perturb_ctl2_ctl2_ctl2_ctl3(
             e_new = dih_f_ptbd(dd)
             pelist[ki].append(e_new)
     return oelist, pelist
+
+
+def perturb_any_dihedral(
+    atoms, psf_file, crd_file, parameter_files, torfix,
+    traj_template, trj_index, perturbation=0.01):
+    dt = DihedralTarget(
+        atoms,
+        psf_file, crd_file,
+        parameter_files=parameter_files,
+        torsionfix=torfix
+    )
+    dt.create_system()
+    dt.get_cosine_series()
+    # start to get the dihedrals and energies
+    tj = trj_index
+    # oelist = []
+    # pelist = [[] for _ in range(len(dt_list[0].k))]
+    pe_dict = dict()
+    dd = dt.get_dihedrals(traj_template, tj, tj)
+    dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
+    e_old = dih_f_old(dd)
+    # oelist.append(e_old)
+    for ki in range(len(dt.k)):
+        ptbd_k = list(np.array(dt.k))
+        mtps = list(np.array(dt.multp))
+        ptbd_k[ki] += perturbation
+        dih_f_ptbd = DihedralFunction(ptbd_k, dt.multp, dt.phase)
+        e_new = dih_f_ptbd(dd)
+        pe_dict[mtps[ki]] = e_new
+    return e_old, pe_dict

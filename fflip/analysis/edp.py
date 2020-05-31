@@ -3,6 +3,8 @@
 
 from rflow.edp import *
 from fflip.analysis.edp_util import *
+from time import sleep
+from random import randint
 
 
 class ElectronDensityFactory:
@@ -33,7 +35,7 @@ class ElectronDensityFactory:
         # this is currently a toy code, only accept
         self.sep = sep
 
-    def __call__(self, first, last):
+    def __call__(self, first, last, skip=[]):
         """
         Args:
             first: int, the first trajectory index
@@ -41,6 +43,7 @@ class ElectronDensityFactory:
         Returns:
             None
         """
+        sleep(randint(0,5))
         trajs = TrajectoryIterator(
             first_sequence=first, last_sequence=last,
             filename_template=self.traj_template,
@@ -59,6 +62,8 @@ class ElectronDensityFactory:
                 if not os.path.isdir(blocks_dir):
                     os.mkdir(blocks_dir)
             else:
+                if res.lower() == 'tip3':
+                    continue  # don't calculate water since (no interdig)
                 subdir_upper = os.path.join(
                     self.save_to_folder,
                     './atoms_{}_upper'.format(res.lower())
@@ -117,7 +122,7 @@ class ElectronDensityFactory:
                     )
                     edc_lower = ElectronDensityCalculator(
                         atom_selection=
-                        "resname {} and name {} and resid >= {}".format(
+                        "resname {} and name {} and resid > {}".format(
                             res.upper(), atom.upper(), self.sep
                         ),
                         nbins=int(500 * (self.box_size / 10)),
@@ -169,17 +174,18 @@ class ElectronDensityFactory:
             else:
                 z_bin_file1 = os.path.join(subdir_upper, 'z.txt')
                 z_bin_file2 = os.path.join(subdir_lower, 'z.txt')
+                edc = edc_upper
                 np.savetxt(z_bin_file1, np.linspace(
                     -edc.box_length_fixed / 2 + edc.box_length_fixed / edc.num_bins / 2,
                     edc.box_length_fixed / 2 - edc.box_length_fixed / edc.num_bins / 2,
                     edc.num_bins
                 )
                            )
+                edc = edc_lower
                 np.savetxt(z_bin_file2, np.linspace(
                     -edc.box_length_fixed / 2 + edc.box_length_fixed / edc.num_bins / 2,
                     edc.box_length_fixed / 2 - edc.box_length_fixed / edc.num_bins / 2,
                     edc.num_bins
                 )
                            )
-
 
