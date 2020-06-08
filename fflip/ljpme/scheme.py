@@ -89,7 +89,7 @@ class SimOptScheme(object):
             "drude_dmpc_bilayer_0_303.15": 200,
             "drude_popc_bilayer_0_303.15": 200,
             "drude_dopc_bilayer_0_303.15": 200,
-            "drude_prpc_bulk_0_298.15": 100
+            "drude_prpc_bulk_0_298.15": 100,
             "dppc_bilayer_0_323.15": 200,
             "dppc_bilayer_-5_323.15": 300,
             "dppc_bilayer_5_323.15": 300,
