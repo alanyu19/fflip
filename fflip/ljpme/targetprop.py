@@ -3,10 +3,8 @@
 # Contains master class of training target (area, rdf, scd, db ...)
 
 from fflip.ljpme.reweight import *
-from fflip.ljpme.moreutil import *
-
 from coffe.omm.genclac import OmmJobGenerator
-from fflip.chm import *
+from fflip.ljpme.scheme import *
 
 
 class KaGenerator(object):
@@ -274,6 +272,7 @@ class TargetProperty(TargetSystem):
         self.trj_intvl_e, self.trj_intvl_p = make_guess_of_intervals(self.name)
         # TODO: the lipfinder is loaded from the util, can we get rid of this?
         self.lipid = lipfinder[lipname]
+        self.lipid_scheme = LipidScheme(self.lipid)
         self.ff = ff
         self.groups = parse_groups
         self._prop_block_size = make_guess_of_block_size(0, self.prop_type)
@@ -331,7 +330,7 @@ class TargetProperty(TargetSystem):
         pass
 
     def parameter_offsets(self):
-        parameter_sets = self.lipid.parse_gtcnp()
+        parameter_sets = self.lipid.parse_groups()
         offsets = [
             gen_sensitivity_offset(
                 ps, percentage=self.perturbation
@@ -356,7 +355,7 @@ class TargetProperty(TargetSystem):
 
     @property
     def parameters(self):
-        return self.lipid.parse_gtcnp(groups=self.groups)
+        return self.lipid.parse_groups(id_allowed=self.groups)
 
     @property
     def num_parameters(self):
@@ -458,8 +457,9 @@ class TargetProperty(TargetSystem):
         )
 
     def reweight(
-            self, use_cluster=True, force_to=False, save_result=True,
-            quit=False
+            self, use_cluster=True, partition='ivy,sbr',
+            force_to=False, save_result=True,
+            quit=False, **kwargs
     ):
         """
         Args:
@@ -472,9 +472,10 @@ class TargetProperty(TargetSystem):
         """
         if (not self.reweight_target.done_reweighting and not quit) or force_to:
             self.reweight_target.reweight(
-                self.perturbation, self.first_trj, self.last_trj,
+                self.first_trj, self.last_trj,
                 self.trj_intvl_e, self.trj_intvl_p,
-                use_cluster=use_cluster
+                use_cluster=use_cluster, partition=partition,
+                **kwargs
             )
             if save_result:
                 self.reweight_target.save_reweighted()
@@ -489,7 +490,9 @@ class TargetProperty(TargetSystem):
     def get_robustness(self, iteration, fromfile=True, **kwargs):
         """
         The robustness here is the reciprocal of the standard DEVIATION of
-        the sensitivity, which is not a solid definition ...
+        the sensitivity, which is not a rigorous definition ... but an useful
+        one.
+        Note: block_size can be passed through kwargs.
         """
         if not hasattr(self, 'reweight_target'):
             self.gen_reweight_target(iteration)
@@ -511,8 +514,7 @@ class TargetProperty(TargetSystem):
                     )
                 )
             diff = self.reweight_target.robustness_analysis(
-                self.perturbation, first, last,
-                self.trj_intvl_e, self.trj_intvl_p, **kwargs
+                first, last, self.trj_intvl_e, self.trj_intvl_p, **kwargs
             )
             if 'area' in self.name or 'scd' in self.name or 'db' in self.name:
                 self.robustness = np.abs(

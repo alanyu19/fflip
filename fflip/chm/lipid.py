@@ -35,7 +35,7 @@ class Lipid:
         self.charmm_group_list = kwargs["charmm_group_list"]
         self.num_charmm_groups = len(self.charmm_group_list)
         assert "lipname" in kwargs
-        self.lipname= kwargs["lipname"]
+        self.lipname = kwargs["lipname"]
         self.cgroups = []
         for group in self.charmm_group_list:
             self.cgroups.append(group)
@@ -46,10 +46,10 @@ class Lipid:
         else:
             pass
 
-    def parse_gtcnp(self, groups=None, print_level=0):
+    def parse_gtcnp(self, groups='all', print_level=0):
         gs = []
         for counter, chm_gp in enumerate(self.cgroups):
-            if groups is not None:
+            if groups is not 'all':
                 assert isinstance(groups, list)
                 if counter not in groups:
                     continue

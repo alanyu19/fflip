@@ -162,3 +162,36 @@ def hard_up_low_atoms(atoms, recipe):
         return upper_atoms, lower_atoms
     else:
         pass  # being stupid for now
+
+
+def manually_select_res_atom(topology_file, atom_selection):
+    """
+    Only support selection words like:
+        resname * and (name * or name * or ... or name *) .OR.
+        resname * and name *
+    Args:
+        topology_file: psf_file for CHARMM
+        atom_selection: selection words
+    Returns:
+        0 based atom indexes as a numpy.array
+    """
+    if "\'" in atom_selection:
+        # Do our own selection to avoid error in mdtraj for H3' and O3' in
+        # sterols and possible future bad naming of atoms
+        select_words = atom_selection.split()
+        atom_names = list()
+        for iw, w in enumerate(select_words):
+            if 'resname' in w:
+                res_name = select_words[iw + 1]
+            if 'name' in w and 'resname' not in w:
+                atom_names.append(select_words[iw + 1].strip(')'))
+        atom_ids = []
+        with open(topology_file, 'r') as topfile:
+            lines = topfile.readlines()
+        for line in lines:
+            if res_name in line:
+                for atom in atom_names:
+                    if atom.upper() in line:
+                        # mdtraj uses python indexing (starting from 0)
+                        atom_ids.append(int(line.strip().split()[0]) - 1)
+        return np.array(atom_ids)

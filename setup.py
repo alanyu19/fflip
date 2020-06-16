@@ -35,7 +35,6 @@ requirements = [
     'openmm>=7.3.0',
     'openmmtools',
     'mdtraj',
-    'MDAnalysis',
     'Click>=6.0',
     'matplotlib'
     # put package requirements here

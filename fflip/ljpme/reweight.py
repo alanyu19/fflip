@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 
+import warnings
 from coffe.omm.reweightprop import *
 from coffe.omm.util import check_and_make_dir
-
+from fflip.ljpme.rdfhandle import *
 from fflip.ljpme.util import *
+from fflip.ljpme.scheme import LipidScheme
 
 
 class ReweightTarget(object):
     def __init__(self, name, temperature, property_dir, energy_dir,
                  property_file_template, result_dir,
                  exp, lipid, exp_dir, parse_groups,
-                 sim_rdf_r_range=(0.0015, 0.999), sim_rdf_r_intvl=0.003
-                 ):
+                 sim_rdf_r_range=(0.0015, 0.999), sim_rdf_r_intvl=0.003):
         """
         Args:
             name:
@@ -37,6 +38,7 @@ class ReweightTarget(object):
         self.sim = None
         self.rew = None
         self.lipid = lipid
+        self.lipid_scheme = LipidScheme(lipid)
         self.groups = parse_groups
         self.sim_rdf_r_range = sim_rdf_r_range
         self.sim_rdf_r_intvl = sim_rdf_r_intvl
@@ -59,10 +61,10 @@ class ReweightTarget(object):
         Get the numebr of perturbed parameters
         """
         if self.groups == 'all':
-            return len(self.lipid.parse_gtcnp())
+            return len(self.lipid_scheme.parse())
         elif isinstance(self.groups, list):
             return len(
-                self.lipid.parse_gtcnp(groups=self.groups)
+                self.lipid_scheme.parse(groups=self.groups)
             )
         else:
             raise Exception
@@ -94,12 +96,14 @@ class ReweightTarget(object):
         else:
             return None
 
-    def reweight(self, perturbation, starting_traj, ending_traj,
+    def reweight(self, starting_traj, ending_traj,
                  traj_interval_energy, traj_interval_prop=None,
-                 use_cluster=False):
+                 use_cluster=False, partition='ivy,sbr',
+                 **kwargs):
+        param_ids = self.lipid_scheme.param_ids(**kwargs)
         if not use_cluster:
             original, perturbed = reweight_many_params(
-                self.ngroups, self.temperature,
+                param_ids, self.temperature,
                 os.path.join(
                     self.property_dir, 'block_data', self.property_file_template
                 ),
@@ -111,43 +115,30 @@ class ReweightTarget(object):
             self.sim = np.array(original)
             self.rew = np.array(perturbed)
         else:
-            on_cluster(
-                '/u/alanyu/bin/on_cluster/on_cluster_reweight.py',
-                [self.ngroups, self.temperature,
-                 os.path.join(
-                     self.property_dir, 'block_data',
-                     self.property_file_template
-                 ),
-                 os.path.join(self.energy_dir, 'block_data/original_{}.dat'),
-                 os.path.join(
-                     self.energy_dir, 'block_data/perturbed_{}_{}.dat'
-                 ),
-                 starting_traj, ending_traj,
-                 traj_interval_energy, traj_interval_prop],
-                submit_script='reweight_{}_{}_{}_{}.sh'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ),
-                out_dir='on_cluster_out_reweight_{}_{}_{}_{}'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ),
-                slurm_name='slurm_reweight_{}_{}_{}_{}'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ),
-                exec_name='reweight_{}_{}_{}_{}'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                )
+            from dask.distributed import Client
+            from dask_jobqueue import SLURMCluster
+            cluster = SLURMCluster(
+                queue=partition,
+                cores=1,
+                walltime="00:30:00",
+                shebang='#!/usr/bin/bash',
+                memory="4 GB"
             )
-            fr = FutureResult()
-            self.sim = fr.get_result(
-                'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ), 'original.txt', 10, 'numpy'
+            cluster.scale(jobs=1)
+            client = Client(cluster)
+            future_result = client.submit(
+                reweight_many_params,
+                param_ids, self.temperature,
+                os.path.join(
+                    self.property_dir, 'block_data', self.property_file_template
+                ),
+                os.path.join(self.energy_dir, 'block_data/original_{}.dat'),
+                os.path.join(self.energy_dir, 'block_data/perturbed_{}_{}.dat'),
+                starting_traj, ending_traj,
+                traj_interval_energy, traj_interval_prop
             )
-            self.rew = fr.get_result(
-                'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                    self.name, starting_traj, ending_traj, perturbation
-                ), 'perturbed.txt', 10, 'numpy'
-            )
+            self.sim = future_result.result()[0]
+            self.rew = future_result.result()[1]
 
     def save_reweighted(self):
         check_and_make_dir(os.path.abspath(self.result_dir))
@@ -156,14 +147,20 @@ class ReweightTarget(object):
         to_save = np.atleast_1d(self.rew)
         np.savetxt(os.path.join(self.result_dir, self.name + '.rew'), to_save)
 
-    def robustness_analysis(self, perturbation, first_trj, last_trj,
+    def robustness_analysis(self, first_trj, last_trj,
                             trj_interval_energy, trj_interval_prop=None,
-                            block_size=30, use_cluster=True):
-        org = []; ptb = []; diff = []
+                            block_size=50, use_cluster=True,
+                            partition='ivy,sbr',
+                            **kwargs):
+        org = []
+        ptb = []
+        diff = []
         if not use_cluster:
+            warnings.warn("This part of code is not up to date, use cluster!")
+            param_ids = self.lipid_scheme.param_ids(**kwargs)
             for starting_trj in range(first_trj, last_trj, block_size):
                 original, perturbed = reweight_many_params(
-                    self.ngroups, self.temperature,
+                    param_ids, self.temperature,
                     os.path.join(
                         self.property_dir, 'block_data',
                         self.property_file_template
@@ -183,54 +180,42 @@ class ReweightTarget(object):
             return (np.mean(np.array(diff), axis=0) /
                     np.std(np.array(diff), axis=0)) ** 2
         else:
+            from dask.distributed import Client
+            from dask_jobqueue import SLURMCluster
+            dask_futures = []
+            param_ids = self.lipid_scheme.param_ids(**kwargs)
             for starting_trj in range(first_trj, last_trj, block_size):
-                on_cluster(
-                    '/u/alanyu/bin/on_cluster/on_cluster_reweight.py',
-                    [self.ngroups, self.temperature,
-                     os.path.join(
-                         self.property_dir, 'block_data',
-                         self.property_file_template
-                     ),
-                     os.path.join(
-                         self.energy_dir, 'block_data/original_{}.dat'
-                     ),
-                     os.path.join(
-                         self.energy_dir,'block_data/perturbed_{}_{}.dat'
-                     ),
-                     starting_trj, starting_trj + block_size - 1,
-                     trj_interval_energy, trj_interval_prop],
-                    submit_script='reweight_{}_{}_{}_{}.sh'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                     ),
-                    out_dir='on_cluster_out_reweight_{}_{}_{}_{}'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    ),
-                    slurm_name='slurm_reweight_{}_{}_{}_{}'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    ),
-                    exec_name='reweight_{}_{}_{}_{}'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
+                cluster = SLURMCluster(
+                    queue=partition,
+                    cores=1,
+                    walltime="00:30:00",
+                    shebang='#!/usr/bin/bash',
+                    memory="4 GB"
+                )
+                cluster.scale(jobs=1)
+                client = Client(cluster)
+                dask_futures.append(
+                    client.submit(
+                        reweight_many_params,
+                        param_ids, self.temperature,
+                        os.path.join(
+                            self.property_dir, 'block_data',
+                            self.property_file_template
+                        ),
+                        os.path.join(
+                            self.energy_dir, 'block_data/original_{}.dat'
+                        ),
+                        os.path.join(
+                            self.energy_dir, 'block_data/perturbed_{}_{}.dat'
+                        ),
+                        starting_trj, starting_trj + block_size - 1,
+                        trj_interval_energy, trj_interval_prop
                     )
                 )
-            for starting_trj in range(first_trj, last_trj, block_size):
-                fr = FutureResult()
-                original = fr.get_result(
-                    'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    ), 'original.txt', 10, 'numpy'
-                )
-                perturbed = fr.get_result(
-                    'on_cluster_out_reweight_{}_{}_{}_{}/'.format(
-                        self.name, starting_trj, starting_trj + block_size - 1,
-                        perturbation
-                    ), 'perturbed.txt', 10, 'numpy'
-                )
                 # this is ugly, change later ...
+            for future_result in dask_futures:
+                original = future_result.result()[0]
+                perturbed = future_result.result()[1]
                 if not ('area' in self.name or 'scd' in self.name):
                     evaluator = SensitivityEvaluator(
                         self.ngroups, self.exp_x, self.exp, self.sim_x,
@@ -307,10 +292,10 @@ class SensitivityEvaluator(object):
                  sens_type=1, n_peaks=2, n_foots=1):
         """
         Args:
-            exp: the experimental value(s)
-            sim: the simulated value(s)
-            rew: the reweighted value(s)
-            sens_type: the catagory of the property (1: area/scd, 2: rdf)
+            -- exp: the experimental value(s)
+            -- sim: the simulated value(s)
+            -- rew: the reweighted value(s)
+            -- sens_type: the catagory of the property (1: area/scd/db, 2: rdf)
         """
         self.ngroups = ngroups
         self.sim = sim
@@ -327,7 +312,7 @@ class SensitivityEvaluator(object):
     def diff_sim_exp(self):
         if self.sens_type == 1:
             """
-            Area / Order parameter
+            Area / Order parameter / DB (thickness)
             """
             return self.sim - self.exp
         elif self.sens_type == 2:
@@ -348,9 +333,9 @@ class SensitivityEvaluator(object):
     def rel_diff_sim_exp(self):
         if self.sens_type == 1:
             """
-            Area / Order parameter
+            Area / Order parameter / DB
             """
-            return (self.sim - self.exp) /self.exp
+            return (self.sim - self.exp) / self.exp
         elif self.sens_type == 2:
             """
             Things like rdf which contain both positions and magnitudes
@@ -407,11 +392,9 @@ class SensitivityEvaluator(object):
             rel_diff_list = []
             for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
                 rel_diff_list.append(
-                    np.array([(r - x_sim) /x_exp, (pfv - y_sim) / y_exp])
+                    np.array([(r - x_sim) / x_exp, (pfv - y_sim) / y_exp])
                 )
             return np.array(rel_diff_list)
-
-
 
             
 
