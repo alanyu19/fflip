@@ -3,36 +3,41 @@
 from fflip.chm.lipid import *
 
 
-# ***************************************************************************************************************
-# DMPC GROUPS:
-dmpc_gs = list()
+# ******************************************************************************
+# PE GROUPS:
+
+pg_gs = list()
+
 # Please note that the CHARMM force field use Rmin/2 intead of sigma,
 # and the unit of epsilon is kcal/mol
-dmpc_gs.append(
+pg_gs.append(
     CharmmGroup(
-        num_atom_category=5,  # NTL, HL, CTL5, CTL2, HL
-        atoms=[['N'],
-               ['H13A', 'H13B', 'H13C', 'H14A', 'H14B', 'H14C', 'H15A', 'H15B',
-                'H15C'],
-               ['C13', 'C14', 'C15'],
+        num_atom_category=8,  # NH3L, HCL, CTL2, HAL2
+        atoms=[['C13'],
+               ['H13A', 'H13B'],
+               ['OC3'],  # OHL
+               ['HO3'],  # HOL
                ['C12'],
-               ['H12A', 'H12B']],
-        charges=[-0.6, 0.25, -0.35, -0.1, 0.25],
-        half_r_mins=[1.85, 0.7, 2.06, 2.10, 0.7],
-        epsilons=[-0.20, -0.046, -0.0800, -0.0560, -0.046],
-        add_charge_gtcnp=[True, True, True, True, False],
+               ['H12A'],
+               ['OC2'],
+               ['HO2']],
+        charges=[0.05, 0.09, -0.65, 0.42, 0.14, 0.09, -0.65, 0.42],
+        half_r_mins=[2.010, 1.3400, 1.77, 0.2245, 2.275, 1.320, 1.77, 0.2245],
+        epsilons=[
+            -0.0560, -0.028, -0.1521, -0.046, -0.0200, -0.022, -0.1521, -0.046
+        ],
+        add_charge_gtcnp=[True, True, True, True, False, True, True, True],
         atoms_same_charge=None,
-        neighbors=[[2, 3], [4], [1], [4], []],
+        neighbors=[[4], [0], [0], [2], [], [4], [4], [6]],
         cooperators=None,
-        add_lj_gtcnp=[True, True, True, True, False],
-        atoms_same_lj=[
-            [], ['H12A', 'H12B'], [], ['C11', 'C1', 'C22', 'C3', 'C32'], []]
+        add_lj_gtcnp=[False, False, True, True, False, False, False, False],
+        atoms_same_lj=[[], [], ['OC2'], ['HO2'], [], [], [], []]
     )
 )
 
-dmpc_gs.append(
+pg_gs.append(
     CharmmGroup(
-        num_atom_category=7,  # CTL2, HAL2, PL, 02L, OSLP, CTL2, HAL2
+        num_atom_category=7,  # CTL2, HAL2, PL, O2L, OSLP, CTL2, HAL2
         atoms=[['C11'],
                ['H11A', 'H11B'],
                ['P'],
@@ -48,12 +53,14 @@ dmpc_gs.append(
         neighbors=[[2], [0], [3, 4], [4], [5], [6], []],
         cooperators=None,
         add_lj_gtcnp=[False, True, True, True, True, False, False],
-        atoms_same_lj=[[], ['HA', 'HB', 'H2R', 'H2S', 'HX', 'HY', 'H2X', 'H2Y'],
-                       [], [], [], [], []]
+        atoms_same_lj=[
+            [], ['HA', 'HB', 'H2R', 'H2S', 'HX', 'HY', 'H2X', 'H2Y'], [], [],
+            [], [], []
+        ]
     )
 )
 
-dmpc_gs.append(
+pg_gs.append(
     CharmmGroup(
         num_atom_category=7,  # CTL1, HAL1, OSL, CL, OBL, CTL2, HAL2
         atoms=[
@@ -69,7 +76,8 @@ dmpc_gs.append(
         # since 'O31' will exchange charge with it
         # it will get skipped by the exclusion argument
         atoms_same_charge=[
-            ['C3'], [], ['O31'], ['C31'], ['O32'], ['C32'], ['H2X', 'H2Y']],
+            ['C3'], [], ['O31'], ['C31'], ['O32'], ['C32'], ['H2X', 'H2Y']
+        ],
         exclusion=[0],
         neighbors=[[1], [], [0], [2, 4, 5], [3], [3], [5]],
         cooperators=None,
@@ -78,7 +86,7 @@ dmpc_gs.append(
     )
 )
 
-dmpc_gs.append(
+pg_gs.append(
     CharmmGroup(
         num_atom_category=7,  # CTL2, HAL2, OSL, CL, OBL, CTL2, HAL2
         atoms=[['C3'], ['HX', 'HY'], ['O31'], ['C31'], ['O32'],
@@ -97,6 +105,6 @@ dmpc_gs.append(
 
 #  *****************************************************************************
 
-dmpc = Lipid(charmm_group_list=dmpc_gs, lipname="DMPC")
+pg = Lipid(charmm_group_list=pg_gs, lipname="PG")
 
 #  *****************************************************************************
