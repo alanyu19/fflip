@@ -43,7 +43,7 @@ class ElectronDensityFactory:
         Returns:
             None
         """
-        sleep(randint(0,5))
+        sleep(randint(0, 5))
         trajs = TrajectoryIterator(
             first_sequence=first, last_sequence=last,
             filename_template=self.traj_template,
