@@ -9,7 +9,9 @@ from fflip.chm.lipids.sm import *
 
 
 def parse_lipid(lipname):
-    if lipname.lower() in ['dlpc', 'dppc', 'dmpc', 'popc', 'dopc', 'prpc', 'pc']:
+    if lipname.lower() in [
+        'dlpc', 'dppc', 'dmpc', 'popc', 'dopc', 'prpc', 'pc'
+    ]:
         return pc
     if lipname.lower() in ['dppe', 'dope', 'dlpe', 'pope', 'pe']:
         return pe
