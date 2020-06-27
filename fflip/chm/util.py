@@ -7,6 +7,7 @@ from fflip.chm.lipids.pc import *
 from fflip.chm.lipids.pe import *
 from fflip.chm.lipids.pg import *
 from fflip.chm.lipids.pce import *
+from fflip.chm.lipid.sm import *
 
 
 def parse_lipid(lipname):
@@ -18,3 +19,5 @@ def parse_lipid(lipname):
         return pg
     if lipname.lower()[-3:] == 'pce':
         return pce
+    if lipname.lower() in ['psm', 'ssm', 'sm']:
+        return sm
