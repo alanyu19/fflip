@@ -186,7 +186,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(self.radius(res1_head) + self.radius(res2_head))
+                d_list.append(self.radius[res1_head] + self.radius[res2_head])
         return np.array(d_list)
 
     @property
@@ -203,7 +203,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(self.radius(res1_head) + self.radius(res2_head))
+                d_list.append(self.radius[res1_head] + self.radius[res2_head])
         return np.array(d_list)
 
     @property
