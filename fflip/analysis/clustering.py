@@ -8,22 +8,6 @@ from fflip.analysis.util import manually_select_res_atom
 from matplotlib import pyplot as plt
 
 
-# Just like LJ radius
-def radius(head):
-    if head == 'pe':
-        return 0.29
-    elif head == 'pc':
-        return 0.29
-    elif head == 'pg':
-        return 0.29
-    elif head == 'pi':
-        return 0.29
-    elif head == 'ps':
-        return 0.29
-    elif head == 'sito':
-        return 0.29
-
-
 def rpatom(head):
     phos = ['P', 'O11', 'O12', 'O13', 'O14']
     if head.lower() == 'cer':
@@ -114,7 +98,7 @@ def idatom(liptype):
 
 class ClusterLip(object):
     def __init__(self, psf_file, top_res_info, bot_res_info, leaflet_recipe,
-                 min_lipids=3, skip_every_n_frames=10,
+                 radius, min_lipids=3, skip_every_n_frames=10,
                  do_top=True, do_bot=True, clfix=dict()):
         self.min_lipids = min_lipids
         self.skip = skip_every_n_frames
@@ -122,6 +106,7 @@ class ClusterLip(object):
         self.do_bot = do_bot
         self.clfix = clfix
         self.psf_file = psf_file
+        self.radius = radius
         psf = CharmmPsfFile(psf_file)
         self.topology = md.Topology.from_openmm(psf.topology)
         self.top_reslib = []
@@ -201,7 +186,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(radius(res1_head) + radius(res2_head))
+                d_list.append(self.radius(res1_head) + self.radius(res2_head))
         return np.array(d_list)
 
     @property
@@ -218,7 +203,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(radius(res1_head) + radius(res2_head))
+                d_list.append(self.radius(res1_head) + self.radius(res2_head))
         return np.array(d_list)
 
     @property
