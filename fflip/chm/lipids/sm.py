@@ -34,7 +34,7 @@ sm_gs.append(
     CharmmGroup(
         num_atom_category=7,  # CTL2, HAL2, PL, 02L, OSLP, CTL2, HAL2
         atoms=[['C11'],
-               ['H11A', 'H11B']
+               ['H11A', 'H11B'],
                ['P'],
                ['O13', 'O14'],
                ['O11', 'O12'],
@@ -56,7 +56,7 @@ sm_gs.append(
 
 sm_gs.append(
     CharmmGroup(
-        num_atom_category=7,  # CTL1, HAL1, NHL, H, C, O, HAL2
+        num_atom_category=8,  # CTL1, HAL1, NHL, H, C, O, HAL2
         atoms=[
             ['C2S'], ['H2S'], ['NF'], ['HNF'],
             ['C1F'], ['OF'], ['C2F'], ['H2F', 'H2G']
