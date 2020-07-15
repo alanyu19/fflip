@@ -12,15 +12,18 @@ class OrderParameterFactory(object):
     given topology
     """
     def __init__(self, topology, special_carbons_for_splitting={},
-                 sep_leaflet=False, recipe=None):
+                 skip=None, sep_leaflet=False, recipe=None):
         """
         Args:
             topology: the mdtraj topology
             special_carbons_for_splitting: carbon names for splitting
         """
         self.topology = topology
-        self.scd_res_dict = construct_scd_bond(topology)
-        self.bonds_for_residues = construct_scd_bond(topology)
+        scd_res_dict = construct_scd_bond(topology)
+        if skip is not None:
+            for resskip in skip:
+                scd_res_dict.pop(resskip)
+        self.bonds_for_residues = scd_res_dict
         self.scd_pairs_for_residues = gen_scd_pairs(
             self.bonds_for_residues,
             special_carbons_for_residues=special_carbons_for_splitting
