@@ -11,7 +11,7 @@ from matplotlib import pyplot as plt
 def rpatom(head):
     phos = ['P', 'O11', 'O12', 'O13', 'O14']
     if head.lower() == 'cer':
-        return ['O1', 'HO1']
+        return ['C2S']
     elif head.lower() == 'sito':
         return ["O3", "H3\'"]
     elif head.lower() == 'pe':
@@ -393,6 +393,8 @@ class ClusterLip(object):
         if self.count_traj == 1:
             self.tcs, self.tncl, self.tlb, self.bcs, self.bncl, self.blb = \
                 self.calc(traj)
+            tlb = self.tlb
+            blb = self.blb
         else:
             tcs, tncl, tlb, bcs, bncl, blb = \
                 self.calc(traj)
@@ -408,7 +410,7 @@ class ClusterLip(object):
                 './labels/top_labels_{}.txt'.format(
                     self.count_traj + first_traj_index - 1
                 ),
-                np.array(self.tlb),
+                np.array(tlb),
                 fmt='%3d'
             )
             self.top_label_saved = True
@@ -417,7 +419,7 @@ class ClusterLip(object):
                 './labels/bot_labels_{}.txt'.format(
                     self.count_traj + first_traj_index - 1
                 ),
-                np.array(self.blb),
+                np.array(blb),
                 fmt='%3d'
             )
             self.bot_label_saved = True
@@ -553,7 +555,7 @@ class ClusterLip(object):
                     bot_res_info[resname].sum() / np.array(self.bncl).sum()
                 )
                 perc_cls_list_bot.append(
-                    top_res_info[resname].sum() / np.array(self.bncl).sum()
+                    bot_res_info[resname].sum() / np.array(self.bncl).sum()
                 )
                 diffline += "{0:<10.4f}".format(
                     bot_res_info[resname].sum() / np.array(self.bncl).sum() -
