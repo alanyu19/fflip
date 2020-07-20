@@ -204,7 +204,7 @@ def get_atom_density_along_z_axis_for_residue(
         np.savetxt(resdir + '/{}_{}_{}.dat'.format(atm, first, last), data)
 
 
-def combine_to_average(psf_file, path_to_data='.', z_unit_in_A=True):
+def combine_to_average(psf_file, path_to_data='.', z_unit_in_A=True, pop_drude=False):
     atom_folders = glob.glob(os.path.join(path_to_data, 'atoms_*'))
     residues = find_resnames_from_psf(psf_file)
     # compare the residue names got from psf_file
@@ -217,7 +217,16 @@ def combine_to_average(psf_file, path_to_data='.', z_unit_in_A=True):
             print('Warning: density data for residue {} not found'.format(r))
     # averaging data for each res + atom
     for fn, resn in zip(atom_folders, resf):
-        atoms = find_atoms_from_psf(psf_file, resn)
+        atoms_raw = find_atoms_from_psf(psf_file, resn)
+        if pop_drude:
+            atoms = []
+            for _atom in atoms_raw:
+                if _atom[0].upper() != 'D':
+                    atoms.append(_atom)
+                else:
+                   pass
+        else:
+            atoms = atoms_raw
         zdata = np.loadtxt(os.path.join(fn, 'z.txt'))
         if z_unit_in_A:
             zdata = 10 * zdata

@@ -13,7 +13,7 @@ class ElectronDensityFactory:
     """
     def __init__(self, psf_file, traj_template,
                  com_selection=None, box_size=10,
-                 save_to_folder='.', sep=None):
+                 save_to_folder='.', sep=None, pop_drude=False):
         """
         Args:
             psf_file: str, the psf file
@@ -34,6 +34,7 @@ class ElectronDensityFactory:
         self.box_size = box_size
         # this is currently a toy code, only accept
         self.sep = sep
+        self.pop_drude = pop_drude
 
     def __call__(self, first, last, skip=[]):
         """
@@ -83,7 +84,14 @@ class ElectronDensityFactory:
                 if not os.path.isdir(blocks_dir_lower):
                     os.mkdir(blocks_dir_lower)
 
-            atoms = find_atoms_from_psf(self.psf_file, res)
+            atoms_temp = find_atoms_from_psf(self.psf_file, res)
+            if self.pop_drude:
+                atoms = []
+                for _atom in atoms_temp:
+                    if _atom[0].upper() != 'D':
+                        atoms.append(_atom)
+            else:
+                atoms = atoms_temp
             for atom in atoms:
                 if self.sep is None:
                     edc = ElectronDensityCalculator(
