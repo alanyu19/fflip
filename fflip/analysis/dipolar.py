@@ -40,9 +40,8 @@ class DipolarCouplingCalculator:
             vector2 = unit_vector(vector2)
             angles = angle(vector1, vector2)
             # angles_normalized = angles / np.pi
-            distances = vector1
-            print(angles.shape)
-            print(distances.shape)
-            #coupling = 12236.5 * np.mean(
-            #    (3 * np.cos(angles)**2 - 1) * distances**(-3) / 2
-            #)
+            distances = np.linalg.norm(vector1, axis=2) * 10  # to angstrom
+            coupling = 12236.5 * np.mean(
+                (3 * np.cos(angles)**2 - 1) * distances**(-3) / 2
+            )
+            print(coupling)
