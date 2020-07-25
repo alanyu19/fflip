@@ -296,7 +296,7 @@ class ClusterLip(object):
 
     def plot_use_xy(
             self, itraj, frame, leaflet, xy_file='{}_{}_{}.xy',
-            plot=True, edge=1.5
+            plot=True, edge=1.5, addlabel=True, highcontrast=False
     ):
         with open(xy_file.format(leaflet, itraj, frame), 'r') as fr:
             abc_ = fr.readline()
@@ -356,10 +356,16 @@ class ClusterLip(object):
                     color=color_(res_head)
                 )
             else:
-                circle = plt.Circle(
-                    (x_[c_], y_[c_]), self.radius[res_head], color='grey',
-                    fill=None
-                )
+                if highcontrast:
+                    circle = plt.Circle(
+                        (x_[c_], y_[c_]), self.radius[res_head],
+                        color='grey', fill=None
+                    )
+                else:
+                    circle = plt.Circle(
+                        (x_[c_], y_[c_]), self.radius[res_head],
+                        color=color_(res_head), linewidth=0.8, fill=None
+                    )
             ax.add_artist(circle)
         rect = patches.Rectangle(
             (-xcell/2, -ycell/2), xcell, ycell, linewidth=2, linestyle='--',
@@ -367,20 +373,22 @@ class ClusterLip(object):
         )
         ax = plt.gca()
         ax.add_patch(rect)
-        plt.xlabel('x [Å]', fontsize=11, labelpad=2)
-        plt.ylabel('y [Å]', fontsize=11, labelpad=2)
+        if addlabel:
+            plt.xlabel('x [nm]', fontsize=11, labelpad=2)
+            plt.ylabel('y [nm]', fontsize=11, labelpad=2)
         plt.savefig(
-            'visualizing_{}_{}_{}_.png'.format(leaflet, itraj, frame),
+            'visualize_{}_{}_{}.png'.format(leaflet, itraj, frame),
             dpi=300, bbox_inches='tight'
         )
 
     def plot_cluster(
         self, itraj, frame, leaflets=['top', 'bot'], edge=1.5,
-
+        addlabel=True, highcontrast=False
     ):
         for leaflet in leaflets:
             self.plot_use_xy(
-                itraj, frame, leaflet, plot=True, edge=edge
+                itraj, frame, leaflet, plot=True, edge=edge,
+                addlabel=addlabel, highcontrast=highcontrast
             )
 
     def get_distances(self, abc, xyz, pairs, atoms):
