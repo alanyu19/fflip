@@ -356,7 +356,7 @@ class ClusterLip(object):
                 )
             else:
                 circle = plt.Circle(
-                    (x_[c_], y_[c_]), self.radius(res_head), color='grey',
+                    (x_[c_], y_[c_]), self.radius[res_head], color='grey',
                     fill=None
                 )
             ax.add_artist(circle)
