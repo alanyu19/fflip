@@ -26,26 +26,10 @@ def color_(head):
         return 'r'
 
 
-# Just like LJ radius
-def radius(head):
-    if head == 'pe':
-        return 0.29
-    elif head == 'pc':
-        return 0.29
-    elif head == 'pg':
-        return 0.29
-    elif head == 'pi':
-        return 0.29
-    elif head == 'ps':
-        return 0.29
-    elif head == 'sito':
-        return 0.29
-
-
 def rpatom(head):
     phos = ['P', 'O11', 'O12', 'O13', 'O14']
     if head.lower() == 'cer':
-        return ['O1', 'HO1']
+        return ['C2S']
     elif head.lower() == 'sito':
         return ["O3", "H3\'"]
     elif head.lower() == 'pe':
@@ -132,7 +116,7 @@ def idatom(liptype):
 
 class ClusterLip(object):
     def __init__(self, psf_file, top_res_info, bot_res_info, leaflet_recipe,
-                 min_lipids=3, skip_every_n_frames=10,
+                 radius, min_lipids=3, skip_every_n_frames=10,
                  do_top=True, do_bot=True, clfix=dict()):
         self.min_lipids = min_lipids
         self.skip = skip_every_n_frames
@@ -140,8 +124,11 @@ class ClusterLip(object):
         self.do_bot = do_bot
         self.clfix = clfix
         self.psf_file = psf_file
+        self.radius = radius
         psf = CharmmPsfFile(psf_file)
         self.topology = md.Topology.from_openmm(psf.topology)
+        self.top_reslib = []
+        self.bot_reslib = []
         top_atoms = dict()
         bot_atoms = dict()
         top_resnames = dict()
@@ -149,6 +136,7 @@ class ClusterLip(object):
         res_count_top = 0
         res_count_bot = 0
         for res in top_res_info:
+            self.top_reslib.append(res[0])
             atoms = select_identifier(
                 self.psf_file, self.topology,
                 atom_selection="resname {} and name {}".format(
@@ -175,6 +163,7 @@ class ClusterLip(object):
                         top_atoms[res_count_top].append(int(rpa))
 
         for res in bot_res_info:
+            self.bot_reslib.append(res[0])
             atoms = select_identifier(
                 self.psf_file, self.topology,
                 atom_selection='resname {} and name {}'.format(
@@ -215,7 +204,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(radius(res1_head) + radius(res2_head))
+                d_list.append(self.radius[res1_head] + self.radius[res2_head])
         return np.array(d_list)
 
     @property
@@ -232,7 +221,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(radius(res1_head) + radius(res2_head))
+                d_list.append(self.radius[res1_head] + self.radius[res2_head])
         return np.array(d_list)
 
     @property
@@ -500,6 +489,9 @@ class ClusterLip(object):
         return res_indexes
 
     def analyze_res(self):
+        """
+        Returns: top/bot dicts in cluster per frame for resnames
+        """
         # First assert some calculation is done
         assert self.count_traj >= 1
         # Start analysis
@@ -526,12 +518,14 @@ class ClusterLip(object):
                 )
         return top_res_info, bot_res_info
 
-    def __call__(self, traj):
+    def __call__(self, traj, save_labels=True, first_traj_index=1):
         self.count_traj += 1
         self.count_frame += int(traj.xyz.shape[0] / self.skip)
         if self.count_traj == 1:
             self.tcs, self.tncl, self.tlb, self.bcs, self.bncl, self.blb = \
                 self.calc(traj)
+            tlb = self.tlb
+            blb = self.blb
         else:
             tcs, tncl, tlb, bcs, bncl, blb = \
                 self.calc(traj)
@@ -542,14 +536,36 @@ class ClusterLip(object):
             self.bcs += bcs
             self.bncl += bncl
             self.blb += blb
+        if save_labels and self.do_top:
+            np.savetxt(
+                './labels/top_labels_{}.txt'.format(
+                    self.count_traj + first_traj_index - 1
+                ),
+                np.array(tlb),
+                fmt='%3d'
+            )
+            self.top_label_saved = True
+        if save_labels and self.do_bot:
+            np.savetxt(
+                './labels/bot_labels_{}.txt'.format(
+                    self.count_traj + first_traj_index - 1
+                ),
+                np.array(blb),
+                fmt='%3d'
+            )
+            self.bot_label_saved = True
 
-    def plot_and_save(self):
+    def plot_and_save(self, max_size=10):
         top_res_info, bot_res_info = self.analyze_res()
         plt.rc('font', size=9)
         if self.do_top:
             # First plot the distribution of the cluster sizes
             h, b = np.histogram(
-                self.tcs, bins=10, range=(0, 10), normed=True
+                self.tcs, bins=max_size, range=(0, max_size), normed=True
+            )
+            np.savetxt(
+                "topsize.txt", np.array([b[:-1], h]).swapaxes(0, 1), fmt='%.5f',
+                header="Size    Perc"
             )
             plt.figure(figsize=(3, 2))
             plt.bar(b[:-1], h, color='b')
@@ -564,7 +580,7 @@ class ClusterLip(object):
             )
             plt.xlabel("Frame #")
             plt.ylabel("# of lipids in clusters", rotation=90)
-            plt.title("Average (top): {}".format(np.array(self.tncl).mean()))
+            plt.title("Average (top): {0:.2f}".format(np.array(self.tncl).mean()))
             plt.savefig('topnum.png', dpi=330, bbox_inches='tight')
             plt.close()
             # Each residue type
@@ -573,11 +589,12 @@ class ClusterLip(object):
             txtheader = "        "
             compline = "Comp    "
             clusline = "Incl    "
+            diffline = "Gain    "
             for rcount, resname in enumerate(top_res_info):
                 # save time series first
                 np.savetxt(
                     '{}_vs_time_top.txt'.format(
-                        resname.lower()), top_res_info[resname]
+                        resname.lower()), top_res_info[resname], fmt='%3d'
                 )
                 txtheader += "{0:<10s}".format(resname)
                 compline += "{0:<10.4f}".format(
@@ -591,6 +608,10 @@ class ClusterLip(object):
                 )
                 perc_cls_list_top.append(
                     top_res_info[resname].sum() / np.array(self.tncl).sum()
+                )
+                diffline += "{0:<10.4f}".format(
+                    top_res_info[resname].sum() / np.array(self.tncl).sum() -
+                    len(self.top_res_indexes[resname]) / self.top_count
                 )
             # -- plot the percentage and compare with the composition
             plt.figure(figsize=(3, 2))
@@ -612,12 +633,18 @@ class ClusterLip(object):
             plt.close()
             # write out the same info to txt file
             with open('topperc.txt', 'w') as f:
-                f.write(txtheader + '\n' + compline + '\n' + clusline)
-
+                f.write(
+                    txtheader + '\n' + compline + '\n' + clusline + '\n'
+                    + diffline + '\n'
+                )
         if self.do_bot:
             # First plot the distribution of the cluster sizes
             h, b = np.histogram(
-                self.bcs, bins=10, range=(0, 10), normed=True
+                self.bcs, bins=max_size, range=(0, max_size), normed=True
+            )
+            np.savetxt(
+                "botsize.txt", np.array([b[:-1], h]).swapaxes(0, 1), fmt='%.5f',
+                header="Size    Perc"
             )
             plt.figure(figsize=(3, 2))
             plt.bar(b[:-1], h, color='g')
@@ -632,7 +659,7 @@ class ClusterLip(object):
             )
             plt.xlabel("Frame #")
             plt.ylabel("# of lipids in clusters", rotation=90)
-            plt.title("Average (bot): {}".format(np.array(self.bncl).mean()))
+            plt.title("Average (bot): {0:.2f}".format(np.array(self.bncl).mean()))
             plt.savefig('botnum.png', dpi=330, bbox_inches='tight')
             plt.close()
             # Each residue type
@@ -641,11 +668,12 @@ class ClusterLip(object):
             txtheader = "        "
             compline = "Comp    "
             clusline = "Incl    "
+            diffline = "Gain    "
             for rcount, resname in enumerate(bot_res_info):
                 # save time series first
                 np.savetxt(
                     '{}_vs_time_bot.txt'.format(
-                        resname.lower()), bot_res_info[resname]
+                        resname.lower()), bot_res_info[resname], fmt='%3d'
                 )
                 txtheader += "{0:<10s}".format(resname)
                 compline += "{0:<10.4f}".format(
@@ -658,7 +686,11 @@ class ClusterLip(object):
                     bot_res_info[resname].sum() / np.array(self.bncl).sum()
                 )
                 perc_cls_list_bot.append(
-                    top_res_info[resname].sum() / np.array(self.bncl).sum()
+                    bot_res_info[resname].sum() / np.array(self.bncl).sum()
+                )
+                diffline += "{0:<10.4f}".format(
+                    bot_res_info[resname].sum() / np.array(self.bncl).sum() -
+                    len(self.bot_res_indexes[resname]) / self.bot_count
                 )
             # -- plot the percentage and compare with the composition
             plt.figure(figsize=(3, 2))
@@ -680,4 +712,71 @@ class ClusterLip(object):
             plt.close()
             # write out the same info to txt file
             with open('botperc.txt', 'w') as f:
-                f.write(txtheader + '\n' + compline + '\n' + clusline)
+                f.write(
+                    txtheader + '\n' + compline + '\n' + clusline + '\n'
+                    + diffline + '\n'
+                )
+
+    def analyze_more(self, first_traj_index, last_traj_index):
+        # Top leaflet
+        if self.do_top:
+            assert self.top_label_saved
+            topfile = open('top_detail.txt', 'w')
+            header = "     Trj     Frm   Label    Size"
+            for resname_ in self.top_reslib:
+                header += "{0:>8s}".format(resname_)
+            topfile.write(header + '\n')
+            for i in range(first_traj_index, last_traj_index + 1):
+                top_res = np.array(
+                    [self.top_res[i][0] for i in range(1, self.top_count + 1)],
+                    dtype='str'
+                )
+                labels_traj = np.loadtxt(
+                    'labels/top_labels_{}.txt'.format(i)
+                )
+                for fi, labels in enumerate(labels_traj):
+                    num_clusters = labels.max()
+                    for lb in range(int(num_clusters)):
+                        size = (labels == lb).sum()
+                        res_count = ""
+                        for resname_ in self.top_reslib:
+                            res_count += "{0:>8d}".format(
+                                ((labels == lb) * (top_res == resname_)).sum()
+                            )
+                        topfile.write(
+                            "{0:>8d}{1:>8d}{2:>8d}{3:>8d}{4}\n".format(
+                                i, self.skip * fi + 1, lb + 1, size, res_count
+                            )
+                        )
+            topfile.close()
+        # Bottom leaflet
+        if self.do_bot:
+            assert self.bot_label_saved
+            botfile = open('bot_detail.txt', 'w')
+            header = "     Trj     Frm   Label    Size"
+            for resname_ in self.bot_reslib:
+                header += "{0:>8s}".format(resname_)
+            botfile.write(header + '\n')
+            for i in range(first_traj_index, last_traj_index + 1):
+                bot_res = np.array(
+                    [self.bot_res[i][0] for i in range(1, self.bot_count + 1)],
+                    dtype='str'
+                )
+                labels_traj = np.loadtxt(
+                    'labels/bot_labels_{}.txt'.format(i)
+                )
+                for fi, labels in enumerate(labels_traj):
+                    num_clusters = labels.max()
+                    for lb in range(int(num_clusters)):
+                        size = (labels == lb).sum()
+                        res_count = ""
+                        for resname_ in self.bot_reslib:
+                            res_count += "{0:>8d}".format(
+                                ((labels == lb) * (bot_res == resname_)).sum()
+                            )
+                        botfile.write(
+                            "{0:>8d}{1:>8d}{2:>8d}{3:>8d}{4}\n".format(
+                                i, self.skip * fi + 1, lb + 1, size, res_count
+                            )
+                        )
+            botfile.close()
