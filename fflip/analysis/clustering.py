@@ -6,6 +6,24 @@ from sklearn.cluster import DBSCAN
 from simtk.openmm.app import CharmmPsfFile
 from fflip.analysis.util import manually_select_res_atom
 from matplotlib import pyplot as plt
+import matplotlib.patches as patches
+
+
+def color_(head):
+    if head == 'pe':
+        return 'yellow'
+    elif head == 'pc':
+        return 'yellow'
+    elif head == 'pg':
+        return 'yellow'
+    elif head == 'pi':
+        return 'yellow'
+    elif head == 'ps':
+        return 'yellow'
+    elif head == 'sito':
+        return 'b'
+    elif head == 'cer':
+        return 'r'
 
 
 # Just like LJ radius
@@ -259,7 +277,120 @@ class ClusterLip(object):
     @staticmethod
     def box_edges(traj):
         return traj.unitcell_lengths[:, :]
-    
+
+    def write_xy(self, traj, frame, itraj='x', xy_file='{}_{}.xy'):
+        # abc, xyz here are for a single frame
+        topstring = ""
+        botstring = ""
+        xyz = traj.xyz[frame]
+        abc = self.box_edges(traj)[frame]
+        for i, comb in enumerate(self.comb_vectors):
+            for index in self.top_atoms:
+                x = xyz[self.top_atoms[index], 0].mean() + comb[0] * abc[0]
+                y = xyz[self.top_atoms[index], 1].mean() + comb[1] * abc[1]
+                resname = self.top_res[index]
+                topstring += "{0:>5s}{1:>4d}{2:>3d}{3:>10.5f}{4:>10.5f}\n".\
+                    format(resname[0], index, i + 1, x, y)
+            for index in self.bot_atoms:
+                x = xyz[self.bot_atoms[index], 0].mean() + comb[0] * abc[0]
+                y = xyz[self.bot_atoms[index], 1].mean() + comb[1] * abc[1]
+                resname = self.bot_res[index]
+                botstring += "{0:>5s}{1:>4d}{2:>3d}{3:>10.5f}{4:>10.5f}\n".\
+                    format(resname[0], index, i + 1, x, y)
+        with open('top_' + xy_file.format(itraj, frame), 'w') as f:
+            f.write(str(abc[0]) + '\t' + str(abc[1]) + '\n')
+            f.write(topstring)
+        with open('bot_' + xy_file.format(itraj, frame), 'w') as f:
+            f.write(str(abc[0]) + '\t' + str(abc[1]) + '\n')
+            f.write(botstring)
+
+    def plot_use_xy(
+            self, frame, leaflet='top', itraj='x', xy_file='{}_{}_{}.xy',
+            plot=True, edge=1.5
+    ):
+        with open(xy_file.format(leaflet, itraj, frame), 'r') as fr:
+            abc_ = fr.readline()
+        xcell = float(abc_.split()[0])
+        ycell = float(abc_.split()[1])
+        data_ = np.loadtxt(
+            xy_file.format(leaflet, itraj, frame), dtype=str, skiprows=1
+        )
+        xy_ = data_[:, 3:].astype(np.float)
+        assert data_.shape[0] % 9 == 0
+        x_ = xy_[:, 0]
+        xmax = x_.max()
+        xmin = x_.min()
+        x_ = x_ - (xmax + xmin) / 2
+        y_ = xy_[:, 1]
+        ymax = y_.max()
+        ymin = y_.min()
+        y_ = y_ - (ymax + ymin) / 2
+        r2 = []
+        cutoff = []
+        for a_ in range(len(x_)):
+            r2.append([])
+            cutoff.append([])
+            index1 = a_ % int(data_.shape[0] / 9) + 1
+            res1_head = self.top_res[index1][1].split('.')[1].lower()
+            for b_ in range(len(x_)):
+                r2[a_].append(
+                    (x_[a_] - x_[b_])**2 + (y_[a_] - y_[b_])**2
+                )
+                index2 = b_ % int(data_.shape[0] / 9) + 1
+                res2_head = self.top_res[index2][1].split('.')[1].lower()
+                if res1_head + '-' + res2_head in self.clfix:
+                    cutoff[a_].append(self.clfix[res1_head + '-' + res2_head])
+                elif res2_head + '-' + res1_head in self.clfix:
+                    cutoff[a_].append(self.clfix[res2_head + '-' + res1_head])
+                else:
+                    cutoff[a_].append(radius(res1_head) + radius(res2_head))
+        dbstop = DBSCAN(
+            eps=1.0, min_samples=self.min_lipids, metric='precomputed'
+        )
+        matrix = np.sqrt(np.array(r2)) / np.array(cutoff)
+        dbstop.fit(matrix)
+        if not plot:
+            return dbstop  # add bot latter
+        plt.figure(figsize=(2.25, 2.25))
+        plt.xlim(-edge * xcell / 2, edge * xcell / 2)
+        plt.ylim(-edge * ycell / 2, edge * ycell / 2)
+        ax = plt.gca()
+        for c_ in range(len(x_)):
+            indexc = c_ % int(data_.shape[0] / 9) + 1
+            res_head = self.top_res[indexc][1].split('.')[1].lower()
+            if dbstop.labels_[c_] != -1:
+                circle = plt.Circle(
+                    (x_[c_], y_[c_]), radius(res_head),
+                    color=color_(res_head)
+                )
+            else:
+                circle = plt.Circle(
+                    (x_[c_], y_[c_]), radius(res_head), color='grey',
+                    fill=None
+                )
+            ax.add_artist(circle)
+        rect = patches.Rectangle(
+            (-xcell/2, -ycell/2), xcell, ycell, linewidth=2, linestyle='--',
+            edgecolor='k', facecolor='none', zorder=9
+        )
+        ax = plt.gca()
+        ax.add_patch(rect)
+        plt.xlabel('x [Å]', fontsize=11, labelpad=2)
+        plt.ylabel('y [Å]', fontsize=11, labelpad=2)
+        plt.savefig(
+            '{}_{}_{}_visualizing.png'.format(leaflet, itraj, frame),
+            dpi=300, bbox_inches='tight'
+        )
+
+    def plot_cluster(
+        self, frame, itraj, leaflets=['top', 'bot'], edge=1.5,
+
+    ):
+        for leaflet in leaflets:
+            self.plot_use_xy(
+                frame, leaflet, itraj=itraj, plot=True, edge=edge
+            )
+
     def get_distances(self, abc, xyz, pairs, atoms):
         r2_all_images = []
         group1 = []
