@@ -267,8 +267,9 @@ class ClusterLip(object):
     def box_edges(traj):
         return traj.unitcell_lengths[:, :]
 
-    def write_xy(self, traj, frame, itraj='x', xy_file='{}_{}.xy'):
+    def write_xy(self, traj, itraj, frame, xy_file='{}_{}.xy'):
         # abc, xyz here are for a single frame
+        frame = frame - 1
         topstring = ""
         botstring = ""
         xyz = traj.xyz[frame]
@@ -286,15 +287,15 @@ class ClusterLip(object):
                 resname = self.bot_res[index]
                 botstring += "{0:>5s}{1:>4d}{2:>3d}{3:>10.5f}{4:>10.5f}\n".\
                     format(resname[0], index, i + 1, x, y)
-        with open('top_' + xy_file.format(itraj, frame), 'w') as f:
+        with open('top_' + xy_file.format(itraj, frame + 1), 'w') as f:
             f.write(str(abc[0]) + '\t' + str(abc[1]) + '\n')
             f.write(topstring)
-        with open('bot_' + xy_file.format(itraj, frame), 'w') as f:
+        with open('bot_' + xy_file.format(itraj, frame + 1), 'w') as f:
             f.write(str(abc[0]) + '\t' + str(abc[1]) + '\n')
             f.write(botstring)
 
     def plot_use_xy(
-            self, frame, leaflet='top', itraj='x', xy_file='{}_{}_{}.xy',
+            self, itraj, frame, leaflet, xy_file='{}_{}_{}.xy',
             plot=True, edge=1.5
     ):
         with open(xy_file.format(leaflet, itraj, frame), 'r') as fr:
@@ -369,17 +370,17 @@ class ClusterLip(object):
         plt.xlabel('x [Å]', fontsize=11, labelpad=2)
         plt.ylabel('y [Å]', fontsize=11, labelpad=2)
         plt.savefig(
-            '{}_{}_{}_visualizing.png'.format(leaflet, itraj, frame),
+            'visualizing_{}_{}_{}_.png'.format(leaflet, itraj, frame),
             dpi=300, bbox_inches='tight'
         )
 
     def plot_cluster(
-        self, frame, itraj, leaflets=['top', 'bot'], edge=1.5,
+        self, itraj, frame, leaflets=['top', 'bot'], edge=1.5,
 
     ):
         for leaflet in leaflets:
             self.plot_use_xy(
-                frame, leaflet, itraj=itraj, plot=True, edge=edge
+                itraj, frame, leaflet, plot=True, edge=edge
             )
 
     def get_distances(self, abc, xyz, pairs, atoms):
