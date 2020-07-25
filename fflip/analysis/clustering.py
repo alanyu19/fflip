@@ -332,7 +332,9 @@ class ClusterLip(object):
                 elif res2_head + '-' + res1_head in self.clfix:
                     cutoff[a_].append(self.clfix[res2_head + '-' + res1_head])
                 else:
-                    cutoff[a_].append(radius(res1_head) + radius(res2_head))
+                    cutoff[a_].append(
+                        self.radius[res1_head] + self.radius[res2_head]
+                    )
         dbstop = DBSCAN(
             eps=1.0, min_samples=self.min_lipids, metric='precomputed'
         )
@@ -349,12 +351,12 @@ class ClusterLip(object):
             res_head = self.top_res[indexc][1].split('.')[1].lower()
             if dbstop.labels_[c_] != -1:
                 circle = plt.Circle(
-                    (x_[c_], y_[c_]), radius(res_head),
+                    (x_[c_], y_[c_]), self.radius[res_head],
                     color=color_(res_head)
                 )
             else:
                 circle = plt.Circle(
-                    (x_[c_], y_[c_]), radius(res_head), color='grey',
+                    (x_[c_], y_[c_]), self.radius(res_head), color='grey',
                     fill=None
                 )
             ax.add_artist(circle)

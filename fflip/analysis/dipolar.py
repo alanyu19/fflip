@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from fflip.analysis.util import hard_up_low_atoms
 from fflip.analysis.angle import angle, unit_vector
 
 
