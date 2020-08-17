@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import warnings
 import numpy as np
 import mdtraj as md
 from simtk.openmm.app import CharmmPsfFile
@@ -364,9 +365,9 @@ class RDF(object):
                 rdf_lower = 0
             # The avgi doesn't have too much sense for asymmetric membrane
             rdf_avg = (
-                rdf_upper * natom1_upper * natom2_upper + rdf_lower * natom1_lower * natom2_lower) / \
-                (natom1_upper * natom2_upper + natom1_lower * natom2_lower
-            )
+                rdf_upper * natom1_upper * natom2_upper +
+                rdf_lower * natom1_lower * natom2_lower
+            ) / (natom1_upper * natom2_upper + natom1_lower * natom2_lower)
             if not do_up:
                 assert do_low
                 rdf_upper = 0 * rdf_lower  # just for convenience in saving
@@ -450,7 +451,8 @@ class RDF(object):
                         file_name = os.path.join(
                             save_to, 'rdf-{}-{}-{}.txt'.format(
                                 self.name,
-                                self.count_traj - save_blocks_interval + first_trj_index,
+                                self.count_traj - save_blocks_interval +
+                                first_trj_index,
                                 self.count_traj + first_trj_index - 1
                             )
                         )
@@ -468,7 +470,8 @@ class RDF(object):
                         file_name = os.path.join(
                             save_to,'rdf-{}-{}-{}.txt'.format(
                                 self.name,
-                                self.count_traj - save_blocks_interval + first_trj_index,
+                                self.count_traj - save_blocks_interval +
+                                first_trj_index,
                                 self.count_traj + first_trj_index - 1
                             )
                         )
@@ -547,17 +550,24 @@ class Coordination(object):
                 for j in [0, 1, -1]:
                     comb_vectors.append([i,j])
         return comb_vectors
-    
-    # attention: currently not very correct for water and those have a high diffusion constant
+
     # assumption, the bilayer is lying in the xy plane
     def upper_lower_pairs(self, traj):
         n_frames = traj.n_frames
         zmean_1 = np.mean(traj.xyz[int(n_frames/2), self.atom1, 2])
         zmean_2 = np.mean(traj.xyz[int(n_frames/2), self.atom2, 2])
-        self.upper_atom1 = self.atom1[np.where(traj.xyz[int(n_frames/2), self.atom1, 2] > zmean_1)]
-        self.upper_atom2 = self.atom2[np.where(traj.xyz[int(n_frames/2), self.atom2, 2] > zmean_2)]
-        self.lower_atom1 = self.atom1[np.where(traj.xyz[int(n_frames/2), self.atom1, 2] <= zmean_1)]
-        self.lower_atom2 = self.atom2[np.where(traj.xyz[int(n_frames/2), self.atom2, 2] <= zmean_2)]
+        self.upper_atom1 = self.atom1[
+            np.where(traj.xyz[int(n_frames/2), self.atom1, 2] > zmean_1)
+        ]
+        self.upper_atom2 = self.atom2[
+            np.where(traj.xyz[int(n_frames/2), self.atom2, 2] > zmean_2)
+        ]
+        self.lower_atom1 = self.atom1[
+            np.where(traj.xyz[int(n_frames/2), self.atom1, 2] <= zmean_1)
+        ]
+        self.lower_atom2 = self.atom2[
+            np.where(traj.xyz[int(n_frames/2), self.atom2, 2] <= zmean_2)
+        ]
         upper_pairs = []
         grid1, grid2 = np.meshgrid(self.upper_atom1, self.upper_atom2)
         for i in range(grid1.shape[0]):
@@ -572,27 +582,37 @@ class Coordination(object):
 
     def natom_upper_lower(self, traj):
         # for getting the bulk density, suppose the diffusion is not very fast,
-        # so that the bulk density won't change (statistically), this (and upper_lower_pairs)
-        # can be improved by per frame calculation, but will take significantly more time
+        # so that the bulk density won't change (statistically),
+        # this (and upper_lower_pairs) can be improved by per frame
+        # calculation, but will take significantly more time
         n_frames = traj.n_frames
         zmean_1 = np.mean(traj.xyz[int(n_frames/2), self.atom1, 2])
         zmean_2 = np.mean(traj.xyz[int(n_frames/2), self.atom2, 2])
         natom1_upper = np.shape(
-            self.atom1[np.where(traj.xyz[int(n_frames/2), self.atom1, 2] > zmean_1)]
+            self.atom1[
+                np.where(traj.xyz[int(n_frames/2), self.atom1, 2] > zmean_1)
+            ]
         )[0]
         natom1_lower = np.shape(
-            self.atom1[np.where(traj.xyz[int(n_frames/2), self.atom1, 2] <= zmean_1)]
+            self.atom1[
+                np.where(traj.xyz[int(n_frames/2), self.atom1, 2] <= zmean_1)
+            ]
         )[0]
         natom2_upper = np.shape(
-            self.atom2[np.where(traj.xyz[int(n_frames/2), self.atom2, 2] > zmean_2)]
+            self.atom2[
+                np.where(traj.xyz[int(n_frames/2), self.atom2, 2] > zmean_2)
+            ]
         )[0]
         natom2_lower = np.shape(
-            self.atom2[np.where(traj.xyz[int(n_frames/2), self.atom2, 2] <= zmean_2)]
+            self.atom2[
+                np.where(traj.xyz[int(n_frames/2), self.atom2, 2] <= zmean_2)
+            ]
         )[0]
         return natom1_upper, natom2_upper, natom1_lower, natom2_lower
 
-    def box_edges(self, traj):
-        return traj.unitcell_lengths[:,:]
+    @staticmethod
+    def box_edges(traj):
+        return traj.unitcell_lengths[:, :]
     
     def get_distances(self, abc, xyz, pairs):
         # particle_a and particle_b should be the atom indexes
@@ -603,57 +623,79 @@ class Coordination(object):
                 for a, b in pairs:                    
                     # xyz[frame, atom, axis]
                     if a != b:
-                        r2_image.append((xyz[:, a, 0] - xyz[:, b, 0] + comb[0] * abc[:, 0])**2 + \
-                                        (xyz[:, a, 1] - xyz[:, b, 1] + comb[1] * abc[:, 1])**2 + \
-                                        (xyz[:, a, 2] - xyz[:, b, 2] + comb[2] * abc[:, 2])**2
-                                       )
+                        r2_image.append(
+                            (xyz[:, a, 0]-xyz[:, b, 0]+comb[0]*abc[:, 0])**2 +
+                            (xyz[:, a, 1]-xyz[:, b, 1]+comb[1]*abc[:, 1])**2 +
+                            (xyz[:, a, 2]-xyz[:, b, 2]+comb[2]*abc[:, 2])**2
+                        )
             elif self.dimension == 2:
                 for a,  b in pairs:
                     if a != b:
-                        r2_image.append((xyz[:, a, 0] - xyz[:, b, 0] + comb[0] * abc[:, 0])**2 + \
-                                        (xyz[:, a, 1] - xyz[:, b, 1] + comb[1] * abc[:, 1])**2
-                                       )
+                        r2_image.append(
+                            (xyz[:, a, 0]-xyz[:, b, 0]+comb[0]*abc[:, 0])**2 +
+                            (xyz[:, a, 1]-xyz[:, b, 1]+comb[1]*abc[:, 1])**2
+                        )
             else:
-                print("Warning: you are on the planet earth, select dimension under 3")
+                warnings.warn(
+                    "Warning: you are on the planet earth, "
+                    "select dimension under 3"
+                )
             r2_all_images.append(r2_image)
-        r2_min = np.min(np.array(r2_all_images), axis = 0)
+        r2_min = np.min(np.array(r2_all_images), axis=0)
         # print(r2_min.shape) r2_min[pairs, frames]
         return np.sqrt(r2_min)
                
     def calc(self, traj, calc_avg):
-        abc = self.box_edges(traj) # T
-        if self.separate_leaflet == False :
+        abc = self.box_edges(traj)  # T
+        if not self.separate_leaflet:
             r2_min = self.get_distances(abc, traj.xyz, self.pairs)
-            count_all_pairs = ((r2_min > self.r_range[0]) & (r2_min <= self.r_range[1])).sum(axis=0)
+            count_all_pairs = (
+                (r2_min > self.r_range[0]) & (r2_min <= self.r_range[1])
+            ).sum(axis=0)
             if calc_avg:
-                count_sum = ((r2_min > self.r_range[0]) & (r2_min <= self.r_range[1])).sum()
-            count_avg = count_sum/ self.natom1/ traj.n_frames
-            count_in_range = count_all_pairs/ self.natom1
+                count_sum = (
+                    (r2_min > self.r_range[0]) & (r2_min <= self.r_range[1])
+                ).sum()
+            count_avg = count_sum / self.natom1 / traj.n_frames
+            count_in_range = count_all_pairs / self.natom1
             return count_in_range, count_avg
         else:
             upper_pairs, lower_pairs = self.upper_lower_pairs(traj)
-            natom1_upper, natom2_upper, natom1_lower, natom2_lower = self.natom_upper_lower(traj)
+            natom1_upper, natom2_upper, natom1_lower, natom2_lower = \
+                self.natom_upper_lower(traj)
             r2_min_upper = self.get_distances(abc, traj.xyz, upper_pairs)
             r2_min_lower = self.get_distances(abc, traj.xyz, lower_pairs)
-            count_all_upper = ((r2_min_upper > self.r_range[0]) & (r2_min_upper <= self.r_range[1])).sum(axis=0)
-            count_all_lower = ((r2_min_lower > self.r_range[0]) & (r2_min_lower <= self.r_range[1])).sum(axis=0)
-            count_sum_upper = ((r2_min_upper > self.r_range[0]) & (r2_min_upper <= self.r_range[1])).sum()
-            count_sum_lower = ((r2_min_lower > self.r_range[0]) & (r2_min_lower <= self.r_range[1])).sum()
-            count_in_range_upper = count_all_upper/ natom1_upper if natom1_upper != 0 else 0
-            count_in_range_lower = count_all_lower/ natom1_lower if natom1_lower != 0 else 0
-            count_in_range = (count_in_range_lower + count_in_range_upper)/ 2
-            count_avg = (count_sum_lower + count_sum_upper)/ (natom1_lower + natom1_upper)/ traj.n_frames
+            count_all_upper = ((r2_min_upper > self.r_range[0]) &
+                               (r2_min_upper <= self.r_range[1])).sum(axis=0)
+            count_all_lower = ((r2_min_lower > self.r_range[0]) &
+                               (r2_min_lower <= self.r_range[1])).sum(axis=0)
+            count_sum_upper = ((r2_min_upper > self.r_range[0]) &
+                               (r2_min_upper <= self.r_range[1])).sum()
+            count_sum_lower = ((r2_min_lower > self.r_range[0]) &
+                               (r2_min_lower <= self.r_range[1])).sum()
+            count_in_range_upper = \
+                count_all_upper / natom1_upper if natom1_upper != 0 else 0
+            count_in_range_lower = \
+                count_all_lower / natom1_lower if natom1_lower != 0 else 0
+            count_in_range = (count_in_range_lower + count_in_range_upper) / 2
+            count_avg = (count_sum_lower + count_sum_upper) / (
+                    natom1_lower + natom1_upper
+            ) / traj.n_frames
             return count_in_range, count_avg
             
-    def __call__(self, traj, verbose = 1, print_interval = 10, calc_avg = True):
+    def __call__(self, traj, verbose=1, print_interval=10, calc_avg=True):
         self.count_traj += 1
         if verbose >= 2:
-            print('Calculating <{}> coordination number for trajectory {} ...'.format(
-                self.name, self.count_traj))
+            print(
+                'Calculating <{}> coordination number '
+                'for trajectory {} ...'.format(self.name, self.count_traj)
+            )
         elif verbose == 1:
             if (self.count_traj - 1) % print_interval == 0:
-                print('Calculating <{}> coordination number for trajectory {} ...'.format(
-                    self.name, self.count_traj))
+                print(
+                    'Calculating <{}> coordination number'
+                    ' for trajectory {} ...'.format(self.name, self.count_traj)
+                )
         else:
             pass
         if self.method == 'rdf':
@@ -663,27 +705,40 @@ class Coordination(object):
             volumns = (abc[:, 0] * abc[:, 1] * abc[:, 2])
             volumn_avg = np.mean(volumns)
             self.radius, rdf = md.compute_rdf(traj, self.pairs, self.r_range)
-            dens_bulk = self.natom2/ volumn_avg if not np.array_equal(self.atom1, self.atom2) else \
-            (self.natom2 - 1)/ volumn_avg
-            coordination_number_avg = (4 * np.pi * dens_bulk * (self.radius[1] - self.radius[0]) * (
-                self.radius[int(self.r_range[0]/0.005): int(self.r_range[1]/0.005)]
-            )**2 * rdf[int(self.r_range[0]/0.005): int(self.r_range[1]/0.005)]).sum()
+            dens_bulk = self.natom2 / volumn_avg if not np.array_equal(
+                self.atom1, self.atom2
+            ) else (self.natom2 - 1) / volumn_avg
+            coordination_number_avg = (
+                    4 * np.pi * dens_bulk * (
+                        self.radius[1] - self.radius[0]
+                    ) * (
+                            self.radius[
+                                int(self.r_range[0]/0.005):
+                                int(self.r_range[1]/0.005)
+                            ]
+                        )**2 * rdf[
+                               int(self.r_range[0]/0.005):
+                               int(self.r_range[1]/0.005)]
+            ).sum()
             if self.count_traj == 1:
                 self.coordination_number_avg = coordination_number_avg
             else:
-                self.coordination_number_avg = (self.coordination_number_avg * (self.count_traj - 1
-                                                                               ) + coordination_number_avg
-                                           ) / self.count_traj
-            return None # Currently don't support per frame calculation
+                self.coordination_number_avg = (
+                    self.coordination_number_avg * (self.count_traj - 1) +
+                    coordination_number_avg
+                ) / self.count_traj
+            return None  # Currently don't support per frame calculation
         elif self.method == 'count':
-            coordination_number_per_frame, coordination_number_avg = self.calc(traj, calc_avg)
+            coordination_number_per_frame, coordination_number_avg = \
+                self.calc(traj, calc_avg)
             if self.count_traj == 1:
                 self.coordination_number_avg = coordination_number_avg
             else:
-                self.coordination_number_avg = (self.coordination_number_avg * (self.count_traj - 1
-                                                                               ) + coordination_number_avg
-                                           )/ self.count_traj
+                self.coordination_number_avg = (
+                    self.coordination_number_avg * (self.count_traj - 1) +
+                    coordination_number_avg
+                ) / self.count_traj
             # this is for the Timeseries, so no need to do appending
             return coordination_number_per_frame
         else:
-            print('Method not accepted!')
+            raise Exception('Method not accepted!')
