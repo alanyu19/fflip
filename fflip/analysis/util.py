@@ -195,3 +195,68 @@ def manually_select_res_atom(topology_file, atom_selection):
                         # mdtraj uses python indexing (starting from 0)
                         atom_ids.append(int(line.strip().split()[0]) - 1)
         return np.array(atom_ids)
+
+
+def res_leader(resname):
+    if resname in ['PLPC', 'DLIPE', 'PNPG', 'PLPI', 'DLIPS']:
+        return 'P'
+    elif 'CET' in resname:
+        return 'NF'
+    elif 'SITO' in resname:
+        return 'O3'
+
+
+def find_up_low_from_crd(crd_file):
+    with open(crd_file, 'r') as f:
+        lines = f.readlines()
+    reading = False
+    upper = []
+    lower = []
+    for l_number, l in enumerate(lines):
+        if reading == True:
+            elements = l.strip().split()
+            atomindex = elements[0]
+            resname = elements[2]
+            atomname = elements[3]
+            zcoor = float(elements[6])
+            segname = elements[7]
+            resid = int(elements[8])
+            if atomname == res_leader(resname):
+                if zcoor > 0:
+                    if 'GLP' in segname:
+                        upper.append(segname)
+                    else:
+                        upper.append(resname + ' ' + str(resid))
+                else:
+                    if 'GLP' in segname:
+                        lower.append(segname)
+                    else:
+                        lower.append(resname + ' ' + str(resid))
+        if 'EXT' in l:
+            reading = True
+
+    reading = False
+    upper_atoms = []
+    lower_atoms = []
+    for l_number, l in enumerate(lines):
+        if reading == True:
+            elements = l.strip().split()
+            atomindex = elements[0]
+            resname = elements[2]
+            atomname = elements[3]
+            zcoor = float(elements[6])
+            segname = elements[7]
+            resid = int(elements[8])
+            if 'GLP' in segname:
+                if segname in upper:
+                    upper_atoms.append(int(atomindex))
+                elif segname in lower:
+                    lower_atoms.append(int(atomindex))
+            else:
+                if resname + ' ' + str(resid) in upper:
+                    upper_atoms.append(int(atomindex))
+                elif resname + ' ' + str(resid) in lower:
+                    lower_atoms.append(int(atomindex))
+        if 'EXT' in l:
+            reading = True
+    return upper_atoms, lower_atoms
