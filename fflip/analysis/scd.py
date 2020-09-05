@@ -96,7 +96,7 @@ class OrderParameterCalculation(object):
             self.scd_up = 0.0
             self.scd_low = 0.0
 
-    def __call__(self, traj):
+    def __call__(self, traj, per_mol=False):
         if not self.sep_leaflet:
             sele1 = self.topology.select(
                 "resname {} and name {}".format(self.residue, self.atom1)
@@ -128,8 +128,11 @@ class OrderParameterCalculation(object):
             self.n_frames += traj.n_frames
             self.scd /= self.n_frames
 
-            # return the average scd for every frame
-            return -1.5 * np.mean(scd, axis=1) + 0.5
+            # return the scd for every frame
+            if per_mol:
+                return -1.5 * scd + 0.5
+            else:
+                return -1.5 * np.mean(scd, axis=1) + 0.5
         else:
             assert self.recipe is not None
             sele1 = self.topology.select(
@@ -181,6 +184,9 @@ class OrderParameterCalculation(object):
             self.scd_up /= self.n_frames
             self.scd_low /= self.n_frames
 
-            # return the average scd for every frame
-            return -1.5 * np.mean(scd_up, axis=1) + 0.5, -1.5 * np.mean(
-                scd_low, axis=1) + 0.5
+            # return the scd for every frame
+            if per_mol:
+                return -1.5 * scd_up + 0.5, -1.5 * scd_low + 0.5
+            else:
+                return -1.5 * np.mean(scd_up, axis=1) + 0.5, -1.5 * np.mean(
+                    scd_low, axis=1) + 0.5
