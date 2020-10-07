@@ -257,7 +257,7 @@ def perturb_4_ctl2(psf_file, crd_file, parameter_files,
             psf_file, crd_file,
             parameter_files=parameter_files, torsionfix=0
         )
-        if i==sn2[0]:
+        if i == sn2[0]:
             dt.create_system()
             dt.get_cosine_series()
         else:
