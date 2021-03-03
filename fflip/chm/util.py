@@ -21,3 +21,26 @@ def parse_lipid(lipname):
         return pce
     if lipname.lower() in ['psm', 'ssm', 'sm']:
         return sm
+
+
+def cosine_series(k, n, p, interval=5):
+    """
+    energy profile based on user provided:
+    k: the force constant(s), can be array like or float
+    n: the multiplicity(ies)
+    p: the phase(s) in degrees
+    return:
+    angles, energies
+    """
+    energy = 0
+    angles = np.arange(-180, 180, interval)
+    angles = angles * np.pi / 180
+    if type(k) == float:
+        k = [k]
+        n = [n]
+        p = [p]
+    p = np.array(p)
+    for k_, n_, p_ in zip(k, n, p):
+        enegy += k_ * (1 + np.cos(n_*angles - p_))
+    return angles, energy
+        
