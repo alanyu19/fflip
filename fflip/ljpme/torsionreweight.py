@@ -191,34 +191,34 @@ def do_torsion_optmization(
             alpha=0.75, linewidth=5, color='red'
         )
         # publish only, comment out after using!
-        # np.savetxt(
-        #     '{}-{}-{}-{}.pme.txt'.format(
-        #         atoms[0].upper(), atoms[1].upper(),
-        #         atoms[2].upper(), atoms[3].upper()
-        #     ), np.array([xaxis, ref_distrib]).transpose()
-        # )
+        np.savetxt(
+            '{}-{}-{}-{}.pme.txt'.format(
+                atoms[0].upper(), atoms[1].upper(),
+                atoms[2].upper(), atoms[3].upper()
+            ), np.array([xaxis, ref_distrib]).transpose()
+        )
         plt.plot(
             xaxis, unfixed_distrib, label='Before fitting',
             alpha=0.75, linewidth=3, color='royalblue'
         )
         # publish only, comment out after using!
-        # np.savetxt(
-        #     '{}-{}-{}-{}.unfixed.txt'.format(
-        #         atoms[0].upper(), atoms[1].upper(),
-        #         atoms[2].upper(), atoms[3].upper()
-        #     ), np.array([xaxis, unfixed_distrib]).transpose()
-        # )
+        np.savetxt(
+            '{}-{}-{}-{}.unfixed.txt'.format(
+                atoms[0].upper(), atoms[1].upper(),
+                atoms[2].upper(), atoms[3].upper()
+            ), np.array([xaxis, unfixed_distrib]).transpose()
+        )
         plt.plot(
             xaxis, fixed_distrib, label='After fitting',
             alpha=0.75, linewidth=5, color='darkorange'
         )
         # publish only, comment out after using!
-        # np.savetxt(
-        #     '{}-{}-{}-{}.fixed.txt'.format(
-        #         atoms[0].upper(), atoms[1].upper(),
-        #         atoms[2].upper(), atoms[3].upper()
-        #     ), np.array([xaxis, fixed_distrib]).transpose()
-        # )
+        np.savetxt(
+            '{}-{}-{}-{}.fixed.txt'.format(
+                atoms[0].upper(), atoms[1].upper(),
+                atoms[2].upper(), atoms[3].upper()
+            ), np.array([xaxis, fixed_distrib]).transpose()
+        )
         if two_stages:
             plt.plot(
                 xaxis, fixed_distrib2, label='Adding multiplicities',
