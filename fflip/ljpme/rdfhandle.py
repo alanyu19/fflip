@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from coffe.omm.exceptions import *
+from fflip.omm.exceptions import *
 
 
 # --------------------------- First things first ---------------------------

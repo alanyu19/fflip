@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from coffe.omm.util import filter_solution
+from fflip.omm.util import filter_solution
 import numpy as np
 import pandas as pd
 from fflip.ljpme.util import get_sign, rename_row_col

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import warnings
-# from coffe.omm.reweightprop import *
-from coffe.omm.util import check_and_make_dir
+# from fflip.omm.reweightprop import *
+from fflip.omm.util import check_and_make_dir
 from fflip.ljpme.reweightfuncs import *
 from fflip.ljpme.rdfhandle import *
 from fflip.ljpme.util import *

@@ -3,7 +3,7 @@
 import numpy as np
 
 from rflow.observables import TimeSeries
-from coffe.omm.util import beta_kjmol
+from fflip.omm.util import beta_kjmol
 
 
 class DataLoader(object):

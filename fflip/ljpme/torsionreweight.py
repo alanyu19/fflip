@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import scipy.optimize as sopt
-from coffe.omm.torsionfuncs import *
+from fflip.omm.torsionfuncs import *
 
 
 class ObjfuncDihedral(object):

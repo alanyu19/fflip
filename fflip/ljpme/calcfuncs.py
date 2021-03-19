@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import os
-from coffe.omm.paragroup import *
+from fflip.omm.paragroup import *
 
 
 def save_nb_change_log(gs, offsets, file="./gtcnp_order.txt"):

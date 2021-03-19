@@ -2,7 +2,7 @@
 # coding: utf-8
 
 
-from coffe.omm.playpara import *
+from fflip.omm.playpara import *
 
 
 def select_a_list_of_atoms(atom_names, topology):
