@@ -67,7 +67,7 @@ def do_torsion_optmization(
         last_torfix=0,
         allowed_m=[1, 2, 3, 4, 5, 6],
         temperature=323.15, nbins=100, plot=True,
-        save_plot_to='/u/alanyu/bin/tools/jplots'
+        save_plot_to='/u/alanyu/tools/jplots'
 ):
     """
 
@@ -115,9 +115,9 @@ def do_torsion_optmization(
         )
         existing_ks_dict[em] = ek
         existing_ps_dict[em] = ep
-    new_ks = list(np.zeros(6))
-    new_ms = list(np.arange(1, 7))
-    new_ps = list(np.zeros(6))
+    new_ks = list(np.zeros(len(allowed_m)))
+    new_ms = allowed_m
+    new_ps = list(np.zeros(len(allowed_m)))
     # Generate the new k and m lists that include more multiplicities
     for m in allowed_m:
         if m in existing_ms:
@@ -190,34 +190,13 @@ def do_torsion_optmization(
             xaxis, ref_distrib, label='Reference (PME)',
             alpha=0.75, linewidth=5, color='red'
         )
-        # publish only, comment out after using!
-        np.savetxt(
-            '{}-{}-{}-{}.pme.txt'.format(
-                atoms[0].upper(), atoms[1].upper(),
-                atoms[2].upper(), atoms[3].upper()
-            ), np.array([xaxis, ref_distrib]).transpose()
-        )
         plt.plot(
             xaxis, unfixed_distrib, label='Before fitting',
             alpha=0.75, linewidth=3, color='royalblue'
         )
-        # publish only, comment out after using!
-        np.savetxt(
-            '{}-{}-{}-{}.unfixed.txt'.format(
-                atoms[0].upper(), atoms[1].upper(),
-                atoms[2].upper(), atoms[3].upper()
-            ), np.array([xaxis, unfixed_distrib]).transpose()
-        )
         plt.plot(
             xaxis, fixed_distrib, label='After fitting',
             alpha=0.75, linewidth=5, color='darkorange'
-        )
-        # publish only, comment out after using!
-        np.savetxt(
-            '{}-{}-{}-{}.fixed.txt'.format(
-                atoms[0].upper(), atoms[1].upper(),
-                atoms[2].upper(), atoms[3].upper()
-            ), np.array([xaxis, fixed_distrib]).transpose()
         )
         if two_stages:
             plt.plot(
@@ -257,7 +236,7 @@ def perturb_4_ctl2(psf_file, crd_file, parameter_files,
             psf_file, crd_file,
             parameter_files=parameter_files, torsionfix=0
         )
-        if i == sn2[0]:
+        if i==sn2[0]:
             dt.create_system()
             dt.get_cosine_series()
         else:
@@ -286,7 +265,10 @@ def perturb_4_ctl2(psf_file, crd_file, parameter_files,
     oelist = []
     pelist = [[] for _ in range(len(dt_list[0].k))]
     for dt in dt_list:
-        dd = dt.get_dihedrals(traj_template, tj, tj)
+        if isinstance(trj_index, list):
+            dd = dt.get_dihedrals(traj_template, tj[0], tj[1])
+        elif isinstance(trj_index, int):
+            dd = dt.get_dihedrals(traj_template, tj, tj)
         dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
         e_old = dih_f_old(dd)
         oelist.append(e_old)
@@ -330,7 +312,10 @@ def perturb_ctl2_ctl2_ctl2_ctl3(
     oelist = []
     pelist = [[] for _ in range(len(dt_list[0].k))]  # assume homogeneous
     for dt in dt_list:
-        dd = dt.get_dihedrals(traj_template, tj, tj)
+        if isinstance(trj_index, list):
+            dd = dt.get_dihedrals(traj_template, tj[0], tj[1])
+        elif isinstance(trj_index, int):
+            dd = dt.get_dihedrals(traj_template, tj, tj)
         dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
         e_old = dih_f_old(dd)
         oelist.append(e_old)
@@ -359,7 +344,10 @@ def perturb_any_dihedral(
     # oelist = []
     # pelist = [[] for _ in range(len(dt_list[0].k))]
     pe_dict = dict()
-    dd = dt.get_dihedrals(traj_template, tj, tj)
+    if isinstance(trj_index, list):
+        dd = dt.get_dihedrals(traj_template, tj[0], tj[1])
+    elif isinstance(trj_index, int):
+        dd = dt.get_dihedrals(traj_template, tj, tj)
     dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
     e_old = dih_f_old(dd)
     # oelist.append(e_old)
