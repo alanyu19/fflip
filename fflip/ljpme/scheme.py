@@ -100,7 +100,6 @@ class SimOptScheme(object):
             "dlpc_bilayer_0_303.15": 200,
             "dmpc_bilayer_0_303.15": 200,
             "popc_bilayer_0_303.15": 200,
-            "popc_bilayer_0_303.15": 200,
             "prpc_bulk_0_298.15": 100
         }
         return finder["{}_{}_{}_{}".format(

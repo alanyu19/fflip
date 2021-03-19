@@ -14,8 +14,11 @@ Nframe = 1
 # Find line number for (x_pt, y_pt)
 def res_info(x_pt, y_pt, block_data):
     for entry in block_data:
-        if "{:.5f}".format(float(x_pt)) == "{:.5f}".format(float(entry[3])) and \
-            "{:.5f}".format(float(y_pt)) == "{:.5f}".format(float(entry[4])):
+        if "{:.5f}".format(float(x_pt)) == "{:.5f}".format(float(entry[3])) \
+            and \
+                "{:.5f}".format(float(y_pt)) == "{:.5f}".format(
+            float(entry[4])
+        ):
             resn = entry[0]
             resid = entry[1]
             nim = entry[2]

@@ -1,26 +1,28 @@
 import numpy as np
 from matplotlib import pyplot as plt
 
-#one = [[0.34,  1,   180.0], [0.05,  2,     0.0], [1.94,  3,     0.0],
+
+# one = [[0.34,  1,   180.0], [0.05,  2,     0.0], [1.94,  3,     0.0],
 #       [0.16,  4,   180.0], [0.05,  5,   180.0], [0.03,  6,     0.0]]
 #
-#dict_1 = {'name': 'use_c36', 'para': one}
+# dict_1 = {'name': 'use_c36', 'para': one}
 #
-#two = [[0.10,  1,   180.0], [0.16,  2,     0.0], [1.93,  3,     0.0],
+# two = [[0.10,  1,   180.0], [0.16,  2,     0.0], [1.93,  3,     0.0],
 #       [0.06,  4,   180.0], [0.04,  5,   180.0], [0.05,  6,     0.0]]
 #
-#dict_2 = {'name': 'use_qm', 'para': two}
+# dict_2 = {'name': 'use_qm', 'para': two}
 #
-#dicts = [dict_1, dict_2]
+# dicts = [dict_1, dict_2]
 
-def plot_charmm_dihedral_cosine_series(input_dictionaries, file_to_save = 0):
+
+def plot_charmm_dihedral_cosine_series(input_dictionaries, file_to_save=0):
     phi = np.arange(0, 2 * np.pi, 2 * np.pi/200)
     
     plot_list = []
     legend = []        
     for count, one_dict in enumerate(input_dictionaries):
         plot_list.append(0 * (1 + np.cos(0)))
-        #use_c36 = 0 * (1 + np.cos(0))
+        # use_c36 = 0 * (1 + np.cos(0))
         for m in one_dict['para']:
             plot_list[count] += m[0] * (1 + np.cos(m[1]*phi-np.pi*m[2]/180))
         legend.append(one_dict['name'])

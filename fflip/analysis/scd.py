@@ -12,15 +12,18 @@ class OrderParameterFactory(object):
     given topology
     """
     def __init__(self, topology, special_carbons_for_splitting={},
-                 sep_leaflet=False, recipe=None):
+                 skip=None, sep_leaflet=False, recipe=None):
         """
         Args:
             topology: the mdtraj topology
             special_carbons_for_splitting: carbon names for splitting
         """
         self.topology = topology
-        self.scd_res_dict = construct_scd_bond(topology)
-        self.bonds_for_residues = construct_scd_bond(topology)
+        scd_res_dict = construct_scd_bond(topology)
+        if skip is not None:
+            for resskip in skip:
+                scd_res_dict.pop(resskip)
+        self.bonds_for_residues = scd_res_dict
         self.scd_pairs_for_residues = gen_scd_pairs(
             self.bonds_for_residues,
             special_carbons_for_residues=special_carbons_for_splitting
@@ -93,7 +96,7 @@ class OrderParameterCalculation(object):
             self.scd_up = 0.0
             self.scd_low = 0.0
 
-    def __call__(self, traj):
+    def __call__(self, traj, per_mol=False):
         if not self.sep_leaflet:
             sele1 = self.topology.select(
                 "resname {} and name {}".format(self.residue, self.atom1)
@@ -125,8 +128,11 @@ class OrderParameterCalculation(object):
             self.n_frames += traj.n_frames
             self.scd /= self.n_frames
 
-            # return the average scd for every frame
-            return -1.5 * np.mean(scd, axis=1) + 0.5
+            # return the scd for every frame
+            if per_mol:
+                return -1.5 * scd + 0.5
+            else:
+                return -1.5 * np.mean(scd, axis=1) + 0.5
         else:
             assert self.recipe is not None
             sele1 = self.topology.select(
@@ -178,6 +184,9 @@ class OrderParameterCalculation(object):
             self.scd_up /= self.n_frames
             self.scd_low /= self.n_frames
 
-            # return the average scd for every frame
-            return -1.5 * np.mean(scd_up, axis=1) + 0.5, -1.5 * np.mean(
-                scd_low, axis=1) + 0.5
+            # return the scd for every frame
+            if per_mol:
+                return -1.5 * scd_up + 0.5, -1.5 * scd_low + 0.5
+            else:
+                return -1.5 * np.mean(scd_up, axis=1) + 0.5, -1.5 * np.mean(
+                    scd_low, axis=1) + 0.5

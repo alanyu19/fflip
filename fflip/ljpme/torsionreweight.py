@@ -115,9 +115,9 @@ def do_torsion_optmization(
         )
         existing_ks_dict[em] = ek
         existing_ps_dict[em] = ep
-    new_ks = list(np.zeros(6))
-    new_ms = list(np.arange(1, 7))
-    new_ps = list(np.zeros(6))
+    new_ks = list(np.zeros(len(allowed_m)))
+    new_ms = allowed_m
+    new_ps = list(np.zeros(len(allowed_m)))
     # Generate the new k and m lists that include more multiplicities
     for m in allowed_m:
         if m in existing_ms:
@@ -265,7 +265,10 @@ def perturb_4_ctl2(psf_file, crd_file, parameter_files,
     oelist = []
     pelist = [[] for _ in range(len(dt_list[0].k))]
     for dt in dt_list:
-        dd = dt.get_dihedrals(traj_template, tj, tj)
+        if isinstance(trj_index, list):
+            dd = dt.get_dihedrals(traj_template, tj[0], tj[1])
+        elif isinstance(trj_index, int):
+            dd = dt.get_dihedrals(traj_template, tj, tj)
         dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
         e_old = dih_f_old(dd)
         oelist.append(e_old)
@@ -309,7 +312,10 @@ def perturb_ctl2_ctl2_ctl2_ctl3(
     oelist = []
     pelist = [[] for _ in range(len(dt_list[0].k))]  # assume homogeneous
     for dt in dt_list:
-        dd = dt.get_dihedrals(traj_template, tj, tj)
+        if isinstance(trj_index, list):
+            dd = dt.get_dihedrals(traj_template, tj[0], tj[1])
+        elif isinstance(trj_index, int):
+            dd = dt.get_dihedrals(traj_template, tj, tj)
         dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
         e_old = dih_f_old(dd)
         oelist.append(e_old)
@@ -338,7 +344,10 @@ def perturb_any_dihedral(
     # oelist = []
     # pelist = [[] for _ in range(len(dt_list[0].k))]
     pe_dict = dict()
-    dd = dt.get_dihedrals(traj_template, tj, tj)
+    if isinstance(trj_index, list):
+        dd = dt.get_dihedrals(traj_template, tj[0], tj[1])
+    elif isinstance(trj_index, int):
+        dd = dt.get_dihedrals(traj_template, tj, tj)
     dih_f_old = DihedralFunction(dt.k, dt.multp, dt.phase)
     e_old = dih_f_old(dd)
     # oelist.append(e_old)

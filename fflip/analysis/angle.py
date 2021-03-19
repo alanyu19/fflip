@@ -36,7 +36,7 @@ class AngleDistribution(object):
         """
         Args:
             topology: the mdtraj topology
-            first_vector: the atom pair of the vector
+            first_vector: the atom pair of the vector, use mdtraj selections.
             second_vector: can be a constant vector or another atom pair
         """
         self.nbins = nbins
