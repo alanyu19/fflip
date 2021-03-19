@@ -77,10 +77,11 @@ Tutorials
    3) Running OpenMM simulations: Tutorial3_.
    4) Extract information from simulations: Tutorial4_.
 
-.. _Tutorial1: examples/01_building_alkane_system/placeholder1.ipynb
-.. _Tutorial2: examples/02_01_charmm_sim/placeholder2.ipynb
-.. _Tutorial3: examples/02_02_openmm_sim/placeholder3.ipynb
-.. _Tutorial4: examples/03_getting_properties/placeholder4.ipynb
+.. _Tutorial1 (pending): examples/01_building_alkane_system/placeholder1.ipynb
+.. _Tutorial2 (pending): examples/02_01_charmm_sim/placeholder2.ipynb
+.. _Tutorial3 (pending): examples/02_02_openmm_sim/placeholder3.ipynb
+.. _Tutorial4 (pending): examples/03_getting_properties/placeholder4.ipynb
+.. _Tutorial5 (pending): examples/04_a_complete_ljpme_optimization/
 
 
 Developers' Guide
