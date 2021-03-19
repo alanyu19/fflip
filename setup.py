@@ -10,11 +10,11 @@ import sys
 cmdclass = versioneer.get_cmdclass()
 
 # Custom commands for building the docs
-try:
-    from sphinx.setup_command import BuildDoc
-    cmdclass['build_sphinx'] = BuildDoc
-except ImportError:
-    print("Could not import sphinx. build_sphinx command not installed.")
+#try:
+#    from sphinx.setup_command import BuildDoc
+#    cmdclass['build_sphinx'] = BuildDoc
+#except ImportError:
+#    print("Could not import sphinx. build_sphinx command not installed.")
 
 
 with open('README.rst') as readme_file:
@@ -25,18 +25,17 @@ with open('HISTORY.rst') as history_file:
 
 
 requirements = [
-    'numpy>=1.12',
+    'numpy>=1.6',
+    'Click>=6.0,<8.0',
     'pandas',
     'nbsphinx', # sphinx documentation for jupyter notebooks
     'sphinx-click', # sphinx documentation for click
     'alabaster', # alabaster theme for documentation
     'packaging',
     'scipy>=1.0.0',
-    'openmm>=7.3.0',
-    'openmmtools',
-    'mdtraj',
-    'Click>=6.0',
-    'matplotlib'
+    # 'openmm>=7.3.0',
+    # 'openmmtools',
+    # 'mdtraj',
     # put package requirements here
 ]
 
@@ -47,6 +46,8 @@ else:
 
 setup_requirements = [
     'pytest-runner',
+    'numpy>=1.20',
+    'cython>=0.29'
     #  put setup requirements (distutils extensions, etc.) here
 ]
 
@@ -56,14 +57,13 @@ test_requirements = [
 ]
 
 setup(
-    name='fflip',
     version=versioneer.get_version(),
     description="Force Field of Lipids Optimization Package",
     long_description=readme + '\n\n' + history,
     author="Yalun Yu",
     author_email='yalun.research@gmail.com',
     url='https://github.com/alanyu19/fflip',
-    packages=find_packages(),
+    packages=find_packages(include=['fflip']),
     entry_points={
         'console_scripts': [
             'fflip=fflip.cli:main'
@@ -74,18 +74,17 @@ setup(
     license="GNU General Public License v3",
     zip_safe=False,
     keywords='fflip',
+    name='fflip',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Natural Language :: English',
-        "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     test_suite='tests',
     tests_require=test_requirements,
