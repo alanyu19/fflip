@@ -76,6 +76,7 @@ Tutorials
    2) Running CHARMM simulations: Tutorial2_.
    3) Running OpenMM simulations: Tutorial3_.
    4) Extract information from simulations: Tutorial4_.
+   5) Optmization for the CHARMM additive lipid FF: Tutorial5_.
 
 .. _Tutorial1 (pending): examples/01_building_alkane_system/placeholder1.ipynb
 .. _Tutorial2 (pending): examples/02_01_charmm_sim/placeholder2.ipynb
