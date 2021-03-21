@@ -33,6 +33,8 @@ requirements = [
     'alabaster', # alabaster theme for documentation
     'packaging',
     'scipy>=1.0.0',
+    'dask',
+    'dask-jobqueue>=0.7.0',
     # 'openmm>=7.3.0',
     # 'openmmtools',
     # 'mdtraj',
