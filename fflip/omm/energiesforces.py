@@ -87,7 +87,7 @@ class ParameterEnergy(object):
         Args:
         - system (openmm.System): defines all forces in OpenMM
         - psf (openmm.app.CharmmPsfFile): OpenMM representation of a psf file
-        - paragroups (list of gtcnp): Instances that define changed nonbonded parameters.
+        - paragroups (list of nbgroup): Instances that define changed nonbonded parameters.
           If paragroups=[] (the default), the energies are evaluated for the original
           force field parameters.
         - paraoffsets(list of float): Offsets for nonbonded parameters (see OpenMM documentation
@@ -103,8 +103,8 @@ class ParameterEnergy(object):
             assert paraoffsets
             self.paraoffsets = paraoffsets
         else:
-            # 'empty_gtcnp' is defined in paragroup
-            self.paragroups = [empty_gtcnp()]
+            # 'empty_nbgroup' is defined in paragroup
+            self.paragroups = [empty_nbgroup()]
             self.paraoffsets = [0]
         if "use_new_method" in kwargs:
             use_new_method = kwargs["use_new_method"]
@@ -164,7 +164,7 @@ class DrudeEnergy(object):
         Args:
         - system (openmm.System): defines all forces in OpenMM
         - psf (openmm.app.CharmmPsfFile): OpenMM representation of a psf file
-        - paragroups (list of gtcnp): Instances that define changed nonbonded parameters.
+        - paragroups (list of nbgroup): Instances that define changed nonbonded parameters.
           If paragroups=[] (the default), the energies are evaluated for the original
           force field parameters.
         - paraoffsets(list of float): Offsets for nonbonded parameters (see OpenMM documentation
@@ -232,7 +232,7 @@ class ParameterForce(object):
         Args:
         - system (openmm.System): defines all forces in OpenMM
         - psf (openmm.app.CharmmPsfFile): OpenMM representation of a psf file
-        - paragroups (list of gtcnp): Instances that define changed nonbonded parameters.
+        - paragroups (list of nbgroup): Instances that define changed nonbonded parameters.
           If paragroups=[] (the default), the energies are evaluated for the original
           force field parameters.
         - paraoffsets(list of float): Offsets for nonbonded parameters (see OpenMM documentation
@@ -247,8 +247,8 @@ class ParameterForce(object):
             assert paraoffsets
             self.paraoffsets = paraoffsets
         else:
-            # 'empty_gtcnp' is defined in paragroup
-            self.paragroups = [empty_gtcnp()]
+            # 'empty_nbgroup' is defined in paragroup
+            self.paragroups = [empty_nbgroup()]
             self.paraoffsets = [0]
 
     def __call__(self, traj, **kwargs):
@@ -303,7 +303,7 @@ class ParametersEnergy(object):
         Args:
         - system (openmm.System): defines all forces in OpenMM
         - psf (openmm.app.CharmmPsfFile): OpenMM representation of a psf file
-        - paragroups (list of gtcnp): Instances that define changed nonbonded parameters.
+        - paragroups (list of nbgroup): Instances that define changed nonbonded parameters.
           If paragroups=[] (the default), the energies are evaluated for the original
           force field parameters.
         - paraoffsets(list of float): Offsets for nonbonded parameters (see OpenMM documentation
@@ -319,8 +319,8 @@ class ParametersEnergy(object):
             assert paras_offsets
             self.paras_offsets = paras_offsets
         else:
-            # 'empty_gtcnp' is defined in paragroup
-            self.paras_groups = [[empty_gtcnp()]]
+            # 'empty_nbgroup' is defined in paragroup
+            self.paras_groups = [[empty_nbgroup()]]
             self.paras_offsets = [[0]]
         if "use_new_method" in kwargs:
             use_new_method = kwargs["use_new_method"]

@@ -99,8 +99,10 @@ class ReweightTarget(object):
 
     def reweight(self, starting_traj, ending_traj,
                  traj_interval_energy, traj_interval_prop=None,
-                 use_cluster=False, partition='ivy,sbr',
+                 use_cluster=False, partition=None,
                  **kwargs):
+        if use_cluster:
+            assert partition is not None
         param_ids = self.lipid_scheme.param_ids(**kwargs)
         if not use_cluster:
             original, perturbed = reweight_many_params(
@@ -151,8 +153,10 @@ class ReweightTarget(object):
     def robustness_analysis(self, first_trj, last_trj,
                             trj_interval_energy, trj_interval_prop=None,
                             block_size=50, use_cluster=True,
-                            partition='ivy,sbr',
+                            partition=None,
                             **kwargs):
+        if use_cluster:
+            assert partition is not None
         org = []
         ptb = []
         diff = []

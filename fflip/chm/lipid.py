@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from coffe.omm.paragroup import *
+from fflip.omm.paragroup import *
 
 
 def add_a_new_group(existing_groups, new_group):
@@ -19,9 +19,9 @@ class CharmmGroup:
         self.charges = kwargs["charges"]
         self.half_r_mins = kwargs["half_r_mins"]
         self.epsilons = kwargs["epsilons"]
-        self.add_lj_gtcnp = kwargs["add_lj_gtcnp"]
+        self.add_lj_nbgroup = kwargs["add_lj_nbgroup"]
         self.atoms_same_lj = kwargs["atoms_same_lj"]
-        self.add_charge_gtcnp = kwargs["add_charge_gtcnp"]
+        self.add_charge_nbgroup = kwargs["add_charge_nbgroup"]
         self.neighbors = kwargs["neighbors"]
         self.cooperators = kwargs["cooperators"]
         self.atoms_same_charge = kwargs["atoms_same_charge"]
@@ -46,7 +46,7 @@ class Lipid:
         else:
             pass
 
-    def parse_gtcnp(self, groups='all', print_level=0):
+    def parse_nbgroups(self, groups='all', print_level=0):
         gs = []
         for counter, chm_gp in enumerate(self.cgroups):
             if groups is not 'all':
@@ -54,20 +54,20 @@ class Lipid:
                 if counter not in groups:
                     continue
             self.level_print(
-                "Creating 'gtcnp's for {} group {} ... ".format(
+                "Creating 'nbgroup's for {} group {} ... ".format(
                     self.lipname, counter+1
                 ), 1, print_level
             )
             for i in range(chm_gp.num_atom_category):
                 # LJ
-                if chm_gp.add_lj_gtcnp[i]:
+                if chm_gp.add_lj_nbgroup[i]:
                     atom_list=[]
                     for atom in chm_gp.atoms[i]:
                         atom_list.append(atom)
                     for atom in chm_gp.atoms_same_lj[i]:
                         atom_list.append(atom)
                     add_a_new_group(
-                        gs, gtcnp(
+                        gs, nbgroup(
                             par_type="sigma", center_names=atom_list,
                             original_p=round(
                                 (1/2)**(1/6) * chm_gp.half_r_mins[i] * 0.2, 5
@@ -76,7 +76,7 @@ class Lipid:
                         )
                     )
                     add_a_new_group(
-                        gs, gtcnp(
+                        gs, nbgroup(
                             par_type="epsilon", center_names=atom_list,
                             original_p=round(chm_gp.epsilons[i] * 4.184, 4),
                             targeted_range=[0.8, 1.2]
@@ -89,7 +89,7 @@ class Lipid:
                         ), 2, print_level
                     )
                 # Charge
-                if chm_gp.add_charge_gtcnp[i]:
+                if chm_gp.add_charge_nbgroup[i]:
                     center_names=[]; nb_names=[]; coop_names=[]
                     # Create and fill in the atoms with the current CHARMM group
                     for atom in chm_gp.atoms[i]:
@@ -115,7 +115,7 @@ class Lipid:
                                     coop_index
                                 ]:
                                     coop_names.append(atom)
-                    # Now we have the name lists, create the 'gtcnp' for charge:
+                    # Now we have the name lists, create the 'nbgroup' for charge:
                     roc = []
                     ron = []
                     # I think this decision will influence the speed of the
@@ -125,7 +125,7 @@ class Lipid:
                     # for r in range(len(roc)):
                     #     roc.append(1)
                     add_a_new_group(
-                        gs, gtcnp(
+                        gs, nbgroup(
                             par_type="charge", center_names=center_names,
                             cooperators=coop_names, neighbors=nb_names,
                             original_p=chm_gp.charges[i],
@@ -142,7 +142,7 @@ class Lipid:
                     )
             self.level_print("", 1, print_level)
         self.level_print(
-            "Total {} gtcnps created for {}\n".format(len(gs), self.lipname),
+            "Total {} nbgroups created for {}\n".format(len(gs), self.lipname),
             1, print_level
         )
         return gs

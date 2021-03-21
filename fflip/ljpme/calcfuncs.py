@@ -5,7 +5,7 @@ import os
 from fflip.omm.paragroup import *
 
 
-def save_nb_change_log(gs, offsets, file="./gtcnp_order.txt"):
+def save_nb_change_log(gs, offsets, file="./nbgroup_order.txt"):
     if os.path.isfile(file):
         os.system("rm {}".format(file))
     for g, off in zip(gs, offsets):
@@ -31,7 +31,7 @@ def save_offsets(groups, offsets, file="./offsets.log"):
 
 
 def get_parameter_set_and_offset_by_index(index_, lip_, percentage_):
-    parameter_sets_ = lip_.parse_gtcnp()
+    parameter_sets_ = lip_.parse_nbgroups()
     pset_ = [parameter_sets_[index_-1]]
     # keep this list format for the other function/class (parameterEnergy?)
     offset_ = [
@@ -43,7 +43,7 @@ def get_parameter_set_and_offset_by_index(index_, lip_, percentage_):
 
 
 def get_one_group_with_offset(index_, lip_, percentage_, id_allowed_):
-    parameter_sets_ = lip_.parse_groups(id_allowed=id_allowed_)
+    parameter_sets_ = lip_.parse_nbgroups(id_allowed=id_allowed_)
     pset_ = [parameter_sets_[index_-1]]
     # keep this list format for the other function/class (parameterEnergy?)
     offset_ = [

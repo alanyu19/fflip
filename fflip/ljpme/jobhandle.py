@@ -26,6 +26,7 @@ class FutureResult(object):
         return result
 
 
+"""
 def on_cluster(executable, executable_args_list, *args, **kwargs):
     out_dir = kwargs['out_dir']
     if os.path.isdir(out_dir):
@@ -73,5 +74,5 @@ def on_cluster(executable, executable_args_list, *args, **kwargs):
     os.system('sbatch {}'.format(kwargs['submit_script']))
     time.sleep(10)
     # os.system("rm -f {}".format(kwargs['submit_script']))
-
+"""
 

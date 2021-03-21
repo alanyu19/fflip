@@ -4,10 +4,11 @@ from fflip.ljpme.targetprop import *
 from fflip.ljpme.optimizers import *
 
 
-root = './scratch/'
-psf_dir = './psf_files/'
-crd_dir = './crd_files/'
-template_dir = './templates/'
+# use absolute paths for these:
+root = '/u/alanyu/04_a_complete_ljpme_optimization/core_files/' 
+psf_dir = '/u/alanyu/04_a_complete_ljpme_optimization/psf_files/'
+crd_dir = '/u/alanyu/04_a_complete_ljpme_optimization/crd_files/'
+template_dir = '/u/alanyu/04_a_complete_ljpme_optimization/templates/'
 
 
 # --------------- area_dppc_bilayer ----------------

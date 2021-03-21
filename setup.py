@@ -60,15 +60,15 @@ setup(
     version=versioneer.get_version(),
     description="Force Field of Lipids Optimization Package",
     long_description=readme + '\n\n' + history,
+    entry_points={
+        'console_scripts': [
+            'fflip=fflip.cli:entrypoint',
+        ],
+    },
     author="Yalun Yu",
     author_email='yalun.research@gmail.com',
     url='https://github.com/alanyu19/fflip',
     packages=find_packages(include=['fflip']),
-    entry_points={
-        'console_scripts': [
-            'fflip=fflip.cli:main'
-        ]
-    },
     include_package_data=True,
     install_requires=requirements,
     license="GNU General Public License v3",

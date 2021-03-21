@@ -8,18 +8,18 @@ import shutil
 
 from fflip.core.globconf import CONFIG
 
-import fflip.core.fflipdir
+import fflip.core.coffedir
 from fflip.core.decorators import args_from_configfile
 from fflip.core import shell
 from fflip.omm import util as ommutil
 from fflip.omm import exceptions as ommexception
 
-class OmmCalculation(fflip.core.fflipdir.CoffeWorkDir):
+class OmmCalculation(fflip.core.coffedir.CoffeWorkDir):
     """
     Class for Openmm Charmm calculations (simulations//property/energy
     calculations//more_to_come...)
     """
-    @fflip.core.fflipdir.log_exceptions
+    @fflip.core.coffedir.log_exceptions
     @args_from_configfile
     def __init__(self, structure, psf_file, options_file, work_dir=".",
                  options={}, overwrite=False, checkpoint=None):
@@ -69,7 +69,7 @@ class OmmCalculation(fflip.core.fflipdir.CoffeWorkDir):
             ommutil.gen_omm_options_file(self.options, self.options_file)
 
 
-    @fflip.core.fflipdir.log_exceptions
+    @fflip.core.coffedir.log_exceptions
     def __call__(self, command):
         """
         Run OpenMM Calculation.
@@ -83,7 +83,7 @@ class OmmCalculation(fflip.core.fflipdir.CoffeWorkDir):
         self._ommrun(command)
         self.logger.info("Omm calculation finished.")
 
-    @fflip.core.fflipdir.log_exceptions
+    @fflip.core.coffedir.log_exceptions
     def _ommrun(self, command):
         """Run OpenMM CHARMM simulation from Rickflow."""
         try:

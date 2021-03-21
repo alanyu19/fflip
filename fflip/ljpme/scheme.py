@@ -23,6 +23,7 @@ class FolderNamingScheme(object):
             iteration, self.tp.lipname, self.tp.system_type,
             self.tp.surface_tension, self.tp.temperature
         )
+        print(traj_root, subdir)
         return os.path.join(traj_root, subdir)
 
     def property_data_folder(self, iteration):
@@ -77,35 +78,40 @@ class SimOptScheme(object):
         self.ts = target_system
 
     @property
-    def last_seqno(self):
+    def critical_seqno(self):
+        """Return:
+            The first seqno to do the sensitivity analysis,
+            the last seqno of the simulation
+        """
         finder = {
-            "drude_dppc_bilayer_0_323.15": 200,
-            "drude_dppc_bilayer_5_323.15": 200,
-            "drude_dppc_bilayer_-5_323.15": 200,
-            "drude_dppc_monolayer_18_321.15": 200,
-            "drude_dppc_monolayer_40_321.15": 200,
-            "drude_dppc_monolayer_55_321.15": 200,
-            "drude_dlpc_bilayer_0_303.15": 200,
-            "drude_dmpc_bilayer_0_303.15": 200,
-            "drude_popc_bilayer_0_303.15": 200,
-            "drude_dopc_bilayer_0_303.15": 200,
-            "drude_prpc_bulk_0_298.15": 100,
-            "dppc_bilayer_0_323.15": 200,
-            "dppc_bilayer_-5_323.15": 300,
-            "dppc_bilayer_5_323.15": 300,
-            "dppc_bilayer_0_333.15": 200,
-            "dppc_monolayer_18_321.15": 200,
-            "dppc_monolayer_40_321.15": 200,
-            "dppc_monolayer_55_321.15": 200,
-            "dlpc_bilayer_0_303.15": 200,
-            "dmpc_bilayer_0_303.15": 200,
-            "popc_bilayer_0_303.15": 200,
-            "prpc_bulk_0_298.15": 100
+            "drude_dppc_bilayer_0_323.15": (51, 200),
+            "drude_dppc_bilayer_5_323.15": (51, 200),
+            "drude_dppc_bilayer_-5_323.15": (51, 200),
+            "drude_dppc_monolayer_18_321.15": (51, 200),
+            "drude_dppc_monolayer_40_321.15": (51, 200),
+            "drude_dppc_monolayer_55_321.15": (51, 200),
+            "drude_dlpc_bilayer_0_303.15": (51, 200),
+            "drude_dmpc_bilayer_0_303.15": (51, 200),
+            "drude_popc_bilayer_0_303.15": (51, 200),
+            "drude_dopc_bilayer_0_303.15": (51, 200),
+            "drude_prpc_bulk_0_298.15": (11, 100),
+            "dppc_bilayer_0_323.15": (51, 200),
+            "dppc_bilayer_-5_323.15": (61, 300),
+            "dppc_bilayer_5_323.15": (61, 300),
+            "dppc_bilayer_0_333.15": (51, 200),
+            "dppc_monolayer_18_321.15": (51, 200),
+            "dppc_monolayer_40_321.15": (51, 200),
+            "dppc_monolayer_55_321.15": (51, 200),
+            "dlpc_bilayer_0_303.15": (51, 200),
+            "dmpc_bilayer_0_303.15": (51, 200),
+            "popc_bilayer_0_303.15": (51, 200),
+            "prpc_bulk_0_298.15": (11, 100)
         }
-        return finder["{}_{}_{}_{}".format(
+        seqno_ = finder["{}_{}_{}_{}".format(
             self.ts.lipname, self.ts.system_type,
             self.ts.surface_tension, self.ts.temperature
         )]
+        return seqno_
 
     @property
     def boxx(self):
@@ -195,7 +201,7 @@ class LipidScheme(object):
         if type(self.lipid_) == DrudeLipid:
             return self.lipid_.parse_groups(**kwargs)
         elif type(self.lipid_) == Lipid:
-            return self.lipid_.parse_gtcnp(**kwargs)
+            return self.lipid_.parse_nbgroups(**kwargs)
 
     def param_ids(self, **kwargs):
         if type(self.lipid_) == DrudeLipid:
@@ -206,7 +212,7 @@ class LipidScheme(object):
             return ids
         elif type(self.lipid_) == Lipid:
             return list(
-                range(1, len(self.lipid_.parse_gtcnp(**kwargs)) + 1)
+                range(1, len(self.lipid_.parse_nbgroups(**kwargs)) + 1)
             )
 
 

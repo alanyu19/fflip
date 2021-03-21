@@ -110,7 +110,7 @@ class TargetSystem(object):
             return 0  # exit
 
         if change_para:
-            assert solution_file is not None and torfix_file is not None
+            assert solution_file is not None  # and torfix_file is not None
 
         trj_loc = self.folder_naming.trajectory_folder(iteration, trj_folder)
 
@@ -156,13 +156,15 @@ class TargetSystem(object):
         if last_seqno is not None:
             options["last_seqno"] = int(last_seqno)
         else:
-            options["last_seqno"] = self.option_scheme.last_seqno
+            options["last_seqno"] = self.option_scheme.critical_seqno[1]
         # get the job run
         job = calc(0, options, overwrite=overwrite)
         # job("rflow submit sdyn.sh")
 
         if wait:
-            pass
+            raise Exception(
+                "Waiting for simulation is not supported currently"
+            )
 
 
 class SpecialProperty(TargetSystem):
@@ -240,7 +242,7 @@ class TargetProperty(TargetSystem):
                  parse_groups='all',
                  **misc_kwargs):
         """
-        misc_kwargs can contain:
+        misc_kwargs may contain:
         exp_rel_dir, ... (more to come)
         """
         self.name = name
@@ -274,6 +276,7 @@ class TargetProperty(TargetSystem):
         self.lipid = lipfinder[lipname]
         self.lipid_scheme = LipidScheme(self.lipid)
         self.ff = ff
+        # CHARMM integer chage groups
         self.groups = parse_groups
         self._prop_block_size = make_guess_of_block_size(0, self.prop_type)
         self._pot_block_size = make_guess_of_block_size(1, self.prop_type)
@@ -330,7 +333,7 @@ class TargetProperty(TargetSystem):
         pass
 
     def parameter_offsets(self):
-        parameter_sets = self.lipid.parse_groups()
+        parameter_sets = self.lipid.parse_nbgroups(groups=self.groups)
         offsets = [
             gen_sensitivity_offset(
                 ps, percentage=self.perturbation
@@ -355,7 +358,7 @@ class TargetProperty(TargetSystem):
 
     @property
     def parameters(self):
-        return self.lipid.parse_groups(id_allowed=self.groups)
+        return self.lipid.parse_nbgroups(groups=self.groups)
 
     @property
     def num_parameters(self):
@@ -457,7 +460,7 @@ class TargetProperty(TargetSystem):
         )
 
     def reweight(
-            self, use_cluster=True, partition='ivy,sbr',
+            self, use_cluster=True, partition=None,
             force_to=False, save_result=True,
             quit=False, **kwargs
     ):
@@ -470,6 +473,8 @@ class TargetProperty(TargetSystem):
 
         Returns: None
         """
+        if use_cluster:
+            assert partition is not None
         if (not self.reweight_target.done_reweighting and not quit) or force_to:
             self.reweight_target.reweight(
                 self.first_trj, self.last_trj,
@@ -566,12 +571,15 @@ class TargetProperty(TargetSystem):
             self.uncertainty = std
 
     def get_sensitivity(
-            self, iteration, force_redo=False, use_cluster=True, quit=False
+            self, iteration, force_redo=False,
+            use_cluster=True, partition=None, quit=False
     ):
         if not hasattr(self, 'reweight_target'):
             # which is not the usual case anyway
             self.gen_reweight_target(iteration)
-        self.reweight(force_to=force_redo, use_cluster=use_cluster, quit=quit)
+        self.reweight(
+            force_to=force_redo, use_cluster=use_cluster, partition=partition, quit=quit
+        )
         self.reweight_target.add_sensitivity_evaluator()
         # get raw
         if not ('peak' in self.name or 'foot' in self.name):

@@ -197,7 +197,7 @@ def reweight_many_params(param_ids, temperature,
     A function to reweight property for series of parameters,
     the input energy should be in kj/mole
     Args:
-        n_params: int, the number of parameter groups
+        param_ids: int, indexers in the observable/potential files
         temperature: float, the temperature, currently support only one
         path_to_prp: str
         path_to_org: str
