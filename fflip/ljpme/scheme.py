@@ -23,7 +23,6 @@ class FolderNamingScheme(object):
             iteration, self.tp.lipname, self.tp.system_type,
             self.tp.surface_tension, self.tp.temperature
         )
-        print(traj_root, subdir)
         return os.path.join(traj_root, subdir)
 
     def property_data_folder(self, iteration):

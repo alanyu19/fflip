@@ -180,7 +180,6 @@ class PropertyLinearEstimator(Optimizer):
 
         Args:
             filename: the file name stores the QM charges, should be .csv file
-        Returns:
         """
         charge_info = pd.read_csv(filename)
         self.qm_info = {}
@@ -194,6 +193,19 @@ class PropertyLinearEstimator(Optimizer):
             if p.par_type == 'charge':
                 self.qm_charges[p.center_names[0]] = self.qm_info[
                     p.center_names[0]]
+                num_qm_charge += 1
+        self.num_qm = num_qm_charge
+
+    def zero_qm_charge(self):
+        """
+        generate 0 "QM" charges, needed when weights of QM is 0
+        and QM charge file is not provied
+        """
+        num_qm_charge = 0
+        self.qm_charges = {}
+        for i, p in enumerate(self.parameter_info):
+            if p.par_type == 'charge':
+                self.qm_charges[p.center_names[0]] = 0
                 num_qm_charge += 1
         self.num_qm = num_qm_charge
 
@@ -424,22 +436,20 @@ class PropertyLinearEstimator(Optimizer):
                 raise Exception('Error in update_weight!')
         print('{} parameters changed in total'.format(count))
 
-    def __call__(
-            self,
-            save_result=False,
-            result_file='linear_solver_result.txt',
-            ssr_file='ssr.png'):
+    def __call__(self, save_result=False, result_file='result.csv', 
+                 ssr_file='ssr.png'):
         a = np.matmul(self.W, self.S)
         b = np.matmul(self.W, self.F)
         solution = np.linalg.lstsq(a, b, rcond=None)
         if save_result:
             residual = np.matmul(self.S, solution[0])
             residual_dict = dict()
-            residual_dict['before'] = self.F[:self.num_all_properties]
-            residual_dict['changed'] = residual[:self.num_all_properties]
-            residual_dict['remained'] = self.F[:self.num_all_properties] - \
+            residual_dict['Relative error before optimization'] = \
+                - self.F[:self.num_all_properties]
+            residual_dict['Changed'] = residual[:self.num_all_properties]
+            residual_dict['After'] = - self.F[:self.num_all_properties] + \
                 residual[:self.num_all_properties]
-            residual_dict['%remained'] = \
+            residual_dict['Remained'] = \
                 1 - residual[:self.num_all_properties] \
                 / self.F[:self.num_all_properties]
             to_write = pd.DataFrame(residual_dict)
@@ -475,10 +485,14 @@ class PropertyLinearEstimator(Optimizer):
                 names.append(prop.name)
                 sr.append((from_prop**2)[i])
                 err_before.append(
-                    np.sqrt(((residual_dict['before']*prop.scaling)**2)[i])
+                    np.sqrt(((
+                        residual_dict[
+                            'Relative error before optimization'
+                        ]*prop.scaling
+                    )**2)[i])
                 )
                 err_after.append(
-                    np.sqrt(((residual_dict['remained']*prop.scaling)**2)[i])
+                    np.sqrt(((residual_dict['After']*prop.scaling)**2)[i])
                 )
             from matplotlib import pyplot as plt
             fig, ax = plt.subplots(figsize=(22, 5))

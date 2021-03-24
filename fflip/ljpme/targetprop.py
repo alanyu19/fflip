@@ -104,8 +104,7 @@ class TargetSystem(object):
                  boxx=None, boxz=None, zmode=None,
                  barostat=None, integrator=None,
                  change_para=False, solution_file=None, torfix_file=None,
-                 overwrite=False, wait=False):
-        """"""
+                 overwrite=False, start=False, verbose=0):
         if self.sim_template is None:
             return 0  # exit
 
@@ -113,7 +112,8 @@ class TargetSystem(object):
             assert solution_file is not None  # and torfix_file is not None
 
         trj_loc = self.folder_naming.trajectory_folder(iteration, trj_folder)
-
+        if verbose >= 1:
+            print("Runnning in {}".format(trj_loc))
         calc = OmmJobGenerator(
             self.crd_file, self.psf_file,
             template=self.sim_template, work_dir=trj_loc
@@ -159,12 +159,8 @@ class TargetSystem(object):
             options["last_seqno"] = self.option_scheme.critical_seqno[1]
         # get the job run
         job = calc(0, options, overwrite=overwrite)
-        # job("rflow submit sdyn.sh")
-
-        if wait:
-            raise Exception(
-                "Waiting for simulation is not supported currently"
-            )
+        if start:
+            job("rflow submit sdyn.sh")
 
 
 class SpecialProperty(TargetSystem):
