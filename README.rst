@@ -70,7 +70,7 @@ Getting Started
 4) conda install -c omnia openmm=7.4.0 openmmtools
 5) conda install -c conda-forge mdtraj
 6) Install rickflow (https://gitlab.com/Olllom/rickflow/tree/master)
-7) goto fflip and run "python setup.py install"
+7) goto fflip and run "python setup.py install" (if a develop mode is preferred, use "python setup.py develop")
 
 You are ready to go!
 
