@@ -74,14 +74,10 @@ Tutorials
 -  Using fflip with OpenMM/CHARMM:
 
    1) Parameterize alkane/alkene systems (pending): Tutorial1_.
-   2) Running CHARMM simulations (pending): Tutorial2_.
-   3) Running OpenMM simulations (pending): Tutorial3_.
-   4) Optmization for the CHARMM additive lipid FF: Tutorial4_.
+   2) Optmization for the CHARMM additive lipid FF: Tutorial2_.
 
-.. _Tutorial1: examples/01_building_alkane_system/placeholder1.ipynb
-.. _Tutorial2: examples/02_01_charmm_sim/placeholder2.ipynb
-.. _Tutorial3: examples/02_02_openmm_sim/placeholder3.ipynb
-.. _Tutorial4: examples/04_a_complete_ljpme_optimization/
+.. _Tutorial1: examples/01_alkane_system/placeholder1.ipynb
+.. _Tutorial2: examples/02_additive_lipid/
 
 
 Developers' Guide
