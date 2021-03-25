@@ -63,6 +63,7 @@ In order to use program-specific functions, these programs have to be installed.
 2) OpenMM: Required.
 3) openmmtools: Required.
 4) mdtraj: Required
+5) Rickflow: Required (https://gitlab.com/Olllom/rickflow/tree/master)
 
 Other comments here.
 
