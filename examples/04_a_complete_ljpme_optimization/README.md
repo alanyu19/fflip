@@ -6,7 +6,7 @@ Workflow to optimize nonbonded parameters in C36 lipid force field
 
 0: area dppc bilayer @323.15K  
 1: area dppc bilayer @333.15K  
-2. overall thickness dppc bilayer @323.15K
+2. overall thickness dppc bilayer @323.15K  
 3. overall thickness dppc bilayer @333.15K  
 
 <h3> Do these updates:</h3>
