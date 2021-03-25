@@ -40,6 +40,6 @@ step 8. Update your targets in **targets.py**
 &nbsp;&nbsp;&nbsp;*in this example, the following command was used:  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip linearopt -i 0 -p 0.1 -s 0.06 -e 0.06 -c 0.03 --ssr*  
 
-<h4> Now you can find FFLiP's solution for nonbonded parameters in the solutions folder!<\h4>  
+<h4> Now you can find FFLiP's solution for nonbonded parameters in the solutions folder!</h4>  
 
 (6) Repeat 1-5 for more iterations (some OPTIONs should be different from the zeroth iteration, use "--help" to find out!)
