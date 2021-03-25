@@ -9,7 +9,7 @@ Workflow to optimize nonbonded parameters in C36 lipid force field
 2. overall thickness dppc bilayer @323.15K
 3. overall thickness dppc bilayer @333.15K  
 
-<h3> Do these upates:</h3>
+<h3> Do these updates:</h3>
 
 step 1. Define your lipids in **$path_to_fflip/fflip/chm/lipids** and import it in **$path_to_fflip/fflip/chm/util.py** (from fflip.chm.lipids.$your_lipid import \*)  
 step 2. In **$path_to_fflip/fflip/ljpme/scheme.py**, find the function called *lipfinder* and add your lipid with a preferred name (note this "name" will be used in targets.py)
