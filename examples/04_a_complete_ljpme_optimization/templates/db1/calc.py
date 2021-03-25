@@ -10,7 +10,7 @@
 #SBATCH -J thickness
 
 
-from coffe.omm.util import get_md_options as gmd
+from fflip.omm.util import get_md_options as gmd
 
 from rflow.edp import *
 from rflow.observables import *

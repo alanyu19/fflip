@@ -12,9 +12,9 @@ from simtk.openmm import MonteCarloMembraneBarostat, MonteCarloBarostat, Langevi
 
 from rflow.integrators import NoseHooverChainVelocityVerletIntegrator
 from rflow import RickFlow, FreeEnergyCosineSeries, RelativePartialCenterOfMassRestraint
-from coffe.omm.playpara import *
-from coffe.omm.paragroup import *
-from coffe.omm.util import *
+from fflip.omm.playpara import *
+from fflip.omm.paragroup import *
+from fflip.omm.util import *
 from fflip.chm import *
 
 from def_lipids import *
@@ -47,10 +47,9 @@ if change_para.lower() == 'yes':
 #  ========= Setup System ==========
 #
 
-if lipname.lower() == 'prpc':
-    top_files = glob.glob("/u/alanyu/top_yalun/prpc/original/*")
-else:
-    top_files = glob.glob("/u/alanyu/top_yalun/for_ljpme/original/*")
+# must update!
+# keep it as original paramters in all iterations!
+top_files = glob.glob("/u/alanyu/top_yalun/for_ljpme/original/*")
 
 workflow = RickFlow(
     toppar=top_files,
@@ -101,6 +100,7 @@ elif baro == 'MC':
 #  ========= Add parameter offsets =========
 #
 if change_para.lower() == 'yes':
+    # don't change this line, solution.txt is copied over by the program
     sol = filter_solution('solution.txt')
     parameter_sets = lipid.parse_gtcnp()
     all_offsets = [gen_sensitivity_offset(ps, percentage = sol[i]) for i, ps in enumerate(parameter_sets)]
@@ -119,14 +119,8 @@ workflow.prepareSimulation(integrator, barostat)
 #  ========= Run Simulation  ==========
 #
 
-newarea = False
 if workflow.next_seqno == 1:
-    newarea = True
     workflow.simulation.minimizeEnergy()
 if __name__ == "__main__":
     workflow.run()
-    if newarea:
-        os.system("area.py --new")
-    else:
-        os.system("area.py")
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
-from coffe.core.placeholder import *
-from coffe.omm.torsionfuncs import *
+from fflip.core.placeholder import *
+from fflip.torsionfuncs import *
 
 
 def replace_top_parameter(top_file_template, para_dict, write_to_new_dir=None):

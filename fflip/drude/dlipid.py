@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from coffe.omm.paragroup import *
+from fflip.omm.paragroup import *
 from fflip.drude.exceptions import *
 
 

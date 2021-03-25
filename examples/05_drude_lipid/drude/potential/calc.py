@@ -10,14 +10,14 @@
 # import os
 import sys
 import time
-import coffe.omm.energiesforces as ef
+import fflip.omm.energiesforces as ef
 
 from simtk.openmm.app import LJPME
 
 from rflow.observables import *
 from rflow.trajectory import *
-from coffe.omm.util import *
-from coffe.omm.util import get_md_options as gmd
+from fflip.omm.util import *
+from fflip.omm.util import get_md_options as gmd
 from fflip.drude import *
 from fflip.ljpme.calcfuncs import save_offsets, get_one_group_with_offset
 

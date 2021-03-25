@@ -34,7 +34,7 @@ To make new options available to coffe, just add them to the defaults file
 
 In the code, global options are accessed as follows::
 
-    from coffe.core.globconf import CONFIG
+    from fflip.core.globconf import CONFIG
     CONFIG.whatever_option
 
 To check the options provided by the user, or convert options
