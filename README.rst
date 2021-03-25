@@ -36,19 +36,11 @@ A Python package for automation of molecular simulations and optimization of lip
 * Documentation: https://fflip.readthedocs.io.
 
 
+
 Features
 --------
 
 * ... more to come
-
-
-Getting started
----------------
-
-
-Instructions for downloading and installing the code can be found here: Installation_.
-
-.. _Installation: docs/notebooks/01_getting_started.ipynb
 
 
 
