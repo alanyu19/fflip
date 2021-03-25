@@ -15,9 +15,10 @@ step 1. Define your lipid(s) in **def_lipids.py** and make sure to add your lipi
 step 2. Modify the simulation template in the **templates** folder (in most cases, only change to sdyn.sh is needed)  
 step 3. Create your template(s) for property calculation in the **templates** folder (take a look at the **area** folder!)  
 step 4. Modify the potential calculation template in the **templates** folder  
-step 5. Put your psf files and crd files in **psf_files** and **crd_files**, respectively  
-step 6. Update the paths in **targets.py** (see comments in this file for instructions)  
-step 7. Update your targets in **targets.py**
+step 5. Copy your **def_lipids.py** to your simulation template folder and your potential calculation template folder  
+step 6. Put your psf files and crd files in **psf_files** and **crd_files**, respectively  
+step 7. Update the paths in **targets.py** (see comments in this file for instructions)  
+step 8. Update your targets in **targets.py**
 
 <h2> After these:</h2>
 
