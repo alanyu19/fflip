@@ -11,7 +11,7 @@ Workflow to optimize nonbonded parameters in C36 lipid force field
 
 <h3> Do these updates:</h3>
 
-step 1. Define your lipids in **def_lipids.py** and make sure to add your lipid(s) to "match_lipid" at the end of the file  
+step 1. Define your lipid(s) in **def_lipids.py** and make sure to add your lipid(s) to "match_lipid" at the end of the file  
 step 2. Modify the simulation template in the **templates** folder (in most cases, only change to sdyn.sh is needed)  
 step 3. Create your template(s) for property calculation in the **templates** folder (take a look at the **area** folder!)  
 step 4. Modify the potential calculation template in the **templates** folder  
