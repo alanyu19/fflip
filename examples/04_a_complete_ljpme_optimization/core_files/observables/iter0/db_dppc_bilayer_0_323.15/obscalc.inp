@@ -1,0 +1,9 @@
+option_file::obscalc.inp
+nlip::36
+trj_location::/u/alanyu/04_a_complete_ljpme_optimization/simulation/iter0/dppc_bilayer_0_323.15
+first_trj::11
+last_trj::40
+block_size::10
+lipname::dppc
+psf::/u/alanyu/04_a_complete_ljpme_optimization/psf_files/bi_72_dppc_c36.psf
+crd::/u/alanyu/04_a_complete_ljpme_optimization/crd_files/bi_72_dppc_c36.crd

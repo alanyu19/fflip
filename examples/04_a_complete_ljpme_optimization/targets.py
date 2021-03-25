@@ -2,19 +2,21 @@
 
 from fflip.ljpme.targetprop import *
 from fflip.ljpme.optimizers import *
+from def_lipids import *
 
-
-# use absolute paths for these:
+### Use absolute paths for these:
+# the path for outputs (except simulation)
 root = '/u/alanyu/04_a_complete_ljpme_optimization/core_files/' 
+# the path of psf/crd files
 psf_dir = '/u/alanyu/04_a_complete_ljpme_optimization/psf_files/'
 crd_dir = '/u/alanyu/04_a_complete_ljpme_optimization/crd_files/'
+# the path of sim/observable/potential calculation templates
 template_dir = '/u/alanyu/04_a_complete_ljpme_optimization/templates/'
 
 
-# --------------- area_dppc_bilayer ----------------
+# --------------- Example Targets ----------------
 properties = []
 special_properties = []
-
 
 # DPPC areas
 for temperature, surface_tension, wt in zip(
@@ -22,9 +24,13 @@ for temperature, surface_tension, wt in zip(
 ):
     prop = TargetProperty(
         prop_type="area",
+        # property naming should follow this example!
+        # keep the surface_tension as 0 if you run a NPT simulation,
+        # this is needed by the code
         name="area_dppc_bilayer_{}_{}".format(surface_tension, temperature),
         system_type='bilayer',
         lipname="dppc",
+        lipid=pc_demo,  # imported from def_lipids
         num_lipids=36,
         weight_factor=wt,
         temperature=temperature,
@@ -35,7 +41,6 @@ for temperature, surface_tension, wt in zip(
         pot_template=template_dir + "potential",
         obs_template=template_dir + "area",
         sim_template=template_dir + "sim",
-        # TODO: pass this to the calc_observable function of TargetProperty
         obs_file_format="area_{}.dat"
     )
     properties.append(prop)
@@ -48,6 +53,7 @@ for temperature in [323.15, 333.15]:
         name="db_dppc_bilayer_0_{}".format(temperature),
         system_type='bilayer',
         lipname="dppc",
+        lipid=pc_demo,  # imported from def_lipids
         num_lipids=36,
         weight_factor=5,
         temperature=temperature,
@@ -57,7 +63,6 @@ for temperature in [323.15, 333.15]:
         root_dir=root,
         pot_template=template_dir + "potential",
         obs_template=template_dir + "db1",
-        # TODO: pass this to the calc_observable function of TargetProperty
         obs_file_format="db_{}.dat"
     )
     properties.append(prop)

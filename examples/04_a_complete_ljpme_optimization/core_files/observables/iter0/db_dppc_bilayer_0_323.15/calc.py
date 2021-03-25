@@ -40,7 +40,8 @@ trajs = TrajectoryIterator(
     load_function=md.load_dcd
 )
 
-db_evaluator = MembraneThickness(nbins=500, edge_bins=140, box_length_fixed=10)
+
+db_evaluator = MembraneThickness(nbins=500, edge_bins=130, box_length_fixed=10)
 
 to_calc = TimeSeries(
     evaluator=db_evaluator, filename="./block_data/db_{}.dat".format(

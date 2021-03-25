@@ -278,8 +278,9 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype, perturbati
               help="if QM partial charges are available ($root/qm/qm.csv)")
 @click.option("--qmw", type=float, default=None,
               help="weight of qm charges, performance not tested!")
+@click.option("--previous", type=str, default=None, help="previous iteration index/label")
 @click.option("--ssr", is_flag=True, help="plot properties' contributions to SSR")
-def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, uncertainty_scaling, hasqm, qmw, ssr):
+def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, uncertainty_scaling, hasqm, qmw, previous, ssr):
     print('there are {} normal properties and {} special properties'.format(
         len(properties), len(special_properties))
     )
@@ -330,13 +331,16 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, uncertainty_scal
         save_result=ssr, ssr_file='./solutions/ssr_' + iteration + '.png',
         result_file='./solutions/predicted_{}.csv'.format(iteration)
     )
-    np.savetxt('./solutions/solution_{}.txt'.format(iteration), solution)
-
-    # TODO (yalun): this should be supported!
-    # param = dppc.parse_nbgroups(groups=properties[0].parse_groups)
-    # previous = np.loadtxt('./solutions/c2aa/solution.txt')
-    # final = combine_solutions([previous, solution], param)
-    # np.savetxt('solution.txt', final)
+    if previous is None:
+        np.savetxt('./solutions/solution_{}.txt'.format(iteration), solution)
+    else:
+        # currently only support one lipid type at once
+        lipid_ = le.target_properties[0].lipid
+        nbgroups_ = le.target_properties[0].groups
+        param = lipid_.parse_nbgroups(groups=nbgroups_)
+        previous = np.loadtxt('./solutions/solution_{}.txt'.format(previous))
+        final = combine_solutions([previous, solution], param)
+        np.savetxt('./solutions/solution_{}.txt'.format(iteration), final)
 
 
 def entrypoint():
