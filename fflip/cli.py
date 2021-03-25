@@ -317,10 +317,6 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, uncertainty_scal
     ) 
     le.get_deviation_vector()
 
-    # np.savetxt('W.mtx', le.W)
-    # np.savetxt('S.mtx', le.S)
-    # np.savetxt('F.mtx', le.F)
-    
     solution = le(save_result=False)
     le.update_weight(
         hard_bounds={'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst},
@@ -330,7 +326,6 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, uncertainty_scal
     )
     if not os.path.isdir("solutions"):  # directory for slurm output files
         os.mkdir("solutions")
-    # TODO: this should be enhanced!
     solution = le(
         save_result=ssr, ssr_file='./solutions/ssr_' + iteration + '.png',
         result_file='./solutions/predicted_{}.csv'.format(iteration)

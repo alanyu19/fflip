@@ -281,19 +281,3 @@ def make_guess_of_layertype(name):
         return 'bulk'
 
 
-lipfinder = {
-    'dppc': pc,
-    'prpc': pc,
-    'dmpc': pc,
-    'dopc': pc,
-    'popc': pc,
-    'dlpc': pc,
-    'pope': pe,
-    'dhpce': pce,
-    'drude_dlpc': drude_pc,
-    'drude_dmpc': drude_pc,
-    'drude_dppc': drude_pc,
-    'drude_dopc': drude_pc,
-    'drude_popc': drude_pc,
-    'drude_prpc': drude_pc
-}

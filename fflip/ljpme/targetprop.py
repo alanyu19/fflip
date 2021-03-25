@@ -220,8 +220,13 @@ class SpecialProperty(TargetSystem):
 
 
 class TargetProperty(TargetSystem):
-    def __init__(self, name, prop_type,
-                 system_type, lipname, num_lipids,
+    def __init__(self,
+                 name,
+                 prop_type,
+                 system_type,
+                 lipname,
+                 lipid,
+                 num_lipids,
                  weight_factor,
                  temperature,
                  surface_tension,
@@ -268,11 +273,11 @@ class TargetProperty(TargetSystem):
         self.first_trj, self.last_trj = \
             make_guess_of_trajectory_range(self.name)
         self.trj_intvl_e, self.trj_intvl_p = make_guess_of_intervals(self.name)
-        # TODO: the lipfinder is loaded from the util, can we get rid of this?
-        self.lipid = lipfinder[lipname]
+        # self.lipid = lipfinder[lipname]
+        self.lipid = lipid
         self.lipid_scheme = LipidScheme(self.lipid)
         self.ff = ff
-        # CHARMM integer chage groups
+        # CHARMM integer charge groups
         self.groups = parse_groups
         self._prop_block_size = make_guess_of_block_size(0, self.prop_type)
         self._pot_block_size = make_guess_of_block_size(1, self.prop_type)

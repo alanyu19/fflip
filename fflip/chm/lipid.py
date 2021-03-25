@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import warnings
 from fflip.omm.paragroup import *
 
 
@@ -34,8 +35,14 @@ class Lipid:
         assert "charmm_group_list" in kwargs
         self.charmm_group_list = kwargs["charmm_group_list"]
         self.num_charmm_groups = len(self.charmm_group_list)
-        assert "lipname" in kwargs
-        self.lipname = kwargs["lipname"]
+        assert "lipname" in kwargs or "name" in kwargs
+        if "name" in kwargs:
+            self.name = kwargs["name"]
+        elif "lipname" in kwargs:
+            warnings.warn(
+                "'lipname' will not be supported in future versions, please use 'name'!"
+            )
+            self.name = kwargs["lipname"]
         self.cgroups = []
         for group in self.charmm_group_list:
             self.cgroups.append(group)
@@ -55,7 +62,7 @@ class Lipid:
                     continue
             self.level_print(
                 "Creating 'nbgroup's for {} group {} ... ".format(
-                    self.lipname, counter+1
+                    self.name, counter+1
                 ), 1, print_level
             )
             for i in range(chm_gp.num_atom_category):
@@ -142,7 +149,7 @@ class Lipid:
                     )
             self.level_print("", 1, print_level)
         self.level_print(
-            "Total {} nbgroups created for {}\n".format(len(gs), self.lipname),
+            "Total {} nbgroups created for {}\n".format(len(gs), self.name),
             1, print_level
         )
         return gs
