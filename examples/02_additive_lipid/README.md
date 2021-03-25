@@ -23,6 +23,10 @@ step 8. Update your targets in **targets.py**
 <h2> After these:</h2>
 
 (1) Run your simulation by: ***fflip simulate [OPTIONS]*** (use "--help" to see what you can do with this)  
+&nbsp;&nbsp;&nbsp;*in this example, the following command was used:  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip  simulate -l simulation/ -c no -x 100 -z 100 --zmode 10 -i L -b MCM -I test -t 400 --start  
+&nbsp;&nbsp;&nbsp;if not the "--start" flag, go to your simulation folders and run "rflow submit sdyn.sh" to start your simulations* 
+
 (2) Run your observable/potential calculations by ***fflip obsopt [OPTIONS]***  
 &nbsp;&nbsp;&nbsp;*in this example, the following commands were used:  
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip obspot -i 0,1,2,3 -tl simulation -f 11 -l 40 -c observable -p 0.1 --iteration 0 (4 observables)   
