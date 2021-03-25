@@ -62,8 +62,8 @@ In order to use program-specific functions, these programs have to be installed.
 1) CHARMM (optional): Required for fflip/uachain. Make sure the command *charmm* can be called from a terminal.
 2) OpenMM: Required.
 3) openmmtools: Required.
-4) mdtraj: Required
-5) Rickflow: Required (https://gitlab.com/Olllom/rickflow/tree/master)
+4) mdtraj: Required.
+5) Rickflow: Required (https://gitlab.com/Olllom/rickflow/tree/master).
 
 Other comments here.
 
