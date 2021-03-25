@@ -9,13 +9,13 @@ Workflow to optimize nonbonded parameters in C36 lipid force field
 2. overall thickness dppc bilayer @323.15K
 3. overall thickness dppc bilayer @333.15K  
 
-<h3> Prerequisite for new lipids/properties:</h3>
+<h3> Do these upates:</h3>
 
 step 1. Define your lipids in **$path_to_fflip/fflip/chm/lipids** and import it in **$path_to_fflip/fflip/chm/util.py** (from fflip.chm.lipids.$your_lipid import \*)  
 step 2. In **$path_to_fflip/fflip/ljpme/scheme.py**, find the function called *lipfinder* and add your lipid with a preferred name (note this "name" will be used in targets.py)
 
-*after doing step 1 & step 2, run **setup.py*** in **$path_to_fflip** *to install fflip (I recommend using "python setup.py develop")*  
-<span style="color:blue"> *A few of the required packages will not be be installed automatically, please read the main README for more info* </span>  
+*after doing step 1 & step 2, run **setup.py*** in **$path_to_fflip** *to install fflip (I recommend using "python setup.py develop")*   
+`* some of the required packages will not be be installed automatically, please read the main README for more info` 
 
 step 3. Modify the simulation template in the **templates** folder (in most cases, only change to sdyn.sh is needed)  
 step 4. Create your template(s) for property calculation in the **templates** folder (take a look at the **area** folder!)  
