@@ -49,7 +49,7 @@ if change_para.lower() == 'yes':
 
 # must update!
 # keep it as original paramters in all iterations!
-top_files = glob.glob("/u/alanyu/top_yalun/for_ljpme/original/*")
+top_files = glob.glob("./toppar/*")
 
 workflow = RickFlow(
     toppar=top_files,

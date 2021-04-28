@@ -3,6 +3,51 @@
 from rflow.trajectory import *
 
 
+def normalizecoor(trajectory, coordinates=2, com_selection=None, subselect="all",
+              use_fixed_box_length=False, box_length_fixed=None):
+    """
+    Normalize the trajectory so that all coordinates are in [0,1] and the center of
+    mass of the membrane is at 0.5. [copied and modified from rickflow]
+
+    Args:
+        trajectory:     An mdtraj trajectory object.
+        coordinates:    0,1, or 2 (for x,y,z); or a list
+        com_selection:  Selection of the membrane (to get the center of mass).
+                        Can be a list of ints or a selection string.
+        subselect:      Atom selection (usually the permeant). Can be a list of ints or a selection string.
+                        The normalized array will only contain the atoms in this selection.
+
+    Returns:
+        np.array: The normalized coordinates.
+
+    """
+    if use_fixed_box_length:
+        assert box_length_fixed!=None and (
+                isinstance(box_length_fixed, float) or \
+            isinstance(box_length_fixed, int)
+        )
+
+    membrane_center = center_of_mass_of_selection(trajectory, com_selection, coordinates)
+
+    selected = select_atoms(trajectory, subselect)
+    # normalize z coordinates: scale to [0,1] and shift membrane center to 0.5
+    z_normalized = trajectory.xyz[:, selected,
+                   coordinates].transpose() - membrane_center.transpose()
+
+    if not use_fixed_box_length:
+        z_normalized /= trajectory.unitcell_lengths[:, coordinates].transpose()
+    else:
+        assert (z_normalized < box_length_fixed).all()
+        z_normalized /= box_length_fixed
+
+    if com_selection is not None and len(com_selection) > 0:
+        z_normalized += 0.5  # shift so that com is at 0.5
+
+    z_normalized = np.mod(z_normalized, 1.0).transpose()
+
+    return z_normalized
+
+
 def find_resnames_from_psf(psf_file):
     res_list = []
     reading = False

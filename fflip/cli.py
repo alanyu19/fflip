@@ -273,7 +273,7 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype, perturbati
 @click.option("-c", "--chrgrst", type=float, default=0.025,
               help="restraint on charge, defualt is 0.025, increase for more restraint")
 @click.option("-u", "--uncertainty_scaling", type=str, default=500,
-              help="increase to apply more restraint")
+              help="default is 500, increase to apply more restraint")
 @click.option("--hasqm", is_flag=True,
               help="if QM partial charges are available ($root/qm/qm.csv)")
 @click.option("--qmw", type=float, default=None,

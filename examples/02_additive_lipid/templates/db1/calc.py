@@ -5,16 +5,15 @@
 #SBATCH --output=./log/master_%A_%a.out
 #SBATCH --error=./log/master_%A_%a.err
 #SBATCH --time=00:30:00
-#SBATCH --partition=ivy,sbr,hwell
+#SBATCH --partition=shared
 #SBATCH --ntasks=1
 #SBATCH -J thickness
 
 
-from fflip.omm.util import get_md_options as gmd
-
-from rflow.edp import *
 from rflow.observables import *
 from rflow.trajectory import *
+from fflip.omm.util import get_md_options as gmd
+from fflip.analysis.edp import *
 
 
 option_file_name = "obscalc.inp"

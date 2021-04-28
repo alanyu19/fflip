@@ -3,11 +3,11 @@
 
 #SBATCH --output=./log/master_%A_%a.out
 #SBATCH --error=./log/master_%A_%a.err
-#SBATCH --time=06:00:00
-#SBATCH --partition=k20,k40
+#SBATCH --time=12:00:00
+#SBATCH --partition=shared
 #SBATCH --cpus-per-task=2
 #SBATCH --ntasks=1
-#SBATCH --mem=5G
+#SBATCH --mem=4G
 
 import os
 import sys
@@ -83,7 +83,7 @@ if index > 0:
     gss, offsets = get_parameter_set_and_offset_by_index(index, lip)
 
 # Update the toppar
-parameter_files = glob.glob("/u/alanyu/top_yalun/for_ljpme/original/*")
+parameter_files = glob.glob("./toppar/*")
 
 psf, topology, parameters = read_structure_parameter_files(
     psf_file, parameter_files
@@ -132,7 +132,7 @@ if index == 0:
         # Use 'CPU' if not running this on a gpu platform
         # If using CUDA, load the version matching your openmm
         # before calling fflip obspot
-        use_new_method=False, use_platform='CUDA'
+        use_new_method=False, use_platform='CPU'
     )
     to_calc = TimeSeries(
         evaluator=energy_evaluator,
@@ -141,7 +141,7 @@ if index == 0:
 else:
     energy_evaluator = ef.ParameterEnergy(
         system, psf, paragroups=gss, paraoffsets=offsets,
-        use_new_method=False, use_platform='CUDA'
+        use_new_method=False, use_platform='CPU'
     )
     to_calc = TimeSeries(
         evaluator=energy_evaluator,

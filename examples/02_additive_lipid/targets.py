@@ -3,15 +3,16 @@
 from fflip.ljpme.targetprop import *
 from fflip.ljpme.optimizers import *
 from def_lipids import *
+import os
 
 ### Use absolute paths for these:
 # the path for outputs (except simulation)
-root = '/u/alanyu/04_a_complete_ljpme_optimization/core_files/' 
+root = os.path.realpath('./core_files')
 # the path of psf/crd files
-psf_dir = '/u/alanyu/04_a_complete_ljpme_optimization/psf_files/'
-crd_dir = '/u/alanyu/04_a_complete_ljpme_optimization/crd_files/'
+psf_dir = os.path.realpath('./psf_files')
+crd_dir = os.path.realpath('./crd_files')
 # the path of sim/observable/potential calculation templates
-template_dir = '/u/alanyu/04_a_complete_ljpme_optimization/templates/'
+template_dir = os.path.realpath('./templates')
 
 
 # --------------- Example Targets ----------------
@@ -35,12 +36,12 @@ for temperature, surface_tension, wt in zip(
         weight_factor=wt,
         temperature=temperature,
         surface_tension=surface_tension,
-        psf_file=psf_dir + "bi_72_dppc_c36.psf",
-        crd_file=crd_dir + "bi_72_dppc_c36.crd",
+        psf_file=os.path.join(psf_dir, "bi_72_dppc_c36.psf"),
+        crd_file=os.path.join(crd_dir, "bi_72_dppc_c36.crd"),
         root_dir=root,
-        pot_template=template_dir + "potential",
-        obs_template=template_dir + "area",
-        sim_template=template_dir + "sim",
+        pot_template=os.path.join(template_dir, "potential"),
+        obs_template=os.path.join(template_dir, "area"),
+        sim_template=os.path.join(template_dir, "sim"),
         obs_file_format="area_{}.dat"
     )
     properties.append(prop)
@@ -58,11 +59,11 @@ for temperature in [323.15, 333.15]:
         weight_factor=5,
         temperature=temperature,
         surface_tension=0,
-        psf_file=psf_dir + "bi_72_dppc_c36.psf",
-        crd_file=crd_dir + "bi_72_dppc_c36.crd",
+        psf_file=os.path.join(psf_dir, "bi_72_dppc_c36.psf"),
+        crd_file=os.path.join(crd_dir, "bi_72_dppc_c36.crd"),
         root_dir=root,
-        pot_template=template_dir + "potential",
-        obs_template=template_dir + "db1",
+        pot_template=os.path.join(template_dir, "potential"),
+        obs_template=os.path.join(template_dir, "db1"),
         obs_file_format="db_{}.dat"
     )
     properties.append(prop)

@@ -260,3 +260,40 @@ def find_up_low_from_crd(crd_file):
         if 'EXT' in l:
             reading = True
     return upper_atoms, lower_atoms
+
+
+def select_atoms(topology_from, sel):
+    """
+    A short helper function to enable selection via atom ids or selection strings.
+
+    Args:
+        topology_from (mdtraj.Trajectory or mdtraj.Topology): The object defining the topology.
+        sel: Either a selection string or a list of atom ids.
+
+    Returns:
+        list of int: Selected atom ids.
+    """
+    if hasattr(topology_from, "topology"):
+        topology = topology_from.topology
+    else:
+        topology = topology_from
+    if sel is None:
+        return []
+    elif isinstance(sel, str):
+        return topology.select(sel)
+    else:
+        return sel
+
+
+def manually_select_atoms(topology_file, atom_name):
+    if "\'" in atom_name:
+        # Do our own selection to avoid error in mdtraj for H3' and O3' in
+        # sterols and possible future bad naming of atoms
+        atmindxs = []
+        with open(topology_file, 'r') as topfile:
+            lines = topfile.readlines()
+        for line in lines:
+            if atom_name.upper() in line:
+                atmindxs.append(int(line.strip().split()[0]) - 1)
+        selection = atmindxs
+        return selection
