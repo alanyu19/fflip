@@ -42,8 +42,11 @@ def get_parameter_set_and_offset_by_index(index_, lip_, percentage_):
     return pset_, offset_
 
 
-def get_one_group_with_offset(index_, lip_, percentage_, id_allowed_):
-    parameter_sets_ = lip_.parse_nbgroups(id_allowed=id_allowed_)
+def get_one_group_with_offset(index_, lip_, percentage_, id_allowed_, drude=False):
+    if not drude:
+        parameter_sets_ = lip_.parse_nbgroups(id_allowed=id_allowed_)
+    else:
+        parameter_sets_ = lip_.parse_groups(id_allowed=id_allowed_)
     pset_ = [parameter_sets_[index_-1]]
     # keep this list format for the other function/class (parameterEnergy?)
     offset_ = [

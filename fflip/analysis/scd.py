@@ -130,7 +130,7 @@ class OrderParameterCalculation(object):
 
             # return the scd for every frame
             if per_mol:
-                return -1.5 * scd + 0.5
+                return (-1.5 * scd + 0.5).flatten()
             else:
                 return -1.5 * np.mean(scd, axis=1) + 0.5
         else:

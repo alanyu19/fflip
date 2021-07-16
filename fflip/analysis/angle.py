@@ -2,6 +2,7 @@
 
 import numpy as np
 from fflip.analysis.util import hard_up_low_atoms
+from fflip.analysis.util import manually_select_res_atom
 
 
 def unit_vector(vector):
@@ -32,7 +33,7 @@ class AngleDistribution(object):
     """
     def __init__(self, topology, first_vector, constant_second_vector=True,
                  second_vector=[0, 0, 1], sep_leaflet=False, recipe=None,
-                 nbins=180):
+                 nbins=180, psf=None):
         """
         Args:
             topology: the mdtraj topology
@@ -52,8 +53,19 @@ class AngleDistribution(object):
         self.topology = topology
         self.sep_leaflet = sep_leaflet
         self.recipe = recipe
+        if "\'" in self.atom1:
+            assert psf is not None
+            self.sele1 = manually_select_res_atom(
+                psf, self.atom1
+            )
         self.sele1 = self.topology.select(self.atom1)
-        self.sele2 = self.topology.select(self.atom2)
+        if "\'" in self.atom2:
+            assert psf is not None
+            self.sele2 = manually_select_res_atom(
+                psf, self.atom2
+            )
+        else:
+            self.sele2 = self.topology.select(self.atom2)
         if not self.sep_leaflet:
             self.distribution = 0.0
         else:

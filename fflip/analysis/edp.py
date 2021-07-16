@@ -304,7 +304,7 @@ class ElectronDensityFactory:
                 if not os.path.isdir(blocks_dir):
                     os.mkdir(blocks_dir)
             else:
-                if res.lower() == 'tip3':
+                if res.lower() == 'tip3' or res.lower() in skip:
                     continue  # don't calculate water since (no interdig)
                 subdir_upper = os.path.join(
                     self.save_to_folder,

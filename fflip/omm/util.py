@@ -14,7 +14,7 @@ from simtk.openmm import Context, LangevinIntegrator
 from simtk.openmm import NonbondedForce, CustomNonbondedForce
 from simtk.openmm.app import CharmmPsfFile, CharmmParameterSet, CharmmPSFWarning
 from simtk.openmm.app import PME, HBonds
-from simtk.openmm.openmm import Platform
+from simtk.openmm import Platform
 import mdtraj as md
 
 from fflip.omm import omm_vfswitch  # this should be from omm
