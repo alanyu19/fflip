@@ -67,7 +67,7 @@ class DrudeChargeGroup:
 
 
 class LJGroup:
-    def __init__(self, _id, atom_type_dict, half_r_mins=None, epsilons=None):
+    def __init__(self, id_, atom_type_dict, half_r_mins=None, epsilons=None):
         """
         The class for defining all parametrizable LJ interactions, NBFIX is
         not included in this class and can be set separately using the
@@ -79,7 +79,7 @@ class LJGroup:
             half_r_mins: can be the original parameters for half_r_mins (A)
             epsilons: can be the original parameters for epsilon (kcal/mol)
         """
-        self.id = _id
+        self.id = id_
         self.atom_type_dict = atom_type_dict
         self.half_r_mins = half_r_mins
         self.epsilons = epsilons
@@ -114,7 +114,7 @@ class DrudeLipid:
             pass
 
     def parse_groups(self, print_level=0, chg_offset=0.2, alpha_offset=0.02,
-                     thole_offset=0.02, id_allowed='all'):
+                     thole_offset=0.02, lj_offset=0.1, id_allowed='all'):
         gs = []
         for counter, chggp in enumerate(self.charge_groups):
             if id_allowed is not 'all' and chggp.id not in id_allowed:
@@ -251,6 +251,38 @@ class DrudeLipid:
                         ), 2, print_level
                     )
             self.level_print("", 1, print_level)
+
+        for counter, ljgp in enumerate(self.lj_groups):
+            if id_allowed is not 'all' and ljgp.id not in id_allowed:
+                continue
+            self.level_print("Parsing {} LJ group {} ...".format(
+                self.lipname, counter + 1
+            ), 1, print_level)
+            internal_id = 0
+            for atom_type in ljgp.keys():
+                atom_names = ljgp[atom_type]
+                add_a_new_group(
+                    gs, DrudeParameter(
+                        lipidname=self.lipname.lower(),
+                        cgid=ljgp.id,
+                        internal_id=internal_id,
+                        par_type='sigma',
+                        center_names=atom_names,
+                        original_p=1.0,
+                        targeted_range=[1 - lj_offset, 1 + lj_offset]
+                    )
+                )
+                add_a_new_group(
+                    gs, DrudeParameter(
+                        lipidname=self.lipname.lower(),
+                        cgid=ljgp.id,
+                        internal_id=internal_id,
+                        par_type='epsilon',
+                        center_names=atom_names,
+                        original_p=1.0,
+                        targeted_range=[1 - lj_offset, 1 + lj_offset]
+                    )
+                )
         self.level_print(
             "Total {} DrudeParameters created for {}\n".format(
                 len(gs), self.lipname
