@@ -432,7 +432,7 @@ def create_system_with_lj_offset(
         if change_14:
             parameters.atom_types_str[atom_type].epsilon_14 = \
             parameters.atom_types_str[atom_type].epsilon_14 * (1 + parameter_offset)
-    psf.setBox(unitcell_lengths)
+    psf.setBox(*unitcell_lengths)
     system_ = psf.createSystem(
         parameters,
         nonbondedMethod=nbmethod,

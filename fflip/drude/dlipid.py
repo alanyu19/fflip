@@ -71,7 +71,7 @@ class LJGroup:
         """
         The class for defining all parametrizable LJ interactions, NBFIX is
         not included in this class and can be set separately using the
-        DrudeNBFIX class
+        DrudeNBFIX class (future release)
         Args:
             id: int, the id within the lipid
             atom_type_dict: a dict contains all atom types and their related
