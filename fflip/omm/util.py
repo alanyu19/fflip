@@ -13,7 +13,7 @@ import simtk.unit as u
 from simtk.openmm import Context, LangevinIntegrator
 from simtk.openmm import NonbondedForce, CustomNonbondedForce
 from simtk.openmm.app import CharmmPsfFile, CharmmParameterSet, CharmmPSFWarning
-from simtk.openmm.app import PME, HBonds
+from simtk.openmm.app import LJPME, PME, HBonds
 from simtk.openmm import Platform
 import mdtraj as md
 
@@ -389,3 +389,55 @@ def filter_solution(file_to_load='solution.txt', threshold=0.1):
             sol.append(d)
     return sol
 
+
+def create_system_with_lj_offset(
+    parameter_group, parameter_offset, psf_file, parameter_files,
+    unitcell_lengths, nbmethod=LJPME, nbcutoff=1.0, change_14=True
+):
+    parameters = CharmmParameterSet(*parameter_files)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", CharmmPSFWarning)
+        psf = CharmmPsfFile(psf_file)
+    topology = md.Topology.from_openmm(psf.topology)
+    if parameter_group.par_type == 'sigma':
+        par_type = 'rmin'
+    elif parameter_group.par_type == 'epsilon':
+        par_type = 'epsilon'
+    else:
+        raise Exception(
+            "Parameter type {} not supported by this function".format(
+                parameter_group.par_type
+            )
+        )
+    # initialize atom_type
+    atom_type = None
+    for name in parameter_group.center_names:
+        atoms = topology.select("name {}".format(name))
+        first_atom_index = int(atoms[0])
+        assert psf.atom_list[first_atom_index].name == name
+        if not atom_type:
+            atom_type = psf.atom_list[first_atom_index].attype
+        else:
+            assert atom_type == psf.atom_list[first_atom_index].attype,\
+                "Different atom types in one parameter (LJ) group!"
+    if par_type == 'rmin':
+        parameters.atom_types_str[atom_type].rmin = \
+        parameters.atom_types_str[atom_type].rmin * (1 + parameter_offset)
+        if change_14:
+            parameters.atom_types_str[atom_type].rmin_14 = \
+            parameters.atom_types_str[atom_type].rmin_14 * (1 + parameter_offset)
+    elif par_type == 'epsilon':
+        parameters.atom_types_str[atom_type].epsilon = \
+        parameters.atom_types_str[atom_type].epsilon * (1 + parameter_offset)
+        if change_14:
+            parameters.atom_types_str[atom_type].epsilon_14 = \
+            parameters.atom_types_str[atom_type].epsilon_14 * (1 + parameter_offset)
+    psf.setBox(unitcell_lengths)
+    system_ = psf.createSystem(
+        parameters,
+        nonbondedMethod=nbmethod,
+        constraints=HBonds,
+        nonbondedCutoff=nbcutoff * u.nanometer,
+        ewaldErrorTolerance=0.0001
+    )
+    return system_
