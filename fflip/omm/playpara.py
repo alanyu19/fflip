@@ -549,7 +549,13 @@ def change_drude_ff_parameters(system, topology, parameter, paraoffset):
     if par_type is 'alpha':
         particles = []
         for i, dp in enumerate(parameter.drude_particles):
-            particles += list(topology.select("name {}".format(dp)))
+            particles += list(
+                topology.select(
+                    "resname {} and name {}".format(
+                        parameter.lipid.upper(), dp
+                    )
+                )
+            )
         drude_indexes = []
         for index_drude in range(drudeforce.getNumParticles()):
             parameters = drudeforce.getParticleParameters(index_drude)
@@ -562,7 +568,13 @@ def change_drude_ff_parameters(system, topology, parameter, paraoffset):
     if par_type is 'thole':
         particles = []
         for i, dp in enumerate(parameter.drude_particles):
-            particles += list(topology.select("name {}".format(dp)))
+            particles += list(
+                topology.select(
+                    "resname {} and name {}".format(
+                        parameter.lipid.upper(), dp
+                    )
+                )
+            )
         d_particles = []
         for index_d in range(drudeforce.getNumParticles()):
             dd_param = drudeforce.getParticleParameters(index_d)
@@ -581,17 +593,36 @@ def change_drude_ff_parameters(system, topology, parameter, paraoffset):
         particles = []
         # Fill in atom selections for center atoms and neighbors
         for i, cn in enumerate(parameter.center_names):
-            particles += list(topology.select("name {}".format(cn)))
+            particles += list(
+                topology.select(
+                    "resname {} and name {}".format(
+                        parameter.lipid.upper(), cn
+                    )
+                )
+            )
         for pid in particles:
             change_charge(nbforce, int(pid), paraoffset)
         for i, nb in enumerate(parameter.neighbors):
-            neighbors = list(topology.select("name {}".format(nb)))
+            neighbors = list(
+                topology.select(
+                    "resname {} and name {}".format(
+                        parameter.lipid.upper(), nb
+                    )
+                )
+            )
             for nid in neighbors:
                 change_charge(nbforce, int(nid), paraoffset * parameter.ron[i])
     elif par_type is 'sigma' or par_type is 'epsilon':
+        warnings.warn("might not be effective if there is any NBFIX in the system!")
         particles = []
         for i, pn in enumerate(parameter.center_names):
-            particles += list(topology.select("name {}".format(pn)))
+            particles += list(
+                topology.select(
+                    "resname {} and name {}".format(
+                        parameter.lipid.upper(), pn
+                    )
+                )
+            )
         for particle in particles:
             if par_type is 'sigma':
                 change_sigma(nbforce, int(particle), paraoffset)

@@ -412,7 +412,11 @@ def create_system_with_lj_offset(
     # initialize atom_type
     atom_type = None
     for name in parameter_group.center_names:
-        atoms = topology.select("name {}".format(name))
+        atoms = topology.select(
+            "resname {} and name {}".format(
+                parameter_group.lipid.upper(), name
+             )
+        )
         first_atom_index = int(atoms[0])
         assert psf.atom_list[first_atom_index].name == name
         if not atom_type:

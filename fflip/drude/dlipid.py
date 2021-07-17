@@ -259,8 +259,9 @@ class DrudeLipid:
                 self.lipname, counter + 1
             ), 1, print_level)
             internal_id = 0
-            for atom_type in ljgp.keys():
-                atom_names = ljgp[atom_type]
+            for atom_type in ljgp.atom_type_dict.keys():
+                atom_names = ljgp.atom_type_dict[atom_type]
+                internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
                         lipidname=self.lipname.lower(),
@@ -272,6 +273,9 @@ class DrudeLipid:
                         targeted_range=[1 - lj_offset, 1 + lj_offset]
                     )
                 )
+            for atom_type in ljgp.atom_type_dict.keys():
+                atom_names = ljgp.atom_type_dict[atom_type]
+                internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
                         lipidname=self.lipname.lower(),
@@ -283,6 +287,7 @@ class DrudeLipid:
                         targeted_range=[1 - lj_offset, 1 + lj_offset]
                     )
                 )
+        # summary
         self.level_print(
             "Total {} DrudeParameters created for {}\n".format(
                 len(gs), self.lipname
