@@ -468,7 +468,7 @@ def change_polarizability(drudeforce, nbforce, drude_id, change_of_alpha):
     attached_id = parameters[1]
     qd_value = parameters[5]._value
     alpha_value = parameters[6]._value
-    new_alpha_value = alpha_value + change_of_alpha
+    new_alpha_value = alpha_value * (1 + change_of_alpha)
     new_qd_value = np.round(
         -np.sqrt((qd_value**2/alpha_value)*new_alpha_value), 4
     )
@@ -488,7 +488,7 @@ def change_thole(drudeforce, thole_id, change_of_thole):
     parameters = drudeforce.getScreenedPairParameters(thole_id)
     particle_1 = parameters[0]
     particle_2 = parameters[1]
-    thole = parameters[2] + change_of_thole
+    thole = parameters[2] * (1 + change_of_thole)
     drudeforce.setScreenedPairParameters(thole_id, particle_1, particle_2, thole)
 
 

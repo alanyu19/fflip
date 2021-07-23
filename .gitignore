@@ -1,6 +1,6 @@
 __pycache__/
 fflip/**/__pycache__/
-.idea
+.idea/
 fflip.egg-info
 .eggs/
 build/
