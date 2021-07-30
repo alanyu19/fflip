@@ -359,7 +359,10 @@ class TargetProperty(TargetSystem):
 
     @property
     def parameters(self):
-        return self.lipid.parse_nbgroups(groups=self.groups)
+        if not isinstance(self.lipid, DrudeLipid):
+            return self.lipid.parse_nbgroups(groups=self.groups)
+        else:
+            return self.lipid.parse_groups(id_allowed=self.groups)
 
     @property
     def num_parameters(self):

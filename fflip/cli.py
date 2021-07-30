@@ -270,6 +270,10 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype, perturbati
               help="restraint on sigma, default is 0.05, increase for more restraint")
 @click.option("-e", "--epsrst", type=float, default=0.05,
               help="restraint on epsilon, defult is 0.05, increase for more restraint")
+@click.option("-t", "--tlrst", type=float, default=0.05,
+              help="restraint on thole, default is 0.05, increase for more restraint")
+@click.option("-a", "--aprst", type=float, default=0.05,
+              help="restraint on alpha, defult is 0.05, increase for more restraint")
 @click.option("-c", "--chrgrst", type=float, default=0.025,
               help="restraint on charge, defualt is 0.025, increase for more restraint")
 @click.option("-u", "--uncertainty_scaling", type=str, default=500,
@@ -280,7 +284,7 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype, perturbati
               help="weight of qm charges, performance not tested!")
 @click.option("--previous", type=str, default=None, help="previous iteration index/label")
 @click.option("--ssr", is_flag=True, help="plot properties' contributions to SSR")
-def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, uncertainty_scaling, hasqm, qmw, previous, ssr):
+def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, uncertainty_scaling, hasqm, qmw, previous, ssr):
     print('there are {} normal properties and {} special properties'.format(
         len(properties), len(special_properties))
     )
@@ -311,16 +315,18 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, uncertainty_scal
     le.get_sensitivity_matrix()
     le.get_weight_matrix(
         qm_weight=qmw, hard_bounds={
-            'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst
+            'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst,
+            'thole': tlrst, 'alpha': aprst
         },
         # This is currently hard-coded
-        drop_bounds={'sigma': 0.2, 'epsilon': 0.2, 'charge': 0.2},
+        drop_bounds={'sigma': 0.2, 'epsilon': 0.2, 'charge': 0.2, 'alpha': 0.2, 'thole': 0.2},
     ) 
     le.get_deviation_vector()
 
     solution = le(save_result=False)
     le.update_weight(
-        hard_bounds={'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst},
+        hard_bounds={'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst,
+                     'thole': tlrst, 'alpha': aprst},
         # parameter change (measured in % or 0.01 e) 
         # smaller than this would be dropped
         lower_bound=0.2

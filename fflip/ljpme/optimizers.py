@@ -213,8 +213,11 @@ class PropertyLinearEstimator(Optimizer):
             self, qm_weight=0.01,
             hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
             drop_bounds={'sigma': 999, 'epsilon': 999, 'charge': 999},
-            forbid={'epsilon': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13'],
-                    'sigma': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13']}
+            forbid={'charge': ['N', 'H13A', 'C13', 'C12', 'H2R', 'H11A', 'C11', 'P', 'O13', 'O11'],
+                    'alpha': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
+                    'thole': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
+                    'epsilon': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13', 'O13', 'O11', 'C1', 'O21', 'C21', 'O22', 'C22'],
+                    'sigma': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13', 'O13', 'O11', 'C1', 'O21', 'C21', 'O22', 'C22']}
     ):
         """
         Generate the weight matrix
@@ -407,7 +410,8 @@ class PropertyLinearEstimator(Optimizer):
 
     def update_weight(
         self,
-        hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
+        hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'thole': 0.05,
+                     'alpha': 0.05, 'charge': 0.02},
         lower_bound=0.3, use_last_solution=False, soft_upper_bound=5, factor=2
     ):
         # Only Part3. deviation from original parameter set
