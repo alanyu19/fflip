@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-
+import sys
 import numpy as np
 from rflow.observables import BinEdgeUpdater
 from fflip.analysis.util import select_atoms, manually_select_atoms
@@ -56,7 +56,7 @@ class ElectronDensityCalculator(BinEdgeUpdater):
                 isinstance(topology_file, str), \
                 "Please provide a topology_file, it's possible that some " \
                 "atoms can't be selected if you don't have that!"
-            self.topology_file = topology_file
+        self.topology_file = topology_file
 
     def __call__(self, trajectory):
         # get the average box edge and total number of frames
@@ -84,6 +84,15 @@ class ElectronDensityCalculator(BinEdgeUpdater):
             atom_ids = np.array(atom_ids)
         else:
             atom_ids = select_atoms(trajectory, self.atom_selection)
+            if 'TIP3' in self.atom_selection:
+                # "Handle the unknown error in atom selection ..., related to Openmm 7.5?"
+                water_atom = self.atom_selection.split('TIP3')[1].split(' ')[-1]
+                if water_atom == 'OH2':
+                    atom_ids = select_atoms(trajectory, "water and mass > 10")
+                elif water_atom[0] == 'H1':
+                    atom_ids = select_atoms(trajectory, "water and mass < 10")[::2]
+                else:
+                    atom_ids = select_atoms(trajectory, "water and mass < 10")[1::2]
         # get the element, you can see the reason why we only allow one atom
         # type here
         atom_for_element = trajectory.topology.atom(atom_ids[0])

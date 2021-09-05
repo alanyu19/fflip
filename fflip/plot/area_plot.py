@@ -1,7 +1,9 @@
-def plot_area(file_to_save, data, skip_ns = 0, interval = 0.002, area_range = (35, 80), title=''):
+def plot_area(file_to_save, data, skip_ns=0, interval=0.002, area_range=(35, 80), title=''):
     import numpy as np
     from matplotlib import pyplot as plt
-    cumulative = np.cumsum(data)/np.arange(1, data.shape[0]+1, 1)
+    skip_frames = int(skip_ns/interval)
+    data_skipped = data[skip_frames:]
+    cumulative = np.cumsum(data_skipped)/np.arange(1, data_skipped.shape[0]+1, 1)
     pattern = ['-','-']
     linewidth = [6, 10]
     markersize = [8, 8]
@@ -26,11 +28,15 @@ def plot_area(file_to_save, data, skip_ns = 0, interval = 0.002, area_range = (3
     ax.spines['right'].set_linewidth(2)
     
     x = np.arange(0, data.shape[0] * interval, interval)
-    
+
     for i, y in enumerate([data, cumulative]):
-        ax.plot(x[:], y, pattern[i], linewidth = linewidth[i], markersize = markersize[i], 
-                label = lg[i], color = colors[i])
-        ax.legend(loc='lower left', fontsize =20, handlelength=2)
+        if i==0:
+            ax.plot(x, y, pattern[i], linewidth=linewidth[i], markersize=markersize[i], 
+                    label=lg[i], color=colors[i])
+        else:
+            ax.plot(x[skip_frames:], y, pattern[i], linewidth=linewidth[i], markersize=markersize[i],
+                    label = lg[i], color = colors[i])
+        ax.legend(loc='lower left', fontsize=20, handlelength=2)
         for tick in ax.xaxis.get_major_ticks():
             tick.label.set_fontsize(28)
         for tick in ax.yaxis.get_major_ticks():
