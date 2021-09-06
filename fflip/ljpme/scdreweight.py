@@ -106,7 +106,7 @@ class ScdOptimizer:
     """
     def __init__(
             self, ref_scds, dihedral_dict, sim_scd_path, sim_dih_path,
-            psf_file, parameter_files,
+            psf_file, parameter_files, scd_template,
             method='BFGS', options={'eps': 1e-2, 'gtol': 1e-04}
     ):
         """
@@ -130,6 +130,7 @@ class ScdOptimizer:
         # self.ref_dihedrals = ref_dihedrals
         self.psf_file = psf_file
         self.parameter_files = parameter_files
+        self.scd_template = scd_template
         self.method = method
         self.dihedral_names_sorted = list(dihedral_dict.keys())
         self.dihedral_names_sorted.sort()
@@ -203,7 +204,7 @@ class ScdOptimizer:
         self.scd_data = dict()
         for scd in self.ref_scds:
             self.scd_data[scd] = np.loadtxt(
-                os.path.join(self.sim_scd_path, '{}.data'.format(scd))
+                os.path.join(self.sim_scd_path, self.scd_template.format(scd))
             )
 
     def __call__(self):
