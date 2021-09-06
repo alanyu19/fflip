@@ -61,7 +61,7 @@ class DihedralOptimizer:
 
 
 def do_torsion_optmization(
-        atoms, psf_file, crd_file, parameter_files,
+        atoms, psf_file, parameter_files,
         traj_to_compare, first_comp, last_comp,
         traj_to_fix, first_fix, last_fix,
         last_torfix=0,
@@ -74,7 +74,6 @@ def do_torsion_optmization(
     Args:
         atoms: list of strings, the four atom names in the dihedral
         psf_file: string, the psf file
-        crd_file: string, the crd file
         parameter_files: list of the parameter files
         traj_to_compare: string, trajectory template of the reference state
         first_comp: integer, first trajectory of the reference state
@@ -95,7 +94,7 @@ def do_torsion_optmization(
     """
     from matplotlib import pyplot as plt
     target = DihedralTarget(
-        atoms, psf_file, crd_file, parameter_files, torsionfix=last_torfix
+        atoms, psf_file, parameter_files, torsionfix=last_torfix
     )
     target.get_cosine_series()
     dihdata_fix = target.get_dihedrals(traj_to_fix, first_fix, last_fix)
@@ -226,8 +225,8 @@ def do_torsion_optmization(
 
 def torsion_match_two_ff(
         atoms,
-        psf_file_comp, crd_file_comp, parameter_files_comp,
-        psf_file_fix, crd_file_fix, parameter_files_fix,
+        psf_file_comp, parameter_files_comp,
+        psf_file_fix, parameter_files_fix,
         traj_comp, first_comp, last_comp,
         traj_fix, first_fix, last_fix,
         last_torfix=0,
@@ -240,10 +239,8 @@ def torsion_match_two_ff(
     Args:
         atoms: list of strings, the four atom names in the dihedral
         psf_file_comp: string, the psf file of the comparison system
-        crd_file_comp: string, the crd file of the comparison system
         parameter_files_comp: list of the parameter files
         psf_file_fix: string, the psf file of the system to do the dihedral matching
-        crd_file_fix: string, the crd file of the system to do the dihedral matching
         traj_to_compare: string, trajectory template of the reference system
         first_comp: integer, first trajectory index of the reference system
         last_comp: integer, last trajectory index of the regerence system
@@ -260,10 +257,10 @@ def torsion_match_two_ff(
     """
     from matplotlib import pyplot as plt
     target = DihedralTarget(
-        atoms, psf_file_fix, crd_file_fix, parameter_files_fix, torsionfix=last_torfix
+        atoms, psf_file_fix, parameter_files_fix, torsionfix=last_torfix
     )
     target_comp = DihedralTarget(
-        atoms, psf_file_comp, crd_file_comp, parameter_files_comp, torsionfix=last_torfix
+        atoms, psf_file_comp, parameter_files_comp, torsionfix=last_torfix
     )
     target.get_cosine_series()
     target_comp.get_cosine_series()
@@ -393,7 +390,7 @@ def torsion_match_two_ff(
     return return_dic
 
 
-def perturb_4_ctl2(psf_file, crd_file, parameter_files,
+def perturb_4_ctl2(psf_file, parameter_files,
                    traj_template, trj_index, sn2=(2, 15), sn1=(2, 15),
                    perturbation=0.01):
     print("Preparing Dihedral Targets ...")
@@ -402,7 +399,7 @@ def perturb_4_ctl2(psf_file, crd_file, parameter_files,
         dt = DihedralTarget(
             ['C2{}'.format(i), 'C2{}'.format(i+1),
              'C2{}'.format(i+2), 'C2{}'.format(i+3)],
-            psf_file, crd_file,
+            psf_file,
             parameter_files=parameter_files, torsionfix=0
         )
         if i==sn2[0]:
@@ -419,7 +416,7 @@ def perturb_4_ctl2(psf_file, crd_file, parameter_files,
         dt = DihedralTarget(
             ['C3{}'.format(i), 'C3{}'.format(i+1),
              'C3{}'.format(i+2), 'C3{}'.format(i+3)],
-            psf_file, crd_file,
+            psf_file,
             parameter_files=parameter_files, torsionfix=0
         )
         dt.system = dt_list[0].system
@@ -451,7 +448,7 @@ def perturb_4_ctl2(psf_file, crd_file, parameter_files,
 
 
 def perturb_ctl2_ctl2_ctl2_ctl3(
-    psf_file, crd_file, parameter_files,
+    psf_file, parameter_files,
     traj_template, trj_index, sn2=16, sn1=16,
     perturbation=0.01
 ):
@@ -460,7 +457,7 @@ def perturb_ctl2_ctl2_ctl2_ctl3(
     dt = DihedralTarget(
         ['C2{}'.format(sn2-3), 'C2{}'.format(sn2-2),
          'C2{}'.format(sn2-1), 'C2{}'.format(sn2)],
-        psf_file, crd_file,
+        psf_file,
         parameter_files=parameter_files, torsionfix=0
     )
     dt.create_system()
@@ -469,7 +466,7 @@ def perturb_ctl2_ctl2_ctl2_ctl3(
     dt = DihedralTarget(
         ['C3{}'.format(sn1 - 3), 'C3{}'.format(sn1 - 2),
          'C3{}'.format(sn1 - 1), 'C3{}'.format(sn1)],
-        psf_file, crd_file,
+        psf_file,
         parameter_files=parameter_files, torsionfix=0
     )
     dt.create_system()
@@ -498,11 +495,11 @@ def perturb_ctl2_ctl2_ctl2_ctl3(
 
 
 def perturb_any_dihedral(
-    atoms, psf_file, crd_file, parameter_files, torfix,
+    atoms, psf_file, parameter_files, torfix,
     traj_template, trj_index, perturbation=0.01):
     dt = DihedralTarget(
         atoms,
-        psf_file, crd_file,
+        psf_file,
         parameter_files=parameter_files,
         torsionfix=torfix
     )

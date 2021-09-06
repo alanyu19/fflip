@@ -159,21 +159,19 @@ class DihedralAngle(object):
 
 class DihedralTarget(object):
     def __init__(
-        self, atoms, psf_file, crd_file, parameter_files, torsionfix=0
+        self, atoms, psf_file, parameter_files, torsionfix=0
     ):
         """
         the dihedral to calculate energy for and do reweighting on
         Args:
             atoms: list of the 4 atoms in the dihedral
             psf_file: psf file
-            crd_file: crd file
             parameter_files: list of parameter files
             torsionfix: if the simulation is done on original + some_torsion_fix,
             then this torsion fix is needed for calculating the original energy
         """
         self.atoms = atoms
         self.psf_file = psf_file
-        self.crd_file = crd_file
         self.parameter_files = parameter_files
         self.torsionfix = torsionfix
     
