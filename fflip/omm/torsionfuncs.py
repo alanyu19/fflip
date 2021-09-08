@@ -60,7 +60,7 @@ class CharmmDihedralReweighter(object):
     def calc_sim_energy(self, dihdata):
         return self.dihfunc1(dihdata)
     
-    def sensitivity_per_k(self, dihdata, perturbation_of_k = 0.02):
+    def sensitivity_per_k(self, dihdata, perturbation_of_k=0.02):
         """
         Calculate the sensitvity for each of the force constant,
         it's not finished and used but we might return to this

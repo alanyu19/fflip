@@ -29,11 +29,36 @@ def compute_dihedral_energy(k, m, p, dihedrals):
     return energies
 
 
+def reweight_scd(beta, scd_data, o_energy, p_energy):
+    tune = beta * np.mean(p_energy) - beta * np.mean(o_energy)
+    obs = np.sum(scd_data * np.exp(
+        -beta * p_energy + beta * o_energy + tune
+    ))
+    ptf = np.sum(np.exp(-beta * p_energy + beta * o_energy + tune))
+    scd_reweighted = obs / ptf
+    return scd_reweighted
+
+
+def separate_k(force_constants, mcount_dict, dihedral_names_sorted):
+    k_dict = dict()
+    start = 0
+    end = 0
+    for i, dihedral_name in enumerate(dihedral_names_sorted):
+        if i == 0:
+            end += mcount_dict[dihedral_name]
+        else:
+            start += previous_count
+            end += mcount_dict[dihedral_name]
+        k_dict[dihedral_name] = force_constants[start:end]
+        previous_count = mcount_dict[dihedral_name]
+    return k_dict
+
+
 class ObjfuncScd(object):
     def __init__(
             self, m_dict, p_dict, ref_scds, scd_data, dihedral_data,
             original_energy, mcount_dict, dihedral_names_sorted,
-            temperature, starting_param, scale
+            temperature, starting_param, scale, block_avg
     ):
         self.m_dict = m_dict
         self.p_dict = p_dict
@@ -46,6 +71,7 @@ class ObjfuncScd(object):
         self.temperature = temperature
         self.starting_param = starting_param
         self.scale = scale
+        self.block_avg = block_avg
 
     def __call__(self, x):
         x = list(x)
@@ -73,35 +99,25 @@ class ObjfuncScd(object):
         beta = beta_kjmol(self.temperature)
         o_energy = np.array(self.original_energy)
         p_energy = np.array(total_energy)
-        tune = beta * np.mean(p_energy) - beta * np.mean(o_energy)
         ssr = 0
         for scd in self.scd_data:
             scd_data_ = self.scd_data[scd]
-            obs = np.sum(scd_data_ * np.exp(
-                -beta * p_energy + beta * o_energy + tune
-            ))
-            ptf = np.sum(np.exp(-beta * p_energy + beta * o_energy + tune))
-            scd_data_rew = obs / ptf
-            ssr += (scd_data_rew - self.ref_scds[scd])**2
+            if not self.block_avg:
+                scd_rew = reweight_scd(beta, scd_data_, o_energy, p_energy)
+            else:
+                size = scd_data_.shape[0]
+                block_size = int(size/3)
+                scd_rew1 = reweight_scd(beta, scd_data_[:block_size], o_energy[:block_size], p_energy[:block_size])
+                scd_rew2 = reweight_scd(beta, scd_data_[block_size:2*block_size], o_energy[block_size:2*block_size],
+                                        p_energy[block_size:2*block_size])
+                scd_rew3 = reweight_scd(beta, scd_data_[2*block_size:3*block_size], o_energy[2*block_size:3*block_size],
+                                        p_energy[2*block_size:3*block_size])
+                scd_rew = (scd_rew1 + scd_rew2 + scd_rew3)
+            ssr += (scd_rew - self.ref_scds[scd])**2
         ssr_scd = copy.deepcopy(ssr)
         ssr += np.sum((x - np.array(self.starting_param))**2) * self.scale
         print(ssr, ssr_scd)
         return ssr
-
-
-def separate_k(force_constants, mcount_dict, dihedral_names_sorted):
-    k_dict = dict()
-    start = 0
-    end = 0
-    for i, dihedral_name in enumerate(dihedral_names_sorted):
-        if i == 0:
-            end += mcount_dict[dihedral_name]
-        else:
-            start += previous_count
-            end += mcount_dict[dihedral_name]
-        k_dict[dihedral_name] = force_constants[start:end]
-        previous_count = mcount_dict[dihedral_name]
-    return k_dict
 
 
 class ScdOptimizer:
@@ -112,7 +128,7 @@ class ScdOptimizer:
     def __init__(
             self, ref_scds, dihedral_dict, sim_scd_path, sim_dih_path,
             psf_file, parameter_files, scd_template, temperature, scale,
-            method='BFGS', options={'eps': 1e-5, 'gtol': 1e-04},
+            block_avg=False, method='BFGS', options={'eps': 1e-5, 'gtol': 1e-04},
     ):
         """
         Args:
@@ -141,6 +157,7 @@ class ScdOptimizer:
         self.dihedral_names_sorted = list(dihedral_dict.keys())
         self.dihedral_names_sorted.sort()
         self.scale = scale
+        self.block_avg = block_avg
         self.options = options
         self.initialized = False
         self.data_loaded = False
@@ -229,7 +246,7 @@ class ScdOptimizer:
         self.obj_func = ObjfuncScd(
             self.m_dict, self.p_dict, self.ref_scds, self.scd_data, self.dihedral_data,
             self.total_original_energy, self.mcount_dict, self.dihedral_names_sorted,
-            self.temperature, self.initial_k, self.scale
+            self.temperature, self.initial_k, self.scale, self.block_avg
         )
         optimum = sopt.minimize(
             self.obj_func, self.initial_k, method=self.method, options=self.options
