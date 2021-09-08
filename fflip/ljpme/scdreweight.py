@@ -33,7 +33,7 @@ class ObjfuncScd(object):
     def __init__(
             self, m_dict, p_dict, ref_scds, scd_data, dihedral_data,
             original_energy, mcount_dict, dihedral_names_sorted,
-            temperature
+            temperature, starting_param, scale
     ):
         self.m_dict = m_dict
         self.p_dict = p_dict
@@ -44,6 +44,8 @@ class ObjfuncScd(object):
         self.mcount_dict = mcount_dict
         self.dihedral_names_sorted = dihedral_names_sorted
         self.temperature = temperature
+        self.starting_param = starting_param
+        self.scale = scale
 
     def __call__(self, x):
         x = list(x)
@@ -81,6 +83,9 @@ class ObjfuncScd(object):
             ptf = np.sum(np.exp(-beta * p_energy + beta * o_energy + tune))
             scd_data_rew = obs / ptf
             ssr += (scd_data_rew - self.ref_scds[scd])**2
+        ssr_scd = copy.deepcopy(ssr)
+        ssr += np.sum((x - np.array(self.starting_param))**2) * self.scale
+        print(ssr, ssr_scd)
         return ssr
 
 
@@ -106,8 +111,8 @@ class ScdOptimizer:
     """
     def __init__(
             self, ref_scds, dihedral_dict, sim_scd_path, sim_dih_path,
-            psf_file, parameter_files, scd_template,
-            method='BFGS', options={'eps': 1e-2, 'gtol': 1e-04}
+            psf_file, parameter_files, scd_template, temperature, scale,
+            method='BFGS', options={'eps': 1e-5, 'gtol': 1e-04},
     ):
         """
         Args:
@@ -131,10 +136,14 @@ class ScdOptimizer:
         self.psf_file = psf_file
         self.parameter_files = parameter_files
         self.scd_template = scd_template
+        self.temperature = temperature
         self.method = method
         self.dihedral_names_sorted = list(dihedral_dict.keys())
         self.dihedral_names_sorted.sort()
+        self.scale = scale
         self.options = options
+        self.initialized = False
+        self.data_loaded = False
 
     def initialize_parameters(self):
         self.k_dict = dict()
@@ -160,6 +169,7 @@ class ScdOptimizer:
         for dihedral_name in self.dihedral_names_sorted:
             for k in self.k_dict[dihedral_name]:
                 self.initial_k.append(k)
+        self.initialized = True
 
     def load_data(self):
         # part1, dihedral data
@@ -206,16 +216,20 @@ class ScdOptimizer:
             self.scd_data[scd] = np.loadtxt(
                 os.path.join(self.sim_scd_path, self.scd_template.format(scd))
             )
+        self.data_loaded = True
 
     def __call__(self):
         # the dimension of the optimization is bound to the reweighter,
         # which is provided to the objective function
         # start_k = np.array(self.reweighter.dihfunc2.k)
-        self.initialize_parameters()
-        self.load_data()
+        if not self.initialized:
+            self.initialize_parameters()
+        if not self.data_loaded:
+            self.load_data()
         self.obj_func = ObjfuncScd(
             self.m_dict, self.p_dict, self.ref_scds, self.scd_data, self.dihedral_data,
-            self.total_original_energy, self.mcount_dict, self.dihedral_names_sorted
+            self.total_original_energy, self.mcount_dict, self.dihedral_names_sorted,
+            self.temperature, self.initial_k, self.scale
         )
         optimum = sopt.minimize(
             self.obj_func, self.initial_k, method=self.method, options=self.options
