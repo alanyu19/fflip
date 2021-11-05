@@ -137,21 +137,20 @@ class DihedralAngle(object):
         self.atom2 = atom2
         self.atom3 = atom3
         self.atom4 = atom4
+        self.sele1 = self.topology.select("name {}".format(self.atom1))
+        self.sele2 = self.topology.select("name {}".format(self.atom2))
+        self.sele3 = self.topology.select("name {}".format(self.atom3))
+        self.sele4 = self.topology.select("name {}".format(self.atom4))
         
     def __call__(self, traj):
         """
         Requirement:
         mdtraj installed and imported as md
         """
-        sele1 = self.topology.select("name {}".format(self.atom1))
-        sele2 = self.topology.select("name {}".format(self.atom2))
-        sele3 = self.topology.select("name {}".format(self.atom3))
-        sele4 = self.topology.select("name {}".format(self.atom4))
-        
         dihedral_every_frame = md.compute_dihedrals(
             traj,
             np.swapaxes(
-                np.array([sele1, sele2, sele3, sele4]), 0, 1
+                np.array([self.sele1, self.sele2, self.sele3, self.sele4]), 0, 1
             )
         )
         return dihedral_every_frame

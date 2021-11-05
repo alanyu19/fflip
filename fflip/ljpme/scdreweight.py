@@ -3,6 +3,7 @@
 import scipy.optimize as sopt
 from fflip.omm.torsionfuncs import *
 from fflip.omm.util import *
+import os
 
 
 def get_dihedral_parameters(atoms, psf_file, parameter_files):
@@ -74,11 +75,15 @@ class ObjfuncScd(object):
         self.block_avg = block_avg
 
     def __call__(self, x):
+        counter = np.loadtxt("counter.txt")
+        counter = int(counter)
+        counter += 1
+        os.system("echo {} > counter.txt".format(counter))
         x = list(x)
         k_dict = separate_k(x, self.mcount_dict, self.dihedral_names_sorted)
         total_energy = None
         for dihedral_name in self.dihedral_names_sorted:
-            if isinstance(self.dihedral_data[dihedral_name][0], list):
+            if isinstance(self.dihedral_data[dihedral_name], list):
                 for dih_data in self.dihedral_data[dihedral_name]:
                     energies = compute_dihedral_energy(
                         k_dict[dihedral_name], self.m_dict[dihedral_name], self.p_dict[dihedral_name], dih_data
@@ -112,11 +117,14 @@ class ObjfuncScd(object):
                                         p_energy[block_size:2*block_size])
                 scd_rew3 = reweight_scd(beta, scd_data_[2*block_size:3*block_size], o_energy[2*block_size:3*block_size],
                                         p_energy[2*block_size:3*block_size])
-                scd_rew = (scd_rew1 + scd_rew2 + scd_rew3)
+                scd_rew = (scd_rew1 + scd_rew2 + scd_rew3) / 3
             ssr += (scd_rew - self.ref_scds[scd])**2
+            if counter % 100 == 0:
+                print(scd, np.sqrt((scd_rew - self.ref_scds[scd])**2))
         ssr_scd = copy.deepcopy(ssr)
         ssr += np.sum((x - np.array(self.starting_param))**2) * self.scale
-        print(ssr, ssr_scd)
+        if counter % 10 == 0:
+            print(ssr, ssr_scd)
         return ssr
 
 
@@ -207,7 +215,7 @@ class ScdOptimizer:
         # part2, original energies
         total_original_energy = None
         for dihedral_name in self.dihedral_names_sorted:
-            if isinstance(self.dihedral_data[dihedral_name][0], list):
+            if isinstance(self.dihedral_data[dihedral_name], list):
                 for dih_data in self.dihedral_data[dihedral_name]:
                     energies = compute_dihedral_energy(
                         self.k_dict[dihedral_name], self.m_dict[dihedral_name], self.p_dict[dihedral_name],
@@ -248,6 +256,7 @@ class ScdOptimizer:
             self.total_original_energy, self.mcount_dict, self.dihedral_names_sorted,
             self.temperature, self.initial_k, self.scale, self.block_avg
         )
+        os.system("echo 1 > counter.txt")
         optimum = sopt.minimize(
             self.obj_func, self.initial_k, method=self.method, options=self.options
         )
