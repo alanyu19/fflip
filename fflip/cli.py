@@ -8,6 +8,8 @@ sys.path.append(os.getcwd())
 
 import click
 from targets import *
+if os.path.isfile('models.py'):
+    from models import *
 import fflip
 from fflip.ljpme.util import construct_indexes, parse_first_last
 
@@ -184,6 +186,46 @@ def simulate(location, time, change_parameters, sfile, tfile,
 
 
 @main.command()
+@click.option("-l", "--location", type=str,
+              help="root directory to run the simulations")
+@click.option("-c", "--change_parameters", default='no', type=click.Choice(['yes', 'no']),
+              help="whether to change nonbonded parameters, if yes, sfile is needed")
+@click.option("-sf", "--sfile", type=str, default=None,
+              help="solution file for nonbonded parameters in 1d array format")
+@click.option("-tf", "--tfile", type=str, default=None,
+              help="file for torsion fixes")
+@click.option("-I", "--iteration", type=str,
+              help="interation id, can be 0, 1, 2 ... or any string")
+@click.option("--start", is_flag=True,
+              help="start immediately? (otherwise go to sim folders to start manually)")
+def simulate_mc(location, change_parameters, sfile, tfile, iteration, start):
+    """
+    Initiate the simulations 
+    """
+    cp_match = {'yes': True, 'no': False}
+    for mcp in mcps:
+        mcp.generate_model_compound()
+        trj_folder = os.path.join(location, 'iter{}'.format(iteration), 'model_compound', mcp.name.lower())
+        # TODO: add other parameters
+        mcp.simulate(trj_folder, start)
+
+
+@main.command()
+@click.option("-l", "--location", type=str,
+              help="root directory of the simulations")
+@click.option("-I", "--iteration", type=str,
+              help="interation id, can be 0, 1, 2 ... or any string")
+def dihedral_mc(location, iteration):
+    """
+    Initiate the simulations 
+    """
+    for mcp in mcps:
+        mcp.generate_model_compound()
+        trj_folder = os.path.join(location, 'iter{}'.format(iteration), 'model_compound', mcp.name.lower())
+        mcp.dihedral_distribution(trj_folder )
+
+
+@main.command()
 @click.option("-i", "--property_indexes", type=str,
               help="the indexes of properties we want to calculate "
                    "(example: all / 0 / 0,2,5 / 4-10)")
@@ -276,7 +318,7 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype, perturbati
               help="restraint on alpha, defult is 0.05, increase for more restraint")
 @click.option("-c", "--chrgrst", type=float, default=0.025,
               help="restraint on charge, defualt is 0.025, increase for more restraint")
-@click.option("-u", "--uncertainty_scaling", type=str, default=500,
+@click.option("-u", "--uncertainty_scaling", type=float, default=500,
               help="default is 500, increase to apply more restraint")
 @click.option("--hasqm", is_flag=True,
               help="if QM partial charges are available ($root/qm/qm.csv)")
