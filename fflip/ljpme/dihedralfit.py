@@ -7,7 +7,8 @@ from fflip.omm.torsionfuncs import *
 
 def generate_weights(
         energy_series, energy_series_cross=None, criterion="boltzmann",
-        cutoff=None, temperature=303.15, extra_weights=None):
+        cutoff=None, temperature=303.15, extra_weights=None
+):
     energy_series = np.array(energy_series)
     energy_series = energy_series - energy_series.min()
     energy_series_cross = np.array(energy_series_cross)
@@ -81,15 +82,37 @@ def rmsd_qm_mm(energy_series_1, energy_series_2, weights, offset_method):
     if offset_method == 'global_min':
         offset = 0
     elif offset_method == 'weight_guided':
-        offset = (np.sum(weights * energy_series_2) - np.sum(weights * energy_series_1)) / np.sum(weights)
+        offset = (
+            np.sum(weights * energy_series_2) -
+            np.sum(weights * energy_series_1)
+        ) / np.sum(weights)
     sd = np.sum(weights * (energy_series_1 - energy_series_2 + offset)**2)
     msd = sd / weights.sum()
     rmsd = np.sqrt(msd)
     return rmsd
 
 
+def phase_penalty(phase_allowed, k):
+    """
+    currently only support 0 (-1) and 180 (1), or no restriction (0)
+    :param phase_allowed: list of allowed phase (-1, 0, or 1)
+    :param k: list of force constants
+    :return: penalty
+    """
+    penalty = 0
+    for p, k in zip(phase_allowed, k):
+        if p * k <= 0:
+            pass
+        else:
+            penalty += 1e10
+    return penalty
+
+
 class ObjfuncDihFit(object):
-    def __init__(self, dihedral_dict, m_dict, dihedral_names_sorted, qme, mme, weights, offset_method):
+    def __init__(
+        self, dihedral_dict, m_dict, p_dict,
+        dihedral_names_sorted, qme, mme, weights, offset_method
+    ):
         """
         Args:
             dihedral_list: dictionary of dihedral series
@@ -97,6 +120,7 @@ class ObjfuncDihFit(object):
         """
         self.dihedral_dict = dihedral_dict
         self.m_dict = m_dict
+        self.p_dict = p_dict
         self.dihedral_names_sorted = dihedral_names_sorted
         self.mcount_dict = dict()
         self.qme = qme
@@ -116,22 +140,26 @@ class ObjfuncDihFit(object):
         mme = copy.deepcopy(self.mme)
         k_dict = separate_k(x, self.mcount_dict, self.dihedral_names_sorted)
         for dn in self.dihedral_names_sorted:
+            mme += phase_penalty(self.p_dict[dn], k_dict[dn])
             energy = mm_energy(self.dihedral_dict[dn], k_dict[dn], self.m_dict[dn])
             mme += energy
         if self.weights is None:  # indicating cross is used
             # TODO: wrapper for this
             weights = generate_weights(
-                self.qme, mme, criterion="cross", cutoff=None, temperature=303.15, extra_weights=None
+                self.qme, mme, criterion="cross", cutoff=None,
+                temperature=303.15, extra_weights=None
             )
         else:
             weights = self.weights
         return rmsd_qm_mm(self.qme, mme, weights, self.offset_method)
 
 
-# generate_weights(energy_series, criterion="boltzmann", cutoff=None, temperature=303.15, extra_weights=None):
+# generate_weights(energy_series, criterion="boltzmann", cutoff=None,
+# temperature=303.15, extra_weights=None):
 
 class DihedralFitter(object):
-    def __init__(self, dihedral_files, allowed_m, qme, mme, temperature, weight_criterion, offset_method,
+    def __init__(self, dihedral_files, allowed_m, phase, qme, mme,
+                 temperature, weight_criterion, offset_method,
                  energy_cutoff=None, extra_weights=None):
         """
         Args:
@@ -146,13 +174,15 @@ class DihedralFitter(object):
         """
         self.dihedral_dict = dict()
         self.m_dict = dict()
+        self.p_dict = dict()
         self.dimension = 0
         dihedral_names = []
-        for file, ms in zip(dihedral_files, allowed_m):
+        for file, ms, ps in zip(dihedral_files, allowed_m, phase):
             atoms, dihedral_series = read_dihedral_series(file)
             dihedral_name = "{}-{}-{}-{}".format(atoms[0], atoms[1], atoms[2], atoms[3])
             self.dihedral_dict[dihedral_name] = dihedral_series
             self.m_dict[dihedral_name] = ms
+            self.p_dict[dihedral_name] = ps
             dihedral_names.append(dihedral_name)
             self.dimension += len(ms)
         dihedral_names.sort()
@@ -171,7 +201,8 @@ class DihedralFitter(object):
 
     def __call__(self):
         self.obj_func = ObjfuncDihFit(
-            self.dihedral_dict, self.m_dict, self.dihedral_names_sorted, self.qme, self.mme,
+            self.dihedral_dict, self.m_dict, self.p_dict,
+            self.dihedral_names_sorted, self.qme, self.mme,
             self.weights, self.offset_method
         )
         # print(self.dimension)
