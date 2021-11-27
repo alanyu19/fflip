@@ -5,11 +5,7 @@
 import glob
 import mdtraj as md
 from fflip.omm.genclac import OmmJobGenerator
-from fflip.ljpme.scheme import *
-from fflip.omm.util import *
 from fflip.omm.torsionfuncs import *
-from rflow.trajectory import TrajectoryIterator
-
 
 class ModelCompoundPool(object):
     def __init__(
@@ -26,19 +22,19 @@ class ModelCompoundPool(object):
         self.integrator = integrator
         self.ff = ff
         self.overwrite = overwrite
-        self.mc_list = list()
 
     def generate_model_compound(self):
+        self.mc = ModelCompound(
+            self.name, self.dihedrals, self.psf_file,
+            self.sim_template, self.ff
+        )
+
+    def simulate(self, trj_folder, start):
         crd_files = glob.glob(os.path.join(self.crd_folder, '*'))
         for crd in crd_files:
-            mc = ModelCompound(self.name, self.dihedrals, self.psf_file, crd, self.sim_template, self.ff)
-            self.mc_list.append(mc)
-    
-    def simulate(self, trj_folder, start):
-        for mc in self.mc_list:
-            folder = os.path.join(trj_folder, mc.crd_file.split('/')[-1])
-            mc.simulate(
-                folder, self.box, self.temperature, self.last_seqno,
+            folder = os.path.join(trj_folder, crd.split('/')[-1])
+            self.mc.simulate(
+                folder, crd, self.box, self.temperature, self.last_seqno,
                 self.integrator, self.overwrite, start
             )
 
@@ -67,15 +63,17 @@ class ModelCompoundPool(object):
 
         
 class ModelCompound(object):
-    def __init__(self, name, dihedrals, psf_file, crd_file, sim_template=None, ff='additive'):
+    def __init__(
+        self, name, dihedrals, psf_file, sim_template=None, ff='additive'
+    ):
         self.name = name
         self.dihedrals = dihedrals
         self.psf_file = psf_file
-        self.crd_file = crd_file
         self.sim_template = sim_template
         self.ff = ff
 
-    def simulate(self, trj_folder, box, temperature, last_seqno, integrator=None,
+    def simulate(self, trj_folder, crd, box, temperature, last_seqno,
+                 integrator=None,
                  overwrite=False, start=False, verbose=0):
         if self.sim_template is None:
             return 0  # exit
@@ -84,7 +82,7 @@ class ModelCompound(object):
         if verbose >= 1:
             print("Runnning in {}".format(trj_loc))
         calc = OmmJobGenerator(
-            self.crd_file, self.psf_file,
+            crd, self.psf_file,
             template=self.sim_template, work_dir=trj_loc
         )
         # constructing options dictionary
@@ -94,7 +92,7 @@ class ModelCompound(object):
         if box is not None:
             options["box"] = float(box)
         else:
-            warning.warn("Better provide a box size, using 50 Å by default")
+            warnings.warn("Better provide a box size, using 50 Å by default")
             options["box"] = 50
         options["temperature"] = temperature
         if integrator is not None:
@@ -102,7 +100,7 @@ class ModelCompound(object):
         else:
             options["intgrt"] = "L"  # Langevin
         options["psf"] = self.psf_file
-        options["crd"] = self.crd_file
+        options["crd"] = crd
         options["molecule"] = self.name
         options["ff"] = self.ff
         if last_seqno is not None:
@@ -113,5 +111,3 @@ class ModelCompound(object):
         job = calc(0, options, overwrite=overwrite)
         if start:
             job("rflow submit sdyn.sh")
-
-        
