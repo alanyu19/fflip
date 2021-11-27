@@ -109,6 +109,42 @@ def get_rdf_names_as_properties(
                 rdf_names.append(rdf_name + '_peak_2')
     return rdf_names
 
+def get_rdf_pf_names(
+        file_template='/u/alanyu/c36ljpme/fflow/runner/rdf/block_data/sparse*'
+):
+    def not_in(a, bb):
+        for b in bb:
+            if a in b:
+                return False
+        return True
+    rdf_names = []
+    file_names = glob.glob(file_template)
+    for name in file_names:
+        name_parts = name.strip().split('/')[-1].split('-')
+        rdf_name = name_parts[1] + '-' + name_parts[2]
+        if not_in(rdf_name, rdf_names) and 'Os2' not in rdf_name:
+            rdf_names.append(rdf_name + '_peak_1')
+            rdf_names.append(rdf_name + '_foot_1')
+            if not (rdf_name == 'O2-OW' or rdf_name == 'Ob-OW'):
+                rdf_names.append(rdf_name + '_peak_2')
+    return rdf_names
+
+
+def get_rdf_rmsd_names(file_template):
+    def not_in(a, bb):
+        for b in bb:
+            if a in b:
+                return False
+        return True
+    rdf_rmsd_names = []
+    file_names = glob.glob(file_template)
+    for name in file_names:
+        name_parts = name.strip().split('/')[-1].split('-')
+        rdf_name = name_parts[1] + '-' + name_parts[2]
+        if not_in(rdf_name, rdf_rmsd_names):  # and 'Os2' not in rdf_name:
+            rdf_rmsd_names.append(rdf_name + '_rmsd')
+    return rdf_rmsd_names
+
 
 def rename_row_col(names):
     dictt = {}

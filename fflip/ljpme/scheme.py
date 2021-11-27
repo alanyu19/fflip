@@ -126,15 +126,17 @@ class SimOptScheme(object):
             "drude_popc_bilayer_0": 49,
             "drude_dopc_bilayer_0": 50,
             "drude_prpc_bulk_0": 42,
-            "dppc_bilayer_0": 48,
-            "dppc_bilayer_-5": 48,
-            "dppc_bilayer_5": 48,
+            "dppc_bilayer_0": 45.9,
+            "dppc_bilayer_-5": 46,
+            "dppc_bilayer_5": 46,
             "dppc_monolayer_18": 45,
             "dppc_monolayer_40": 49,
             "dppc_monolayer_55": 52,
-            "dlpc_bilayer_0": 48,
-            "dmpc_bilayer_0": 48,
-            "popc_bilayer_0": 49,
+            "dlpc_bilayer_0": 44.95,
+            "dmpc_bilayer_0": 45.6,
+            "dspc_bilayer_0": 46.75,
+            "popc_bilayer_0": 46.4,
+            "sopc_bilayer_0": 46,
             "prpc_bulk_0": 43
         }
         return finder["{}_{}_{}".format(
@@ -144,9 +146,9 @@ class SimOptScheme(object):
     @property
     def boxz(self):
         finder = {
-            "drude_dppc_bilayer_0": 64,
-            "drude_dppc_bilayer_-5": 64,
-            "drude_dppc_bilayer_5": 64,
+            "drude_dppc_bilayer_0": 73,
+            "drude_dppc_bilayer_-5": 73,
+            "drude_dppc_bilayer_5": 73,
             "drude_dppc_monolayer_18": 223,
             "drude_dppc_monolayer_40": 223,
             "drude_dppc_monolayer_55": 223,
@@ -155,15 +157,17 @@ class SimOptScheme(object):
             "drude_popc_bilayer_0": 65,
             "drude_dopc_bilayer_0": 65,
             "drude_prpc_bulk_0": None,
-            "dppc_bilayer_0": 64,
+            "dppc_bilayer_0": 72.7,
             "dppc_bilayer_-5": 64,
             "dppc_bilayer_5": 64,
             "dppc_monolayer_18": 223,
             "dppc_monolayer_40": 223,
             "dppc_monolayer_55": 223,
-            "dlpc_bilayer_0": 62,
-            "dmpc_bilayer_0": 63,
-            "popc_bilayer_0": 65,
+            "dlpc_bilayer_0": 67.25,
+            "dmpc_bilayer_0": 68.5,
+            "dspc_bilayer_0": 78.85,
+            "popc_bilayer_0": 72.5,
+            "sopc_bilayer_0": 78.8,
             "prpc_bulk_0": None
         }
         return finder["{}_{}_{}".format(
