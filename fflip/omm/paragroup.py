@@ -163,8 +163,7 @@ def empty_nbgroup():
 class DrudeParameter:
     def __init__(self, lipidname, cgid, internal_id,
                  par_type, center_names, original_p, targeted_range,
-                 neighbors=None, drude_particles=None,
-                 **kwargs):
+                 neighbors=None, drude_particles=None, **kwargs):
         """
         Class contains
         Args:
@@ -222,7 +221,7 @@ class DrudeParameter:
         """
         offset = []
         if self.par_type == "charge" or self.par_type == 'alpha' \
-                or self.par_type == 'thole':
+            or self.par_type == 'thole' or self.par_type == 'nbthole':
             offset.append(
                 round(self.targeted_range[0] - self.original_p, 4)
             )
@@ -263,7 +262,8 @@ class DrudeParameter:
         # this is not useful anymore probably
         name = self.center_names[0] + '_' + self.par_type
         if self.par_type == "sigma" or self.par_type == "epsilon" \
-                or self.par_type == "alpha" or self.par_type == "thole":
+                or self.par_type == "alpha" or self.par_type == "thole" \
+                or self.par_type == "nbthole":
             return [name]
         elif self.par_type == "charge":
             # initialize name list
@@ -294,8 +294,13 @@ class DrudeParameter:
                         self.par_type, self.center_names, self.drude_particles,
                         self.original_p, self.targeted_range
                     )
-        # haven't change lj
         elif self.par_type == "epsilon" or self.par_type == "sigma":
+            return "DrudeParameter(par_type = '{}', center_names = {}," \
+                "original_p = {}, targeted_range = {})\n".format(
+                    self.par_type, self.center_names,
+                    self.original_p, self.targeted_range
+                )
+        elif self.par_type == "nbthole":
             return "DrudeParameter(par_type = '{}', center_names = {}," \
                 "original_p = {}, targeted_range = {})\n".format(
                     self.par_type, self.center_names,

@@ -31,9 +31,9 @@ class DrudeChargeGroup:
             add_group: bool, if parse this group.
             neighbors: list of list, the atoms to exchange charge.
             atoms_same_charge: list of list, atoms in other groups that
+            must use the same charge.
             add_alpha:
             atoms_same_alpha:
-            must use the same charge.
             exclusion: bool, if ignore the whole group
         Example:
             dcg = DrudeChargeGroup()
@@ -74,8 +74,8 @@ class LJGroup:
         DrudeNBFIX class (future release)
         Args:
             id: int, the id within the lipid
-            atom_type_dict: a dict contains all atom types and their related
-            atom names.
+            atom_type_dict: a dict contains all atom types and an example 
+            atom name.
             half_r_mins: can be the original parameters for half_r_mins (A)
             epsilons: can be the original parameters for epsilon (kcal/mol)
         """
@@ -89,8 +89,24 @@ class DrudeNBFIX:
     pass
 
 
+class NBTHOLEGroup():
+    def __init__(self, id_, nbthole_types):
+        """
+        The class for defining all potential NBTHOLEs to be added to a CHARMM
+        group for a lipid/model compound.
+        Args:
+            id: int, the id within the lipid
+            nbthole_types: a dict contains all NBTHOLE interactions that could
+            be added and their initial values.
+        """
+        self.id = id_
+        self.nbthole_types = nbthole_types
+
+
 class DrudeLipid:
-    def __init__(self, lipname, charge_groups=None, lj_groups=None):
+    def __init__(
+         self, lipname, charge_groups=None, lj_groups=None, nbthole_groups=None
+    ):
         """
         DRUDE Lipid, NBFIX to come
         Args:
@@ -101,10 +117,13 @@ class DrudeLipid:
         self.lipname = lipname
         self.charge_groups = charge_groups
         self.lj_groups = lj_groups
+        self.nbthole_groups = nbthole_groups
         if charge_groups:
             self.num_charge_groups = len(self.charge_groups)
         if lj_groups:
             self.num_lj_groups = len(self.lj_groups)
+        if nbthole_groups:
+            self.num_nbthole_groups = len(self.nbthole_groups)
             
     @staticmethod
     def level_print(content, level, print_level):
@@ -114,7 +133,8 @@ class DrudeLipid:
             pass
 
     def parse_groups(self, print_level=0, chg_offset=0.2, alpha_offset=0.02,
-                     thole_offset=0.02, lj_offset=0.1, id_allowed='all'):
+                     thole_offset=0.02, lj_offset=0.1, nbthole_offset=0.2,
+                     id_allowed='all'):
         gs = []
         for counter, chggp in enumerate(self.charge_groups):
             if id_allowed is not 'all' and chggp.id not in id_allowed:
@@ -285,6 +305,30 @@ class DrudeLipid:
                         center_names=atom_names,
                         original_p=1.0,
                         targeted_range=[1 - lj_offset, 1 + lj_offset]
+                    )
+                )
+
+        for counter, nbt_group in enumerate(self.nbthole_groups):
+            if id_allowed is not 'all' and nbt.id not in id_allowed:
+                continue
+            self.level_print(
+                "Parsing {} nbthole group {}".format(self.lipname, counter + 1), 1, print_level
+            )
+            internal_id = 0
+            for nbt in nbt_group.nbthole_types:
+                internal_id += 1
+                add_a_new_group(
+                    gs, DrudeParameter(
+                        lipidname=self.lipname.lower(),
+                        cgid=nbt_group.id,
+                        internal_id=internal_id,
+                        par_type='nbthole',
+                        center_names=[nbt[0], nbt[1]],
+                        original_p=nbt_group.nbthole_types[nbt],
+                        targeted_range=[
+                            nbt_group.nbthole_types[nbt] - nbthole_offset,
+                            nbt_group.nbthole_types[nbt] + nbthole_offset
+                        ]
                     )
                 )
         # summary

@@ -5,7 +5,8 @@ from __future__ import division, print_function
 import warnings
 import numpy as np
 import simtk.unit as u
-from simtk.openmm import NonbondedForce, DrudeForce
+from simtk.openmm import NonbondedForce, DrudeForce, CustomBondForce
+import simtk.openmm as mm
 
 from fflip.omm.exceptions import ParameterTypeNotExistentError,\
     GlobalParameterForceTypeError
@@ -488,7 +489,7 @@ def change_thole(drudeforce, thole_id, change_of_thole):
     parameters = drudeforce.getScreenedPairParameters(thole_id)
     particle_1 = parameters[0]
     particle_2 = parameters[1]
-    thole = parameters[2] * (1 + change_of_thole)
+    thole = parameters[2] + change_of_thole
     drudeforce.setScreenedPairParameters(thole_id, particle_1, particle_2, thole)
 
 
@@ -540,12 +541,67 @@ def reassign_epsilon_by_id(nbforce, particle_id, new_epsilon):
     nbforce.setParticleParameters(particle_id, charge, sigma, new_eps)
 
 
-def change_drude_ff_parameters(system, topology, parameter, paraoffset):
+def change_drude_ff_parameters(
+    system, topology, parameter, paraoffset, psf=None
+):
     """
     Change some nonbonded parameters of the system.
     """
     par_type = parameter.par_type
     drudeforce, nbforce = find_drude_nb_forces(system)
+    particleMap = {}
+    particleMapR = {}
+    for i in range(drudeforce.getNumParticles()):
+        particleMap[drudeforce.getParticleParameters(i)[0]] = i
+        particleMapR[i] = drudeforce.getParticleParameters(i)[0]
+    # custombondforce = None
+    # for force in system.getForces():
+    #     if isinstance(force, CustomBondForce):
+    #         custombonforce = force
+    #         break
+    # nbt14force_new = mm.CustomBondForce(
+    #     '-138.935456*charge_prod*(1.0+0.5*screen*r)*exp(-1.0*screen*r)/r'
+    # )
+    # nbt14force_new.addPerBondParameter("charge_prod")
+    # nbt14force_new.addPerBondParameter("screen")
+    # nbt14force_new.setForceGroup(psf.NONBONDED_FORCE_GROUP)
+    # # new nbthole (currently changing existing NBTHOLE is not supported!)
+    if par_type is 'nbthole':
+        pass
+    #     num_nbt14_new = 0
+    #     atype1 = parameter.center_names[0]
+    #     atype2 = parameter.center_names[1]
+    #     for dih in psf.dihedral_list:
+    #         a1, a4 = dih.atom1, dih.atom4
+    #         if sorted([a1.attype, a4.attype]) == sorted([atype1, atype2]):
+    #             # These (d1_idx, d4_idx) are for the drudeforce only
+    #             d1_idx = particleMap[a1.idx + 1]
+    #             d4_idx = particleMap[a4.idx + 1]
+    #             d1_parameters = drudeforce.getParticleParameters(d1_idx)
+    #             d4_parameters = drudeforce.getParticleParameters(d4_idx)
+    #             # q1, q4 = d1_parameters[5]._value, d4_parameters[5]
+    #             # # 1000 is for unit conversion
+    #             # alpha1 = pow(1000 * d1_parameters[6]._value, -1./6.)
+    #             # alpha4 = pow(1000 * d4_parameters[6]._value, -1./6.)
+    #             # screen = parameter.original_p + paraoffset
+    #             # screen = screen * alpha1 * alpha4 * 10.0
+    #             # q_prod = q1 * q4
+    #             # nbt14force_new.addBond(d1_idx, d4_idx, [q_prod, screen])
+    #             q1, q4 = a1.charge, a4.charge
+    #             # 1000 is for unit conversion
+    #             alpha1 = pow(-1 * psf.drudeconsts_list[a1.idx][0],-1./6.)
+    #                      # pow(1000 * d1_parameters[6]._value, -1./6.)
+    #             alpha4 = pow(-1 * psf.drudeconsts_list[a4.idx][0],-1./6.)
+    #                      # pow(1000 * d4_parameters[6]._value, -1./6.)
+    #             nbt_value = parameter.original_p + paraoffset
+    #             screen = nbt_value * alpha1 * alpha4 * 10
+    #             q_prod = q1 * q4
+    #             nbt14force_new.addBond(
+    #                 a1.idx, a4.idx, [q_prod, screen])
+    #             num_nbt14_new += 1
+    #     if num_nbt14_new > 0:
+    #         system.addForce(nbt14force_new)
+
     if par_type is 'alpha':
         particles = []
         for i, dp in enumerate(parameter.drude_particles):
@@ -584,7 +640,14 @@ def change_drude_ff_parameters(system, topology, parameter, paraoffset):
         for index_t in range(drudeforce.getNumScreenedPairs()):
             sp_param = drudeforce.getScreenedPairParameters(index_t)
             if sp_param[0] in d_particles or sp_param[1] in d_particles:
+                # name1 = psf.atom_list[particleMapR[sp_param[0]]].name
+                # name2 = psf.atom_list[particleMapR[sp_param[1]]].name
+                # if 'DC2' in [name1, name2] or ('DC3' in [name1, name2] and 'DOP2' in [name1, name2]):
+                #     print(name1, name2)
                 thole_indexes.append(index_t)
+                if sp_param[0] in d_particles and sp_param[1] in d_particles:
+                    # repeat to include both changes
+                    thole_indexes.append(index_t)
         if not thole_indexes:
             warnings.warn("No Thole Pairs Selected!")
         for ti in thole_indexes:
@@ -694,7 +757,7 @@ def find_drude_force_parameter(system, topology, name, plrzb=True, dname=None):
                 bigsum += sp_param[2]
             if sp_param[1] == dindex and sp_param[0] in neighbors:
                 bigsum += sp_param[2]
-        thole = round((bigsum - neighbor_sum) / 2, 3)
+        thole = round((bigsum - neighbor_sum)/2, 3)
     else:
         thole = 0
     return charge, alpha, thole
