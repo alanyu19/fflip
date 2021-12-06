@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import scipy.optimize as sopt
+import nlopt
 from fflip.omm.torsionfuncs import *
 # from fflip.ljpme.util import * ## change to specific class/function(s)
 
@@ -175,7 +176,7 @@ class ObjfuncDihFit(object):
         rmsd = rmsd_qm_mm(self.qme, mme, weights, self.offset_method)
         return rmsd
     
-    def __call__(self, x):
+    def __call__(self, x, grad):
         dn0 = self.dihedral_names_sorted[0]
         mme = copy.deepcopy(self.mme)
         penalty = 0
@@ -253,24 +254,48 @@ class DihedralFitter(object):
             self.weights = None
         self.optimum = None
 
-    def __call__(self):
+    def __call__(self, method, lower_bounds=None, upper_bounds=None, maxiter=None):
         self.obj_func = ObjfuncDihFit(
             self.dihedral_dict, self.m_dict, self.p_dict, self.pforce_dict,
             self.dihedral_names_sorted, self.qme, self.mme,
             self.weights, self.extra_weights, self.offset_method
         )
         # print(self.dimension)
-        optimum = sopt.basinhopping(
-            self.obj_func, np.zeros(self.dimension), minimizer_kwargs={"method": "BFGS"}
+        # optimum = sopt.basinhopping(
+        #    self.obj_func, np.zeros(self.dimension), minimizer_kwargs={"method": "BFGS"}
+        # )
+        opt = nlopt.opt(method, self.dimension)
+        if lower_bounds is None:
+            lower_bounds = - np.ones(self.dimension) * 3
+        opt.set_lower_bounds(lower_bounds)
+        if upper_bounds is None:
+            upper_bounds = np.ones(self.dimension) * 3
+        opt.set_upper_bounds(upper_bounds)
+        if maxiter is not None:
+            opt.set_maxeval(maxiter)
+        opt.set_min_objective(self.obj_func)
+        opt.set_xtol_rel(0.005)  # hard-coded
+        if method is nlopt.G_MLSL_LDS or method is nlopt.G_MLSL:
+            opt.set_local_optimizer(nlopt.opt(nlopt.LN_SBPLX, self.dimension))
+        # x = opt.optimize(np.zeros(self.dimension))
+        # print(max(lower_bounds), min(upper_bounds))
+        x = opt.optimize(
+            np.random.uniform(
+                low=max(lower_bounds), high=min(upper_bounds), size=(self.dimension)
+            )
         )
-        self.optimum = optimum
+        minf = opt.last_optimum_value()
+        # print(x, minf)
+        self.optimum = x
+        self.opt = opt
     
     def quick_rmsd(self, x):
         return self.obj_func.rmsd(x)
 
     def show_optimum(self, correct_phase=False):
         assert self.optimum is not None
-        k_dict = separate_k(self.optimum.x, self.mcount_dict, self.dihedral_names_sorted)
+        # k_dict = separate_k(self.optimum.x, self.mcount_dict, self.dihedral_names_sorted)
+        k_dict = separate_k(self.optimum, self.mcount_dict, self.dihedral_names_sorted)
         for dn in self.dihedral_names_sorted:
             if correct_phase:
                 k = correct_phase(self.p_dict[dn], k_dict[dn])

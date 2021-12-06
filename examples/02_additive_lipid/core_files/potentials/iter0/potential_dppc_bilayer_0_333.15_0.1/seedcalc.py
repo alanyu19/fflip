@@ -3,7 +3,7 @@
 
 import os
 import sys
-from coffe.omm.util import get_md_options as gmd
+from fflip.omm.util import get_md_options as gmd
 from fflip.chm import *
 from def_lipids import *
 

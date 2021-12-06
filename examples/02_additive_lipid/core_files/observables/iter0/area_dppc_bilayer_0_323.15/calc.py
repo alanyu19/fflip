@@ -10,9 +10,9 @@
 
 from simtk.openmm.app import LJPME
 
-from coffe.omm.util import get_md_options as gmd
+from fflip.omm.util import get_md_options as gmd
 
-from coffe.omm.util import *
+from fflip.omm.util import *
 from rflow.observables import *
 from rflow.trajectory import *
 
