@@ -28,7 +28,8 @@ class CharmmGroup:
         self.atoms_same_charge = kwargs["atoms_same_charge"]
         if "exclusion" in kwargs:
             self.exclusion = kwargs["exclusion"]
-    
+        else:
+            self.exclusion = []
 
 class Lipid:
     def __init__(self, **kwargs):

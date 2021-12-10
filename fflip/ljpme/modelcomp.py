@@ -4,8 +4,16 @@
 
 import glob
 import mdtraj as md
+from openmm.app import NoCutoff, CharmmCrdFile
+from openmm import NonbondedForce, DrudeForce, CustomBondForce
+
 from fflip.omm.genclac import OmmJobGenerator
 from fflip.omm.torsionfuncs import *
+from fflip.omm.playpara import *
+from fflip.chm import *
+from fflip.drude import *
+from fflip.omm.util import *
+
 
 class ModelCompoundPool(object):
     def __init__(
@@ -62,15 +70,24 @@ class ModelCompoundPool(object):
             np.savetxt(trj_folder + '/{}-{}-{}-{}.dat'.format(dihe[0], dihe[1], dihe[2], dihe[3]), to_save)
 
         
-class ModelCompound(object):
+class ModelCompound(Lipid, DrudeLipid):
     def __init__(
-        self, name, dihedrals, psf_file, sim_template=None, ff='additive'
+        self, name, psf_file, dihedrals=None, sim_template=None, ff='additive',
+        charge_groups=None, lj_groups=None, nbtholes=None, charmm_group_list=[]
     ):
         self.name = name
         self.dihedrals = dihedrals
         self.psf_file = psf_file
+        # self.crd_file = crd_file
         self.sim_template = sim_template
         self.ff = ff
+        self.psf = CharmmPsfFile(self.psf_file)
+        self.parameters = None
+        self.topology = md.Topology.from_openmm(self.psf.topology)
+        if self.ff is 'drude':
+            DrudeLipid.__init__(self, name, charge_groups, lj_groups, nbtholes)
+        elif self.ff is 'additive':
+            Lipid.__init__(self, name=name, charmm_group_list=charmm_group_list)
 
     def simulate(self, trj_folder, crd, box, temperature, last_seqno,
                  integrator=None,
@@ -111,3 +128,47 @@ class ModelCompound(object):
         job = calc(0, options, overwrite=overwrite)
         if start:
             job("rflow submit sdyn.sh")
+    
+    def load_parameter_files(self, parameter_files):
+        """
+        parameter_files: list of CHARMM parameter files
+        """
+        self.parameters = CharmmParameterSet(*parameter_files)
+    
+    def load_nbthole(self, params, offsets):
+        for p, o in zip(params, offsets):
+            if p.par_type is 'nbthole':
+                self.add_nbthole(p.center_names[0], p.center_names[1], p.original_p + o)
+                
+    def add_nbthole(self, atype1, atype2, nbt_value):
+        self.parameters.nbthole_types[(atype1, atype2)] = nbt_value
+        self.parameters.atom_types_str[atype1].nbthole[atype2] = nbt_value
+        self.parameters.atom_types_str[atype2].nbthole[atype1] = nbt_value
+        
+    def generate_gas_system(self, parameter_files=None):
+        if not self.parameters:
+            assert parameter_files is not None
+            self.load_parameter_files(parameter_files)
+        self.system = self.psf.createSystem(
+            self.parameters, 
+            nonbondedMethod=NoCutoff,
+            constraints=HBonds
+        )
+        
+    def change_nb_params(self, params, offsets):
+        for p, o in zip(params, offsets):
+            if p.par_type is not 'nbthole':
+                change_drude_ff_parameters(self.system, self.topology, p, o, self.psf)
+    
+    def generate_context(self):
+        self.context = Context(self.system, LangevinIntegrator(1, 1, 1))
+        
+    def generate_energies(self, crd_files):
+        energies = []
+        for crd_file in crd_files:
+            crd = CharmmCrdFile(crd_file)
+            self.context.setPositions(crd.positions)
+            e = self.context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(u.kilocalories_per_mole)
+            energies.append(e)
+        return np.array(energies)
+

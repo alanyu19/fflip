@@ -346,7 +346,7 @@ def gen_sensitivity_offset(paragroup, sign=1, percentage=1, lj_abs=False):
     if pt == 'alpha':
         # return 0.0001 * float(percentage)  # 0.829 -> 0.929 if percentage is 1
         return 0.01 * float(percentage)
-    if pt == 'thole':
+    if pt == 'thole' or pt == 'nbthole':
         # return 0.1 * float(percentage)
         return 0.01 * float(percentage)
     if pt == 'epsilon' or pt == 'sigma':

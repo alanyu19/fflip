@@ -345,13 +345,22 @@ def get_md_options(filename):
 
 
 def parse_md_options(md_options):
+    """
+    md_options are a dictionary containing input paramters
+    """
     mdo = dict()
-    mdo['psf'] = str(md_options['psf'])
-    mdo['crd'] = str(md_options['crd'])
-    if 'surface_tension' in md_options:
-        mdo['surf_ts'] = 20 * float(md_options['surface_tension'])
-    if 'box' in md_options:
-        mdo['box'] = float(md_options['box'])
+    for item in md_options:
+        if item in [
+            'psf', 'crd', 'lipid', 'ff', 'lipname',
+            'change_param', 'sfile', 'integrator', 'barostat'
+        ]:
+            mdo[item] = str(md_options[item])
+        if item == 'surface_tension':
+            # TODO: unify the naming
+            mdo['surf_ts'] = 20 * float(md_options[item])
+            mdo[item] = 20 * float(md_options[item])
+        if item in ['box', 'temperature',]:
+            mdo[item] = float(md_options[item])
     if 'boxx' in md_options:
         mdo['xvec'] = float(md_options['boxx'])
         if 'boxy' in md_options:
@@ -362,29 +371,10 @@ def parse_md_options(md_options):
             mdo['zvec'] = float(md_options['boxz'])
         else:
             mdo['zvec'] = float(md_options['boxx'])
-    if 'lipid' in md_options:
-        mdo['lipname'] = str(md_options['lipid'])
-    else:
-        mdo['lipname'] = 'dppc'
-    mdo['temp'] = float(md_options['temperature'])
-    if 'barostat' in md_options:
-        mdo['baro'] = str(md_options['barostat'])
-    if 'intgrt' in md_options:
-        mdo['intgrt'] = str(md_options['intgrt'])
     if 'zmode' in md_options:
         mdo['zmode'] = int(md_options['zmode'])
     else:
         mdo['zmode'] = 0
-    if 'change_para' in md_options:
-        mdo['change_para'] = str(md_options['change_para'])
-        if mdo['change_para'] == 'yes':
-            try:
-                # mdo['tfile'] = str(md_options['tfile'])
-                mdo['sfile'] = str(md_options['sfile'])
-            except:
-                pass
-    if 'ff' in md_options:
-        mdo['ff'] = md_options['ff']
     return mdo
 
 
