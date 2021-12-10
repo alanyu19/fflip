@@ -25,7 +25,7 @@ class ModelCompoundPool(object):
 
     def generate_model_compound(self):
         self.mc = ModelCompound(
-            self.name, self.dihedrals, self.psf_file,
+            self.name, self.psf_file, self.dihedrals,
             self.sim_template, self.ff
         )
 
@@ -64,7 +64,7 @@ class ModelCompoundPool(object):
         
 class ModelCompound(object):
     def __init__(
-        self, name, dihedrals, psf_file, sim_template=None, ff='additive'
+        self, name, psf_file, dihedrals=None, sim_template=None, ff='additive'
     ):
         self.name = name
         self.dihedrals = dihedrals
@@ -73,8 +73,7 @@ class ModelCompound(object):
         self.ff = ff
 
     def simulate(self, trj_folder, crd, box, temperature, last_seqno,
-                 integrator=None,
-                 overwrite=False, start=False, verbose=0):
+                 integrator=None, overwrite=False, start=False, verbose=0):
         if self.sim_template is None:
             return 0  # exit
 
