@@ -9,14 +9,17 @@ from fflip.ljpme.util import get_sign, rename_row_col
 
 class Optimizer(object):
     def __init__(self, target_properties, special_properties,
-                 model_compounds, parameters=None):
+                 model_compounds, uncertainty_scaling, parameters=None, qmc=None):
         """
         The general optimizer that takes information from targets and handles the experiments
         Args:
             target_properties (type: list): TargetProperty objects
             special_properties (type: list): SpecialProperty objects
-            model_compounds（type: dict): model compounds, names as keys.
+            model_compounds（type: dict): model compounds, names as keys
+            qmc (type: dict): QM partial charges for available atoms
+            uncertainty_scaling (float): controls the importance of error 
         """
+        self.uncertainty_scaling = uncertainty_scaling
         self.target_properties = target_properties
         self.special_properties = special_properties
         self.model_compounds = model_compounds
@@ -27,16 +30,26 @@ class Optimizer(object):
                 self.parameters = self.target_properties[0].parameters
             except Exception("Please provide the parameters changed!"):
                 pass
+        self.qmc = dict()
+        if qmc is not None:
+            for i, p in enumerate(self.parameters):
+                if p.par_type == 'charge':
+                    self.qmc[p.center_names[0]] = qmc[p.center_names[0]]
         self.W = None
         self.S = None
+        self.T = None
 
-    @ property
+    @property
     def model_compound_names(self):
         if self.model_compounds:
             return sorted(list(self.model_compounds.keys()))
         else:
             return None
 
+    @property
+    def num_qmc(self):
+        return len(self.qmc)
+    
     @property
     def num_properties(self):
         return len(self.target_properties)
@@ -52,6 +65,7 @@ class Optimizer(object):
     @property
     def num_model_compounds(self):
         return len(self.model_compounds)
+
     @property
     def num_parameters(self):
         return len(self.parameters)
@@ -120,6 +134,22 @@ class Optimizer(object):
         mean_weight = np.mean(np.array(weights))
         return np.mean(np.array(roblist), axis=0) / mean_weight
 
+    @property
+    def uncertainty(self):
+        uncerlist = []
+        weights = []
+        for prop in self.target_properties:
+            if hasattr(prop, 'robustness'):
+                # The weights here is used to scale the robustness!
+                weights.append(prop.weight_factor)
+                uncerlist.append(
+                    prop.weight_factor * prop.uncertainty
+                )
+        mean_weight = np.mean(np.array(weights))
+        return self.uncertainty_scaling * np.mean(np.array(uncerlist), axis=0) \
+            / mean_weight
+
+
     def exchange_exp_value(self, pname1, pname2):
         for p in self.all_properties:
             if p.name == pname1:
@@ -166,10 +196,10 @@ class Optimizer(object):
             ptype = self.parameters[i0].par_type
             i = i0 + self.num_all_properties + self.num_qmc
             if ptype not in forbid:
-                if not self.robustness[i0] < drop_bounds[ptype]:
+                if self.robustness[i0] >= drop_bounds[ptype]:
                     print(
                         "{0:>5s} {1:>8s} {2:>10f}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
+                            self.parameters[i0].center_names[0], ptype,
                             round(
                                 max(self.uncertainty[i0], hard_bounds[ptype]), 6
                             )
@@ -179,7 +209,7 @@ class Optimizer(object):
                 else:
                     print(
                         "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
+                            self.parameters[i0].center_names[0], ptype,
                             "  ** exceeds drop bound **"
                         )
                     )
@@ -198,7 +228,7 @@ class Optimizer(object):
                 if allow_change:
                     print(
                         "{0:>5s} {1:>8s} {2:>10f}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
+                            self.parameters[i0].center_names[0], ptype,
                             round(
                                 max(self.uncertainty[i0], hard_bounds[ptype]), 6
                             )
@@ -208,7 +238,7 @@ class Optimizer(object):
                 elif exceed_bound:
                     print(
                         "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
+                            self.parameters[i0].center_names[0], ptype,
                             "  ** exceeds drop bound **"
                         )
                     )
@@ -216,7 +246,7 @@ class Optimizer(object):
                 else:
                     print(
                         "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
+                            self.parameters[i0].center_names[0], ptype,
                             "  ** not allowed for changing **"
                         )
                     )
@@ -231,41 +261,43 @@ class Optimizer(object):
             matrix[i][i] = qmscan_weights[self.model_compound_names[i0]]
         self.W = matrix
 
-    def gen_sensitivity_matrix(self):
+    def gen_sensitivity_matrix(self, scale=100):
         rows = self.num_all_properties + self.num_qmc + self.num_parameters +\
                self.num_model_compounds
-        cols = self.num_parameters
+        cols = self.num_parameters + self.num_model_compounds
         matrix = np.zeros((rows, cols))
         # Part1. properties
         for i, prop in enumerate(
                 self.target_properties + self.special_properties
         ):
-            matrix[i] = prop.sensitivity
+            matrix[i] = list(scale * prop.sensitivity) + \
+                [0 for _ in range(self.num_model_compounds)]
         # Part2. QM (not diagonal)
-        # initialize
-        qindex = {};
-        count = 0;
-        qparam = []  # used to record the order
-        for p in self.parameter_info:
-            if p.par_type == 'charge':
-                qparam.append(p)
-                qindex[p.center_names[0]] = count
-            # increase count no matter what par type!
-            count += 1
-        i = self.num_all_properties - 1
-        # loop over all parameters to add up the sensitivity
-        for j, p in enumerate(self.parameter_info):
-            if p.par_type == 'charge':
-                i += 1
-                # 1.self
-                matrix[i][j] += 0.01 / len(p.center_names) * \
-                                get_sign(p.original_p)
-                # 2. neighbors
-                for neib in p.neighbors:
-                    # only consider those selected as centers?
-                    if neib in qindex:
-                        matrix[i][qindex[neib]] += -0.01 / len(p.neighbors) * \
-                                                   get_sign(p.original_p)
+        if self.num_qmc > 0:
+            # initialize
+            qindex = {};
+            count = 0;
+            qparam = []  # used to record the order
+            for p in self.parameters:
+                if p.par_type == 'charge':
+                    qparam.append(p)
+                    qindex[p.center_names[0]] = count
+                # increase count no matter what par type!
+                count += 1
+            i = self.num_all_properties - 1
+            # loop over all parameters to add up the sensitivity
+            for j, p in enumerate(self.parameters):
+                if p.par_type == 'charge':
+                    i += 1
+                    # 1.self
+                    matrix[i][j] += 0.01 / len(p.center_names) * \
+                                    get_sign(p.original_p)
+                    # 2. neighbors
+                    for neib in p.neighbors:
+                        # only consider those selected as centers?
+                        if neib in qindex:
+                            matrix[i][qindex[neib]] += -0.01 / len(p.neighbors) * \
+                                                       get_sign(p.original_p)
         # Part3. C36
         for i, j in zip(
             range(
@@ -274,7 +306,7 @@ class Optimizer(object):
             ),
             range(self.num_parameters)
         ):
-            if self.parameter_info[j].par_type == 'charge':
+            if self.parameters[j].par_type == 'charge':
                 matrix[i][j] = 1
             else:
                 if hasattr(self, 'last_solution'):
@@ -287,62 +319,58 @@ class Optimizer(object):
                 self.num_all_properties + self.num_qmc + self.num_parameters,
                 rows
             ),
-            range(self.num_model_compounds)
+            range(self.num_parameters, self.num_parameters + self.num_model_compounds)
         ):
             matrix[i][j] = 1
         self.S = matrix
 
-    def gen_deviation_vector(self):
+    def gen_target_vector(self):
         vector = []
         # Part1. properties
         for p in (self.target_properties + self.special_properties):
             vector.append(p.deviation)
         # Part2. QM
-        qindex = {}
-        count = 0
-        qparam = []  # used to record the order
-        for p in self.parameter_info:
-            if p.par_type == 'charge':
-                qparam.append(p)
-                qindex[p.center_names[0]] = count
-                # increase count only when par type is 'charge'
-                count += 1
-        # prepare an empty list
-        qmc_vector = list(np.zeros(len(qparam)))
-        # loop over all parameters to add up the deviation
-        # index i is used to count the charge parameter
-        # index j is used to retrieve the last solution
-        i = -1
-        for j, p in enumerate(self.parameter_info):
-            if p.par_type == 'charge':
-                i += 1
-                # 1.self
-                qmc_vector[i] += self.qm_charges[p.center_names[0]] - \
-                                 p.original_p
-                if hasattr(self, 'last_solution'):
-                    # self continued
-                    qmc_vector[i] += -0.01 / len(p.center_names) * \
-                                     get_sign(p.original_p) * \
-                                     self.last_solution[j]
-                    # 2. neighbors
-                    for neib in p.neighbors:
-                        # only consider those selected as centers
-                        if neib in qindex:
-                            qmc_vector[qindex[neib]] += \
-                                0.01 / len(p.neighbors) * \
-                                get_sign(p.original_p) * \
-                                self.last_solution[j]
-        for qv in qmc_vector:
-            vector.append(qv)
-        # Part3. C36
+        if len(self.qmc) > 0:
+            qindex = {}
+            count = 0
+            qparam = []  # used to record the order
+            for p in self.parameters:
+                if p.par_type == 'charge':
+                    qparam.append(p)
+                    qindex[p.center_names[0]] = count
+                    # increase count only when par type is 'charge'
+                    count += 1
+            # prepare an empty list
+            qmc_vector = list(np.zeros(len(qparam)))
+            # loop over all parameters to add up the deviation
+            # index i is used to count the charge parameter
+            # index j is used to retrieve the last solution
+            i = -1
+            for j, p in enumerate(self.parameters):
+                if p.par_type == 'charge':
+                    i += 1
+                    # 1.self
+                    qmc_vector[i] += self.qmc[p.center_names[0]] - \
+                                     p.original_p
+                    if hasattr(self, 'last_solution'):
+                        # self continued
+                        qmc_vector[i] += -0.01 / len(p.center_names) * \
+                                         get_sign(p.original_p) * \
+                                         self.last_solution[j]
+                        # 2. neighbors
+                        for neib in p.neighbors:
+                            # only consider those selected as centers
+                            if neib in qindex:
+                                qmc_vector[qindex[neib]] += \
+                                    0.01 / len(p.neighbors) * \
+                                    get_sign(p.original_p) * \
+                                    self.last_solution[j]
+            for qv in qmc_vector:
+                vector.append(qv)
+        # Part3. Original parameters
         for i in range(self.num_parameters):
-            if hasattr(self, 'last_solution'):
-                vector.append(0)
-                # vector.appned(-self.last_solution[i]/2)
-                # vector.append(-self.last_solution[i])
-            else:
-                vector.append(0)
-        self.F = np.array(vector)
+            vector.append(0)
+        self.T = np.array(vector)
 
     def load_last_solution(self, file):
         self.last_solution = filter_solution(file)
@@ -378,22 +406,6 @@ class PropertyLinearEstimator(Optimizer):
         for prop in self.target_properties:
             tpp.append(prop.perturbation)
         return tpp
-
-
-    @property
-    def uncertainty(self):
-        uncerlist = []
-        weights = []
-        for prop in self.target_properties:
-            if hasattr(prop, 'robustness'):
-                # The weights here is used to scale the robustness!
-                weights.append(prop.weight_factor)
-                uncerlist.append(
-                    prop.weight_factor * prop.uncertainty
-                )
-        mean_weight = np.mean(np.array(weights))
-        return self.uncertainty_scaling * np.mean(np.array(uncerlist), axis=0) \
-            / mean_weight
 
     def get_qm_charge_from_file(self, filename):
         """
@@ -432,7 +444,7 @@ class PropertyLinearEstimator(Optimizer):
     def get_weight_matrix(
             self, qm_weight=0.01,
             hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
-            drop_bounds={'sigma': 999, 'epsilon': 999, 'charge': 999},
+            drop_bounds={'sigma': 1, 'epsilon': 1, 'charge': 1},
             forbid={'charge': ['N', 'H13A', 'C13', 'C12', 'H2R', 'H11A', 'C11', 'P', 'O13', 'O11'],
                     'alpha': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
                     'thole': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
@@ -486,7 +498,7 @@ class PropertyLinearEstimator(Optimizer):
                             "  ** exceeds drop bound **"
                         )
                     )
-                    matrix[i][i] = 999999
+                    matrix[i][i] = 1e5
             elif ptype in forbid:
                 if self.robustness[i0] < drop_bounds[ptype]:
                     allow_change = False
@@ -516,7 +528,7 @@ class PropertyLinearEstimator(Optimizer):
                             "  ** exceeds drop bound **"
                         )
                     )
-                    matrix[i][i] = 999999
+                    matrix[i][i] = 1e5
                 else:
                     print(
                         "{0:>5s} {1:>8s} {2:<30s}".format(
@@ -524,10 +536,10 @@ class PropertyLinearEstimator(Optimizer):
                             "  ** not allowed for changing **"
                         )
                     )
-                    matrix[i][i] = 999999
+                    matrix[i][i] = 1e5
             else:
                 print("???")
-                matrix[i][i] = 999999
+                matrix[i][i] = 1e5
         self.W = matrix
 
     def get_sensitivity_matrix(self):

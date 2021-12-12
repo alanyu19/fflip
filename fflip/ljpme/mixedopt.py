@@ -16,7 +16,7 @@ class MixedOptimizer(Optimizer):
 
     def __init__(self, model_compounds, qme, crd_files, mc_parameters,
                  parameters, target_properties, special_properties,
-                 toppar_files):
+                 uncertainty_scaling, toppar_files):
         """
 
         Args:
@@ -31,20 +31,20 @@ class MixedOptimizer(Optimizer):
         """
         super().__init__(
             target_properties, special_properties, model_compounds,
-            parameters
+            uncertainty_scaling, parameters=parameters
         )
         self.mc_parameters = mc_parameters
         self.crd_files = crd_files
+        self.qme = dict()
         for mc in qme:
-            self.qme[mc] = self.qme[mc] - self.qme[mc].min()
+            self.qme[mc] = qme[mc] - qme[mc].min()
         self.paramters = parameters
         self.target_properties = target_properties
         self.special_properties = special_properties
         self.toppar_files = toppar_files
-        # Maybe move this to the __call__ function
-        # self.uncertainty_scaling = uncertainty_scaling
 
     def obj_func(self, x, grad):
+        self.X = x
         sqrt_ssr_dict = dict()
         for mc in self.model_compounds:
             # glyp = ModelCompound(
@@ -65,21 +65,27 @@ class MixedOptimizer(Optimizer):
             omm_e = omm_e - omm_e.min()
             w = np.exp(-1.0 * omm_e / (0.001987 * 303.15)) + \
                 np.exp(-1.0 * self.qme[mc] / (0.001987 * 303.15))
-            sqrt_ssr = np.sqrt(np.sum(w * (omm_e - self.qme) ** 2))
+            sqrt_ssr = np.sqrt(np.sum(w * (omm_e - self.qme[mc]) ** 2))
             sqrt_ssr_dict[mc] = sqrt_ssr
-        self.gen_weight_matrix(
-            self.hard_bounds, self.drop_bounds, forbid=self.forbid,
-            qmc_weight=self.qmc_weight, qmscan_weights=self.qmscan_weights
-        )
-        self.gen_sensitivity_matrix()
-        self.gen_deviation_vector()
-        deviation_vector = self.F + [sqrt_ssr_dict[mc] for mc in
+        self.gen_target_vector()
+        target_vector = list(self.T) + [0 for mc in
                                      self.model_compound_names]
         product1 = np.matmul(self.W, self.S)
-        product2 = np.matmul(product1, deviation_vector)
-        ssr = np.sum(product2**2)
-        if self.counter % self.print_interval == 1:
-            print('Iteration {} ...'.format(self.counter), ssr)
+        product2 = np.matmul(product1, list(x) + [sqrt_ssr_dict[mc] for mc in self.model_compound_names])
+        self.D = product2
+        diff = product2 - np.matmul(self.W, target_vector)
+        ssr = np.sum(diff**2)
+        ssr_p1 = np.sum(diff[:self.num_all_properties]**2)
+        ssr_p2 = np.sum(diff[self.num_all_properties: self.num_all_properties + self.num_qmc]**2)
+        ssr_p3 = np.sum(diff[
+            self.num_all_properties + self.num_qmc: self.num_all_properties + self.num_qmc + self.num_parameters
+        ]**2)
+        ssr_p4 = np.sum(diff[
+            self.num_all_properties + self.num_qmc + self.num_parameters:
+            self.num_all_properties + self.num_qmc + self.num_parameters + self.num_model_compounds
+        ]**2)
+        if self.counter % self.print_interval == 1 or self.counter == 1:
+            print('Iteration {}: {} {} {} {} {}...'.format(self.counter, ssr_p1, ssr_p2, ssr_p3, ssr_p4, ssr))
         self.counter += 1
         return ssr
 
@@ -93,7 +99,12 @@ class MixedOptimizer(Optimizer):
         self.forbid = forbid
         self.qmscan_weights = qmscan_weights
         self.qmc_weight = qmc_weight
-        opt = nlopt.opt(self.method, dimension)
+        self.gen_weight_matrix(
+            self.hard_bounds, self.drop_bounds, forbid=self.forbid,
+            qmc_weight=self.qmc_weight, qmscan_weights=self.qmscan_weights
+        )
+        self.gen_sensitivity_matrix()
+        opt = nlopt.opt(method, dimension)
         if "lower_bounds" in options:
             opt.set_lower_bounds(options["lower_bounds"])
         if "upper_bounds" in options:
