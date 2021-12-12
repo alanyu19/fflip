@@ -3,7 +3,7 @@
 #!/usr/bin/env python
 
 import os
-from coffe.omm.util import get_md_options as gmd
+from fflip.omm.util import get_md_options as gmd
 
 
 if not os.path.isdir('log'):

@@ -12,9 +12,9 @@ from simtk.openmm import MonteCarloMembraneBarostat, MonteCarloBarostat, Langevi
 
 from rflow.integrators import NoseHooverChainVelocityVerletIntegrator
 from rflow import RickFlow, FreeEnergyCosineSeries, RelativePartialCenterOfMassRestraint
-from coffe.omm.playpara import *
-from coffe.omm.paragroup import *
-from coffe.omm.util import *
+from fflip.omm.playpara import *
+from fflip.omm.paragroup import *
+from fflip.omm.util import *
 from fflip.chm import *
 
 from def_lipids import *

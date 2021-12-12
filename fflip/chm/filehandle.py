@@ -2,7 +2,7 @@
 
 
 from fflip.core.placeholder import *
-from fflip.torsionfuncs import *
+# from fflip.ljpme.torsionfuncs import *
 
 
 def replace_top_parameter(top_file_template, para_dict, write_to_new_dir=None):
