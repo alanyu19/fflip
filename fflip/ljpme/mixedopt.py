@@ -84,7 +84,7 @@ class MixedOptimizer(Optimizer):
             self.num_all_properties + self.num_qmc + self.num_parameters:
             self.num_all_properties + self.num_qmc + self.num_parameters + self.num_model_compounds
         ]**2)
-        if self.counter % self.print_interval == 1 or self.counter == 1:
+        if self.counter % self.print_interval == 0:
             print('Iteration {}: {} {} {} {} {}...'.format(self.counter, ssr_p1, ssr_p2, ssr_p3, ssr_p4, ssr))
         self.counter += 1
         return ssr
@@ -92,7 +92,7 @@ class MixedOptimizer(Optimizer):
     def __call__(self, method, print_interval, hard_bounds, drop_bounds,
                  forbid, qmscan_weights, qmc_weight=0, **options):
         self.print_interval = print_interval
-        self.counter = 1
+        self.counter = 0
         dimension = len(self.parameters)
         self.hard_bounds = hard_bounds
         self.drop_bounds = drop_bounds
@@ -103,8 +103,9 @@ class MixedOptimizer(Optimizer):
             self.hard_bounds, self.drop_bounds, forbid=self.forbid,
             qmc_weight=self.qmc_weight, qmscan_weights=self.qmscan_weights
         )
-        self.gen_sensitivity_matrix()
+        self.gen_sensitivity_matrix(scale=100)
         opt = nlopt.opt(method, dimension)
+        self.optimizer = opt
         if "lower_bounds" in options:
             opt.set_lower_bounds(options["lower_bounds"])
         if "upper_bounds" in options:
@@ -119,6 +120,5 @@ class MixedOptimizer(Optimizer):
         # TODO: could use random start instead
         x0 = np.zeros(len(self.parameters))
         x = opt.optimize(x0)
-        minf = opt.last_optimum_value()
-        # print(x, minf)
-        return x, minf
+        # minf = opt.last_optimum_value()
+        return x

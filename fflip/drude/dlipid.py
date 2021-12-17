@@ -13,7 +13,7 @@ def add_a_new_group(existing_groups, new_group):
     existing_groups.append(new_group)
 
 
-class DrudeChargeGroup:
+class DrudeChargeGroup(object):
     def __init__(self, id_, atom_groups, drude_particles,
                  charges, alphas, tholes, add_group, neighbors,
                  atoms_same_charge, atoms_same_alpha, atoms_same_thole=None,
@@ -89,7 +89,7 @@ class DrudeNBFIX:
     pass
 
 
-class NBTHOLEGroup():
+class NBTHOLEGroup(object):
     def __init__(self, id_, nbthole_types):
         """
         The class for defining all potential NBTHOLEs to be added to a CHARMM
@@ -103,7 +103,7 @@ class NBTHOLEGroup():
         self.nbthole_types = nbthole_types
 
 
-class DrudeLipid:
+class DrudeLipid(object):
     def __init__(
          self, lipname, charge_groups=None, lj_groups=None, nbthole_groups=None
     ):

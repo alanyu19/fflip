@@ -163,7 +163,7 @@ class Optimizer(object):
                 p.exchanged_exp = exp1
 
     def gen_weight_matrix(self, hard_bounds, drop_bounds, forbid,
-                          qmc_weight=None, qmscan_weights=None):
+                          qmc_weight=None, qmscan_weights=None, verbose=0):
         """
         Generate the weight matrix
         Args:
@@ -197,22 +197,24 @@ class Optimizer(object):
             i = i0 + self.num_all_properties + self.num_qmc
             if ptype not in forbid:
                 if self.robustness[i0] >= drop_bounds[ptype]:
-                    print(
-                        "{0:>5s} {1:>8s} {2:>10f}".format(
-                            self.parameters[i0].center_names[0], ptype,
-                            round(
-                                max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:>10f}".format(
+                                self.parameters[i0].center_names[0], ptype,
+                                round(
+                                    max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                                )
                             )
                         )
-                    )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 else:
-                    print(
-                        "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameters[i0].center_names[0], ptype,
-                            "  ** exceeds drop bound **"
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:<30s}".format(
+                                self.parameters[i0].center_names[0], ptype,
+                                "  ** exceeds drop bound **"
+                            )
                         )
-                    )
                     matrix[i][i] = 1e5
             elif ptype in forbid:
                 if self.robustness[i0] < drop_bounds[ptype]:
@@ -226,30 +228,33 @@ class Optimizer(object):
                         else:
                             allow_change = True
                 if allow_change:
-                    print(
-                        "{0:>5s} {1:>8s} {2:>10f}".format(
-                            self.parameters[i0].center_names[0], ptype,
-                            round(
-                                max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:>10f}".format(
+                                self.parameters[i0].center_names[0], ptype,
+                                round(
+                                    max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                                )
                             )
                         )
-                    )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 elif exceed_bound:
-                    print(
-                        "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameters[i0].center_names[0], ptype,
-                            "  ** exceeds drop bound **"
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:<30s}".format(
+                                self.parameters[i0].center_names[0], ptype,
+                                "  ** exceeds drop bound **"
+                            )
                         )
-                    )
                     matrix[i][i] = 1e5
                 else:
-                    print(
-                        "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameters[i0].center_names[0], ptype,
-                            "  ** not allowed for changing **"
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:<30s}".format(
+                                self.parameters[i0].center_names[0], ptype,
+                                "  ** not allowed for changing **"
+                            )
                         )
-                    )
                     matrix[i][i] = 1e5
             else:
                 warnings.warn("Unexpected Situation!")
@@ -261,7 +266,14 @@ class Optimizer(object):
             matrix[i][i] = qmscan_weights[self.model_compound_names[i0]]
         self.W = matrix
 
-    def gen_sensitivity_matrix(self, scale=100):
+    def gen_sensitivity_matrix(self, scale=1):
+        """
+        Args:
+             scale: the scaling factor for the sensitivity. If using the
+             potential energy template provided by fflip, the sensitivity
+             is calculated based on (0.01 * perturbation) perturbation size
+             in the "fflip obspot" step.
+        """
         rows = self.num_all_properties + self.num_qmc + self.num_parameters +\
                self.num_model_compounds
         cols = self.num_parameters + self.num_model_compounds
@@ -449,7 +461,8 @@ class PropertyLinearEstimator(Optimizer):
                     'alpha': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
                     'thole': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
                     'epsilon': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13', 'O13', 'O11', 'C1', 'O21', 'C21', 'O22', 'C22'],
-                    'sigma': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13', 'O13', 'O11', 'C1', 'O21', 'C21', 'O22', 'C22']}
+                    'sigma': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13', 'O13', 'O11', 'C1', 'O21', 'C21', 'O22', 'C22']},
+            verbose=True
     ):
         """
         Generate the weight matrix
@@ -482,22 +495,24 @@ class PropertyLinearEstimator(Optimizer):
             i = i0 + self.num_all_properties + self.num_qm
             if ptype not in forbid:
                 if not self.robustness[i0] < drop_bounds[ptype]:
-                    print(
-                        "{0:>5s} {1:>8s} {2:>10f}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
-                            round(
-                                max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:>10f}".format(
+                                self.parameter_info[i0].center_names[0], ptype,
+                                round(
+                                    max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                                )
                             )
                         )
-                    )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 else:
-                    print(
-                        "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
-                            "  ** exceeds drop bound **"
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:<30s}".format(
+                                self.parameter_info[i0].center_names[0], ptype,
+                                "  ** exceeds drop bound **"
+                            )
                         )
-                    )
                     matrix[i][i] = 1e5
             elif ptype in forbid:
                 if self.robustness[i0] < drop_bounds[ptype]:
@@ -512,30 +527,33 @@ class PropertyLinearEstimator(Optimizer):
                         else:
                             continue
                 if allow_change:
-                    print(
-                        "{0:>5s} {1:>8s} {2:>10f}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
-                            round(
-                                max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:>10f}".format(
+                                self.parameter_info[i0].center_names[0], ptype,
+                                round(
+                                    max(self.uncertainty[i0], hard_bounds[ptype]), 6
+                                )
                             )
                         )
-                    )
                     matrix[i][i] = max(self.uncertainty[i0], hard_bounds[ptype])
                 elif exceed_bound:
-                    print(
-                        "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
-                            "  ** exceeds drop bound **"
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:<30s}".format(
+                                self.parameter_info[i0].center_names[0], ptype,
+                                "  ** exceeds drop bound **"
+                            )
                         )
-                    )
                     matrix[i][i] = 1e5
                 else:
-                    print(
-                        "{0:>5s} {1:>8s} {2:<30s}".format(
-                            self.parameter_info[i0].center_names[0], ptype,
-                            "  ** not allowed for changing **"
+                    if verbose:
+                        print(
+                            "{0:>5s} {1:>8s} {2:<30s}".format(
+                                self.parameter_info[i0].center_names[0], ptype,
+                                "  ** not allowed for changing **"
+                            )
                         )
-                    )
                     matrix[i][i] = 1e5
             else:
                 print("???")
