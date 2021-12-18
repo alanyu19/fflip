@@ -7,7 +7,8 @@ import sys
 sys.path.append(os.getcwd())
 
 import click
-from targets import *
+if os.path.isfile('targets.py'):
+    from targets import *
 if os.path.isfile('models.py'):
     from models import *
 import fflip
@@ -19,7 +20,9 @@ from fflip.ljpme.util import construct_indexes, parse_first_last
 @click.pass_context
 def main(ctx, args=None):
     """Console script for fflip"""
-    click.echo("FFLiP: a python package for CHARMM/Drude lipid force field parameterization")
+    click.echo(
+        "FFLiP: A Python Package for CHARMM/Drude Lipid FF Parameterization"
+    )
     return 0
 
 
@@ -71,7 +74,7 @@ def scalc(property_indexes, first_trj, last_trj, perturbation, iteration, partit
         else:
             first = firsts[count]
             last = lasts[count]
-        properties[i].update_percentage_of_perturbation(perturbation)
+        properties[i].update_amount_of_perturbation(perturbation)
         properties[i].update_first_last_trj(first, last)
         thread = Thread(
             target=properties[i].get_sensitivity,
@@ -131,7 +134,7 @@ def rcalc(property_indexes, first_trj, last_trj, perturbation, iteration, partit
         assert (last - first + 1) % 3 == 0, \
             "Please provide a trajectory range that can be divided by 3!"
 
-        properties[i].update_percentage_of_perturbation(perturbation)
+        properties[i].update_amount_of_perturbation(perturbation)
         properties[i].update_first_last_trj(first, last)
         thread = Thread(
             target=properties[i].get_robustness,
@@ -249,8 +252,8 @@ def dihedral_mc(location, iteration):
 @click.option("--verbose/--silent", default=True)
 @click.option("-s", "--solution", default=None, help="last solution")
 @click.option("-t", "--torfix", default=None, help="torsion fix file")
-def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype, perturbation, iteration,
-           overwrite, verbose, solution, torfix):
+def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype,
+           perturbation, iteration, overwrite, verbose, solution, torfix):
     """
     Calculate energies (original+perturbed) and observables
     """
@@ -291,7 +294,7 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype, perturbati
                 )
             )
         properties[i].update_first_last_trj(first, last)
-        properties[i].update_percentage_of_perturbation(perturbation)
+        properties[i].update_amount_of_perturbation(perturbation)
         if calctype is not None:
             if calctype.lower() == 'all' or calctype.lower() == 'observable':
                 properties[i].calc_observable(
@@ -338,7 +341,7 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
     )
     
     for prop in le.target_properties:
-        prop.update_percentage_of_perturbation(perturbation)
+        prop.update_amount_of_perturbation(perturbation)
         prop.get_sensitivity(iteration, use_cluster=False, quit=True)
     for prop in le.special_properties:
         prop.get_sensitivity(iteration)

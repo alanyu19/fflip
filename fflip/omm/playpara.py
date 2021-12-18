@@ -280,7 +280,7 @@ def brutal_nonbonded_parameter(system, topology, paragroup, paraoffset):
                         atom = int(atom)
                         charge, sigma, epsilon = \
                             force.getParticleParameters(atom)
-                        # in this case, the paraoffset should be percentage
+                        # in this case, the paraoffset should be fraction
                         sigma_new = sigma * (1 + paraoffset)
                         force.setParticleParameters(
                             atom, charge, sigma_new, epsilon
@@ -288,7 +288,7 @@ def brutal_nonbonded_parameter(system, topology, paragroup, paraoffset):
                     old = 1
                     new = 1 + paraoffset
                 # If change for all non water atoms
-                elif paragroup.center_names[0]=='no water':
+                elif paragroup.center_names[0] == 'no water':
                     atom_not_sele = topology.select('water')
                     atom_all = topology.select_atom_indices(selection='all')
                     for atom in atom_all:
@@ -314,8 +314,6 @@ def brutal_nonbonded_parameter(system, topology, paragroup, paraoffset):
                             atom = int(atom)
                             charge, sigma, epsilon = \
                                 force.getParticleParameters(atom)
-                            # In this situation, the offset should be the
-                            # real number, not the percentage
                             sigma_new = sigma * (1 + paraoffset)
                             force.setParticleParameters(
                                 atom, charge, sigma_new, epsilon
@@ -676,7 +674,8 @@ def change_drude_ff_parameters(
             for nid in neighbors:
                 change_charge(nbforce, int(nid), paraoffset * parameter.ron[i])
     elif par_type is 'sigma' or par_type is 'epsilon':
-        warnings.warn("might not be effective if there is any NBFIX in the system!")
+        warnings.warn(
+            "Might not be effective if there is any NBFIX in the system!")
         particles = []
         for i, pn in enumerate(parameter.center_names):
             particles += list(

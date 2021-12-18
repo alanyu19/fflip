@@ -411,7 +411,7 @@ class PropertyLinearEstimator(Optimizer):
     def target_prop_perturbations(self):
         """
         Returns:
-            a list contains the percentages of perturbation (for rescaling
+            a list contains the amounts of perturbation (for rescaling
             sensitivity)
         """
         tpp = []

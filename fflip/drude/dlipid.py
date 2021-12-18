@@ -105,16 +105,16 @@ class NBTHOLEGroup(object):
 
 class DrudeLipid(object):
     def __init__(
-         self, lipname, charge_groups=None, lj_groups=None, nbthole_groups=None
+         self, name, charge_groups=None, lj_groups=None, nbthole_groups=None
     ):
         """
         DRUDE Lipid, NBFIX to come
         Args:
-            lipname: the name of the lipid / lipid family
+            name: the name of the lipid (type)
             charge_groups: as named, the DrudeChargeGroup class
             lj_groups: the LJGroup class
         """
-        self.lipname = lipname
+        self.name = name
         self.charge_groups = charge_groups
         self.lj_groups = lj_groups
         self.nbthole_groups = nbthole_groups
@@ -140,7 +140,7 @@ class DrudeLipid(object):
             if id_allowed is not 'all' and chggp.id not in id_allowed:
                 continue
             self.level_print("Parsing {} charge group {} ...".format(
-                self.lipname, counter + 1
+                self.name, counter + 1
             ), 1, print_level)
             # used to record the indexing of the parameter within the group
             internal_id = 0
@@ -173,7 +173,7 @@ class DrudeLipid(object):
                     internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            lipidname=self.lipname.lower(),
+                            lipidname=self.name.lower(),
                             cgid=chggp.id,
                             internal_id=internal_id,
                             par_type="charge",
@@ -213,7 +213,7 @@ class DrudeLipid(object):
                     internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            lipidname=self.lipname.lower(),
+                            lipidname=self.name.lower(),
                             cgid=chggp.id,
                             internal_id=internal_id,
                             par_type="alpha",
@@ -251,7 +251,7 @@ class DrudeLipid(object):
                     internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            lipidname=self.lipname.lower(),
+                            lipidname=self.name.lower(),
                             cgid=chggp.id,
                             internal_id=internal_id,
                             par_type="thole",
@@ -276,7 +276,7 @@ class DrudeLipid(object):
             if id_allowed is not 'all' and ljgp.id not in id_allowed:
                 continue
             self.level_print("Parsing {} LJ group {} ...".format(
-                self.lipname, counter + 1
+                self.name, counter + 1
             ), 1, print_level)
             internal_id = 0
             for atom_type in ljgp.atom_type_dict.keys():
@@ -284,7 +284,7 @@ class DrudeLipid(object):
                 internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
-                        lipidname=self.lipname.lower(),
+                        lipidname=self.name.lower(),
                         cgid=ljgp.id,
                         internal_id=internal_id,
                         par_type='sigma',
@@ -298,7 +298,7 @@ class DrudeLipid(object):
                 internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
-                        lipidname=self.lipname.lower(),
+                        lipidname=self.name.lower(),
                         cgid=ljgp.id,
                         internal_id=internal_id,
                         par_type='epsilon',
@@ -312,14 +312,14 @@ class DrudeLipid(object):
             if id_allowed is not 'all' and nbt.id not in id_allowed:
                 continue
             self.level_print(
-                "Parsing {} nbthole group {}".format(self.lipname, counter + 1), 1, print_level
+                "Parsing {} nbthole group {}".format(self.name, counter + 1), 1, print_level
             )
             internal_id = 0
             for nbt in nbt_group.nbthole_types:
                 internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
-                        lipidname=self.lipname.lower(),
+                        lipidname=self.name.lower(),
                         cgid=nbt_group.id,
                         internal_id=internal_id,
                         par_type='nbthole',
@@ -334,7 +334,7 @@ class DrudeLipid(object):
         # summary
         self.level_print(
             "Total {} DrudeParameters created for {}\n".format(
-                len(gs), self.lipname
+                len(gs), self.name
             ), 1, print_level
         )
         return gs

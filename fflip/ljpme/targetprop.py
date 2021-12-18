@@ -5,6 +5,7 @@
 from fflip.ljpme.reweight import *
 from fflip.omm.genclac import OmmJobGenerator
 from fflip.ljpme.scheme import *
+from fflip.ljpme.param import gen_param_offset
 
 
 class KaGenerator(object):
@@ -76,7 +77,7 @@ class DeltaGenerator(object):
 class TargetSystem(object):
     def __init__(self,
                  system_type,
-                 lipname,
+                 lipid_name,
                  num_lipids,
                  temperature,
                  surface_tension,
@@ -88,7 +89,7 @@ class TargetSystem(object):
                  naming_scheme=FolderNamingScheme,
                  ff='c36'):
         self.system_type = system_type
-        self.lipname = lipname
+        self.lipid_name = lipid_name
         self.num_lipids = num_lipids
         self.temperature = temperature
         self.surface_tension = surface_tension
@@ -152,7 +153,7 @@ class TargetSystem(object):
             options["tfile"] = torfix_file
         options["psf"] = self.psf_file
         options["crd"] = self.crd_file
-        options["lipid"] = self.lipname
+        options["lipid"] = self.lipid_name
         if last_seqno is not None:
             options["last_seqno"] = int(last_seqno)
         else:
@@ -224,7 +225,7 @@ class TargetProperty(TargetSystem):
                  name,
                  prop_type,
                  system_type,
-                 lipname,
+                 lipid_name,
                  lipid,
                  num_lipids,
                  weight_factor,
@@ -249,7 +250,7 @@ class TargetProperty(TargetSystem):
         self.name = name
         self.prop_type = prop_type
         self.system_type = system_type
-        self.lipname = lipname
+        self.lipid_name = lipid_name
         self.num_lipids = num_lipids
         self.temperature = temperature
         self.surface_tension = surface_tension
@@ -273,7 +274,6 @@ class TargetProperty(TargetSystem):
         self.first_trj, self.last_trj = \
             make_guess_of_trajectory_range(self.name)
         self.trj_intvl_e, self.trj_intvl_p = make_guess_of_intervals(self.name)
-        # self.lipid = lipfinder[lipname]
         self.lipid = lipid
         self.lipid_scheme = LipidScheme(self.lipid)
         self.ff = ff
@@ -291,8 +291,8 @@ class TargetProperty(TargetSystem):
         if "potential" in kwargs:
             self._pot_block_size = kwargs["potential"]
 
-    def update_percentage_of_perturbation(self, percent):
-        self._perturbation = round(float(percent), 1)
+    def update_amount_of_perturbation(self, amount):
+        self._perturbation = round(float(amount), 1)
 
     def update_first_last_trj(self, first_trj, last_trj):
         self.first_trj = first_trj
@@ -336,8 +336,8 @@ class TargetProperty(TargetSystem):
     def parameter_offsets(self):
         parameter_sets = self.lipid.parse_nbgroups(groups=self.groups)
         offsets = [
-            gen_sensitivity_offset(
-                ps, percentage=self.perturbation
+            gen_param_offset(
+                ps, amount=self.perturbation
             ) for ps in parameter_sets
         ]
         return offsets
@@ -393,8 +393,8 @@ class TargetProperty(TargetSystem):
 
         options = dict()
         options["option_file"] = "potcalc.inp"
-        options["lipname"] = self.lipname
-        options["percentage"] = self.perturbation
+        options["name"] = self.name
+        options["amount"] = self.perturbation
         options["trj_location"] = trj_loc
         options["first_trj"] = self.first_trj
         options["last_trj"] = self.last_trj
@@ -432,7 +432,7 @@ class TargetProperty(TargetSystem):
         options["first_trj"] = self.first_trj
         options["last_trj"] = self.last_trj
         options["block_size"] = self.prop_block_size
-        options["lipname"] = self.lipname
+        options["name"] = self.name
         # get the job run
         job = calc(2, options, overwrite=overwrite)
         job('python submit.py')

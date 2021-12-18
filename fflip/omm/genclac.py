@@ -7,7 +7,7 @@ from fflip.omm.sim import *
 from fflip.omm.util import copy_folder, copy_one_layer 
 
 
-class OmmJobGenerator:
+class OmmJobGenerator(object):
     """A generator for omm/mdtraj simulation/calculation plans."""
     def __init__(self, structure, psf_file, template, work_dir):
         """
@@ -42,21 +42,18 @@ class OmmJobGenerator:
         job_template = self.template
         work_dir = self.work_dir
         if os.path.exists(work_dir):
-            if overwrite == True:
+            if overwrite is True:
                 os.system('rm -r {}'.format(work_dir))
                 copy_folder(job_template, work_dir)
             else:
                 copy_one_layer(job_template, work_dir)
         else:
             copy_folder(job_template, work_dir)
-        if 'percentage' not in options:
-            # TODO: do we want to keep this percentage of parameter offset
-            #  used in the sensitivity analysis in fflip?
-            options['percentage'] = 1
+        if 'amount' not in options:
+            options['amount'] = 0.001  # small perturbation for better accuracy
         if 'solution' not in options:
-            # TODO: same question here!
             options['solution'] = None
-        elif options['solution'] == None:
+        elif options['solution'] is None:
             pass
         else:
             os.system(
@@ -141,12 +138,12 @@ class OmmJobGenerator:
         # TODO: iteration number should not appear in this function/class,
         #  but it should appear in the work directory, think about how to do
         #  this.
-        if calc_type == 0: # simulation
+        if calc_type == 0:  # simulation
             calculation = self.gensim(options, overwrite=overwrite)
             return calculation
-        if calc_type == 1: # potential
+        if calc_type == 1:  # potential
             calculation = self.gen_pot_calc(options, overwrite=overwrite)
             return calculation
-        if calc_type == 2: # observable
+        if calc_type == 2:  # observable
             calculation = self.gen_prop_calc(options, overwrite=overwrite)
             return calculation

@@ -20,21 +20,21 @@ class FolderNamingScheme(object):
 
     def trajectory_folder(self, iteration, traj_root):
         subdir = "iter{}/{}_{}_{}_{}".format(
-            iteration, self.tp.lipname, self.tp.system_type,
+            iteration, self.tp.lipid_name, self.tp.system_type,
             self.tp.surface_tension, self.tp.temperature
         )
         return os.path.join(traj_root, subdir)
 
     def property_data_folder(self, iteration):
         subdir = "observables/iter{}/{}_{}_{}_{}_{}".format(
-            iteration, self.tp.prop_type, self.tp.lipname, self.tp.system_type,
+            iteration, self.tp.prop_type, self.tp.lipid_name, self.tp.system_type,
             self.tp.surface_tension, self.tp.temperature
         )
         return os.path.join(self.tp.root_dir, subdir)
 
     def potential_data_folder(self, iteration):
         subdir = "potentials/iter{}/potential_{}_{}_{}_{}_{}".format(
-            iteration, self.tp.lipname, self.tp.system_type,
+            iteration, self.tp.lipid_name, self.tp.system_type,
             self.tp.surface_tension, self.tp.temperature, self.tp.perturbation
         )
         return os.path.join(self.tp.root_dir, subdir)
@@ -48,7 +48,7 @@ class FolderNamingScheme(object):
 
     def reweighting_file_name(self):
         return "{}_{}_{}_{}_{}".format(
-            self.tp.prop_type, self.tp.lipname, self.tp.system_type,
+            self.tp.prop_type, self.tp.lipid_name, self.tp.system_type,
             self.tp.surface_tension, self.tp.temperature
         )
 
@@ -107,7 +107,7 @@ class SimOptScheme(object):
             "prpc_bulk_0_298.15": (11, 100)
         }
         seqno_ = finder["{}_{}_{}_{}".format(
-            self.ts.lipname, self.ts.system_type,
+            self.ts.lipid_name, self.ts.system_type,
             self.ts.surface_tension, self.ts.temperature
         )]
         return seqno_
@@ -140,7 +140,7 @@ class SimOptScheme(object):
             "prpc_bulk_0": 43
         }
         return finder["{}_{}_{}".format(
-            self.ts.lipname, self.ts.system_type, self.ts.surface_tension
+            self.ts.lipid_name, self.ts.system_type, self.ts.surface_tension
         )]
 
     @property
@@ -171,7 +171,7 @@ class SimOptScheme(object):
             "prpc_bulk_0": None
         }
         return finder["{}_{}_{}".format(
-            self.ts.lipname, self.ts.system_type, self.ts.surface_tension
+            self.ts.lipid_name, self.ts.system_type, self.ts.surface_tension
         )]
 
     @property
