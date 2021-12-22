@@ -95,6 +95,6 @@ prpc_gs.append(
 
 #  *****************************************************************************
 
-prpc = Lipid(charmm_group_list=prpc_gs, lipname="PRPC")
+prpc = Lipid(charmm_group_list=prpc_gs, name="PRPC")
 
 #  *****************************************************************************

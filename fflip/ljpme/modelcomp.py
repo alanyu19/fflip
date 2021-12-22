@@ -40,12 +40,12 @@ class ModelCompoundPool(object):
             self.sim_template, self.ff
         )
 
-    def simulate(self, trj_folder, start):
+    def simulate(self, trj_folder, toppar_path, start):
         crd_files = glob.glob(os.path.join(self.crd_folder, '*'))
         for crd in crd_files:
             folder = os.path.join(trj_folder, crd.split('/')[-1])
             self.mc.simulate(
-                folder, crd, self.box, self.temperature, self.last_seqno,
+                folder, crd, toppar_path, self.box, self.temperature, self.last_seqno,
                 self.integrator, self.overwrite, start
             )
 
@@ -53,10 +53,12 @@ class ModelCompoundPool(object):
         psf = CharmmPsfFile(self.psf_file)
         topology = md.Topology.from_openmm(psf.topology)
         trajs = []
-        for mc in self.mc_list:
-            # TODO: loop to include more seqno
+        mc = self.mc
+        # TODO: loop to include more seqno
+        replicas = glob.glob(f"{trj_folder}/*")
+        for rep in replicas:
             traj_file = os.path.join(
-                trj_folder, mc.crd_file.split('/')[-1], 'trj/dyn2.dcd'
+                rep, 'trj/dyn2.dcd'
             )
             trajs.append(md.load_dcd(traj_file, top=self.psf_file))
         for dihe in self.dihedrals:
@@ -100,7 +102,7 @@ class ModelCompound(Lipid, DrudeLipid):
         elif self.ff is 'additive':
             Lipid.__init__(self, name=name, charmm_group_list=charmm_group_list)
 
-    def simulate(self, trj_folder, crd, box, temperature, last_seqno,
+    def simulate(self, trj_folder, crd, toppar_path, box, temperature, last_seqno,
                  integrator=None, overwrite=False, start=False, verbose=0):
         if self.sim_template is None:
             return 0  # exit
@@ -116,6 +118,7 @@ class ModelCompound(Lipid, DrudeLipid):
         options = dict()
         # special treatment to the option file name
         options["mdo"] = "input.mdo"
+        options["toppar_path"] = toppar_path
         if box is not None:
             options["box"] = float(box)
         else:
@@ -123,9 +126,9 @@ class ModelCompound(Lipid, DrudeLipid):
             options["box"] = 50
         options["temperature"] = temperature
         if integrator is not None:
-            options["intgrt"] = integrator
+            options["integrator"] = integrator
         else:
-            options["intgrt"] = "L"  # Langevin
+            options["integrator"] = "L"  # Langevin
         options["psf"] = self.psf_file
         options["crd"] = crd
         options["molecule"] = self.name

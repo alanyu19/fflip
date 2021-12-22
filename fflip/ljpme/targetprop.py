@@ -286,13 +286,13 @@ class TargetProperty(TargetSystem):
         self._perturbation = 1.0
 
     def update_block_sizes(self, **kwargs):
-        if "property" in kwargs:
-            self._prop_block_size = kwargs["property"]
+        if "observable" in kwargs:
+            self._prop_block_size = kwargs["observable"]
         if "potential" in kwargs:
             self._pot_block_size = kwargs["potential"]
 
     def update_amount_of_perturbation(self, amount):
-        self._perturbation = round(float(amount), 1)
+        self._perturbation = round(float(amount), 4)
 
     def update_first_last_trj(self, first_trj, last_trj):
         self.first_trj = first_trj
@@ -377,10 +377,11 @@ class TargetProperty(TargetSystem):
             change_para=False, solution_file=None, torfix_file=None
         )
 
-    def recalc_energy(self, iteration, traj_root, overwrite=False, wait=True,
+    def recalc_energy(self, iteration, traj_root, toppar_path,
+                      overwrite=False, wait=True,
                       last_solution=None, torfix=None):
 
-        print("parameter perturbation: ~ {}%".format(self.perturbation))
+        print("parameter perturbation: ~ {}".format(self.perturbation))
 
         trj_loc = self.folder_naming.trajectory_folder(iteration, traj_root)
 
@@ -393,12 +394,13 @@ class TargetProperty(TargetSystem):
 
         options = dict()
         options["option_file"] = "potcalc.inp"
-        options["name"] = self.name
+        options["name"] = self.lipid_name
         options["amount"] = self.perturbation
         options["trj_location"] = trj_loc
         options["first_trj"] = self.first_trj
         options["last_trj"] = self.last_trj
         options["block_size"] = self.pot_block_size
+        options["toppar_path"] = toppar_path
         if last_solution is not None:
             assert os.path.isfile(last_solution)
             # os.system("cp {} {}".format(last_solution, work_dir))
@@ -432,7 +434,7 @@ class TargetProperty(TargetSystem):
         options["first_trj"] = self.first_trj
         options["last_trj"] = self.last_trj
         options["block_size"] = self.prop_block_size
-        options["name"] = self.name
+        options["name"] = self.lipid_name
         # get the job run
         job = calc(2, options, overwrite=overwrite)
         job('python submit.py')

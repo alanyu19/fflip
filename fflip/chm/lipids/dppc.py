@@ -97,6 +97,6 @@ dppc_gs.append(
 
 #  *****************************************************************************
 
-dppc = Lipid(charmm_group_list=dppc_gs, lipname="DPPC")
+dppc = Lipid(charmm_group_list=dppc_gs, name="DPPC")
 
 #  *****************************************************************************

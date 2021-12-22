@@ -36,11 +36,16 @@ def main(ctx, args=None):
 @click.option("-l", "--last_trj", type=str,
               help="the last trajectory index(es)"
                    "(example: 100 / 100,400,200)")
+@click.option("-bsp", "--block_size_potential", type=int, default=-1,
+              help="block size (# traj) for potential calculation")
+@click.option("-bso", "--block_size_observable", type=int, default=-1,
+              help="block size (# traj) for observable calculation")
 @click.option("-p", "--perturbation", type=float,
               help='the perturbation size used in reweighting (%)')
 @click.option("--iteration", type=str, help="iteration id")
 @click.option("-P", "--partition", type=str, help="slurmq partition")
-def scalc(property_indexes, first_trj, last_trj, perturbation, iteration, partition):
+def scalc(property_indexes, first_trj, last_trj, block_size_potential,
+          block_size_observable, perturbation, iteration, partition):
     """
     Perform the sensitivity calculation
     """
@@ -76,6 +81,10 @@ def scalc(property_indexes, first_trj, last_trj, perturbation, iteration, partit
             last = lasts[count]
         properties[i].update_amount_of_perturbation(perturbation)
         properties[i].update_first_last_trj(first, last)
+        if block_size_potential > 0:
+            properties[i].update_block_sizes(potential=block_size_potential)
+        if block_size_observable > 0:
+            properties[i].update_block_sizes(observable=block_size_observable)
         thread = Thread(
             target=properties[i].get_sensitivity,
             kwargs={'iteration': iteration, 'force_redo': True, 'partition': partition}
@@ -94,10 +103,15 @@ def scalc(property_indexes, first_trj, last_trj, perturbation, iteration, partit
 @click.option("-l", "--last_trj", type=str,
               help="the last trajectory index(es)"
                    "(example: 100 / 100,400,200)")
+@click.option("-bsp", "--block_size_potential", type=int, default=-1,
+              help="block size (# traj) for potential calculation")
+@click.option("-bso", "--block_size_observable", type=int, default=-1,
+              help="block size (# traj) for observable calculation")
 @click.option("-p", "--perturbation", type=float)
 @click.option("--iteration", type=str, help="iteration id")
 @click.option("-P", "--partition", type=str, help="slurmq partition")
-def rcalc(property_indexes, first_trj, last_trj, perturbation, iteration, partition):
+def rcalc(property_indexes, first_trj, last_trj, block_size_potential,
+          block_size_observable, perturbation, iteration, partition):
     """
     Perform the error(robustness) analysis on sensitivities
     """
@@ -136,6 +150,10 @@ def rcalc(property_indexes, first_trj, last_trj, perturbation, iteration, partit
 
         properties[i].update_amount_of_perturbation(perturbation)
         properties[i].update_first_last_trj(first, last)
+        if block_size_potential > 0:
+            properties[i].update_block_sizes(potential=block_size_potential)
+        if block_size_observable > 0:
+            properties[i].update_block_sizes(observable=block_size_observable)
         thread = Thread(
             target=properties[i].get_robustness,
             kwargs={'iteration': iteration, 
@@ -199,9 +217,10 @@ def simulate(location, time, change_parameters, sfile, tfile,
               help="file for torsion fixes")
 @click.option("-I", "--iteration", type=str,
               help="interation id, can be 0, 1, 2 ... or any string")
+@click.option("--toppar", type=str, default=None, help="toppar path")
 @click.option("--start", is_flag=True,
               help="start immediately? (otherwise go to sim folders to start manually)")
-def simulate_mc(location, change_parameters, sfile, tfile, iteration, start):
+def simulate_mc(location, change_parameters, sfile, tfile, iteration, toppar, start):
     """
     Initiate the simulations 
     """
@@ -210,7 +229,7 @@ def simulate_mc(location, change_parameters, sfile, tfile, iteration, start):
         mcp.generate_model_compound()
         trj_folder = os.path.join(location, 'iter{}'.format(iteration), 'model_compound', mcp.name.lower())
         # TODO: add other parameters
-        mcp.simulate(trj_folder, start)
+        mcp.simulate(trj_folder, toppar, start)
 
 
 @main.command()
@@ -240,20 +259,26 @@ def dihedral_mc(location, iteration):
 @click.option("-l", "--last_trj", type=str,
               help="the last trajectory index(es)"
                    "(example: 100 / 100,400,200)")
+@click.option("-bsp", "--block_size_potential", type=int, default=-1,
+              help="block size (# traj) for potential calculation")
+@click.option("-bso", "--block_size_observable", type=int, default=-1,
+              help="block size (# traj) for observable calculation")
 @click.option(
     "-c", "--calctype", type=click.Choice(
         ['Potential', 'Observable', 'All'],case_sensitive=False
     )
 )
 @click.option("-p", "--perturbation", type=float,
-              help='perturbation of parameter')
+              help='perturbation of parameter (suggestion: 0.001)')
 @click.option("--iteration", type=str, help="iteration id")
 @click.option("--overwrite/--keep", default=False)
 @click.option("--verbose/--silent", default=True)
+@click.option("--toppar", type=str, default=None, help="toppar path")
 @click.option("-s", "--solution", default=None, help="last solution")
 @click.option("-t", "--torfix", default=None, help="torsion fix file")
-def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype,
-           perturbation, iteration, overwrite, verbose, solution, torfix):
+def obspot(property_indexes, traj_loc, first_trj, last_trj, block_size_potential,
+           block_size_observable, calctype, perturbation, iteration, overwrite,
+           verbose, toppar, solution, torfix):
     """
     Calculate energies (original+perturbed) and observables
     """
@@ -295,15 +320,20 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, calctype,
             )
         properties[i].update_first_last_trj(first, last)
         properties[i].update_amount_of_perturbation(perturbation)
+        if block_size_potential > 0:
+            properties[i].update_block_sizes(potential=block_size_potential)
+        if block_size_observable > 0:
+            properties[i].update_block_sizes(observable=block_size_observable)
         if calctype is not None:
             if calctype.lower() == 'all' or calctype.lower() == 'observable':
                 properties[i].calc_observable(
-                    iteration, traj_root=traj_loc, overwrite=overwrite
+                    iteration, traj_root=traj_loc, overwrite=overwrite,
                 )
             if calctype.lower() == 'all' or calctype.lower() == 'potential':
                 properties[i].recalc_energy(
                     iteration, traj_root=traj_loc, overwrite=overwrite, 
-                    last_solution=solution, torfix=torfix
+                    last_solution=solution, torfix=torfix,
+                    toppar_path=toppar
                 )
 
 @main.command()

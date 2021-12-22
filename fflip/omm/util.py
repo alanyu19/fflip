@@ -351,15 +351,15 @@ def parse_md_options(md_options):
     mdo = dict()
     for item in md_options:
         if item in [
-            'psf', 'crd', 'lipid', 'ff', 'lipname',
+            'psf', 'crd', 'lipid', 'ff', 'lipname', 'toppar_path',
             'change_param', 'sfile', 'integrator', 'barostat'
         ]:
             mdo[item] = str(md_options[item])
-        if item == 'surface_tension':
+        elif item == 'surface_tension':
             # TODO: unify the naming
             mdo['surf_ts'] = 20 * float(md_options[item])
             mdo[item] = 20 * float(md_options[item])
-        if item in ['box', 'temperature',]:
+        elif item in ['box', 'temperature',]:
             mdo[item] = float(md_options[item])
     if 'boxx' in md_options:
         mdo['xvec'] = float(md_options['boxx'])

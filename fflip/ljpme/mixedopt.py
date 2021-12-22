@@ -68,8 +68,7 @@ class MixedOptimizer(Optimizer):
             sqrt_ssr = np.sqrt(np.sum(w * (omm_e - self.qme[mc]) ** 2))
             sqrt_ssr_dict[mc] = sqrt_ssr
         self.gen_target_vector()
-        target_vector = list(self.T) + [0 for mc in
-                                     self.model_compound_names]
+        target_vector = list(self.T) + [0 for mc in self.model_compound_names]
         product1 = np.matmul(self.W, self.S)
         product2 = np.matmul(product1, list(x) + [sqrt_ssr_dict[mc] for mc in self.model_compound_names])
         self.D = product2
@@ -103,7 +102,7 @@ class MixedOptimizer(Optimizer):
             self.hard_bounds, self.drop_bounds, forbid=self.forbid,
             qmc_weight=self.qmc_weight, qmscan_weights=self.qmscan_weights
         )
-        self.gen_sensitivity_matrix(scale=100)
+        self.gen_sensitivity_matrix(scale=1)
         opt = nlopt.opt(method, dimension)
         self.optimizer = opt
         if "lower_bounds" in options:
