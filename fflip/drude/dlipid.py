@@ -66,7 +66,7 @@ class DrudeChargeGroup(object):
             self.exclusion = exclusion
 
 
-class LJGroup:
+class LJGroup(object):
     def __init__(self, id_, atom_type_dict, half_r_mins=None, epsilons=None):
         """
         The class for defining all parametrizable LJ interactions, NBFIX is
@@ -173,7 +173,7 @@ class DrudeLipid(object):
                     internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            lipidname=self.name.lower(),
+                            lipid_name=self.name.lower(),
                             cgid=chggp.id,
                             internal_id=internal_id,
                             par_type="charge",
@@ -213,7 +213,7 @@ class DrudeLipid(object):
                     internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            lipidname=self.name.lower(),
+                            lipid_name=self.name.lower(),
                             cgid=chggp.id,
                             internal_id=internal_id,
                             par_type="alpha",
@@ -251,7 +251,7 @@ class DrudeLipid(object):
                     internal_id += 1
                     add_a_new_group(
                         gs, DrudeParameter(
-                            lipidname=self.name.lower(),
+                            lipid_name=self.name.lower(),
                             cgid=chggp.id,
                             internal_id=internal_id,
                             par_type="thole",
@@ -284,7 +284,7 @@ class DrudeLipid(object):
                 internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
-                        lipidname=self.name.lower(),
+                        lipid_name=self.name.lower(),
                         cgid=ljgp.id,
                         internal_id=internal_id,
                         par_type='sigma',
@@ -298,7 +298,7 @@ class DrudeLipid(object):
                 internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
-                        lipidname=self.name.lower(),
+                        lipid_name=self.name.lower(),
                         cgid=ljgp.id,
                         internal_id=internal_id,
                         par_type='epsilon',
@@ -319,7 +319,7 @@ class DrudeLipid(object):
                 internal_id += 1
                 add_a_new_group(
                     gs, DrudeParameter(
-                        lipidname=self.name.lower(),
+                        lipid_name=self.name.lower(),
                         cgid=nbt_group.id,
                         internal_id=internal_id,
                         par_type='nbthole',

@@ -3,18 +3,16 @@
 import math
 
 
-class nbgroup(object):
+class NonbondedGroup(object):
     """
     A class that contains the info about the group for which one want to
     change the nobonded parameters but not the interaction form ...
-    "nbgroup" = GroupToChangeNonbondedParameterss
     """
-    def __init__(self, **kwargs):
-        self.par_type = kwargs["par_type"]
-        self.center_names = kwargs["center_names"]
+    def __init__(self, lipid_name, par_type, center_names, **kwargs):
+        self.lipid = lipid_name
+        self.par_type = par_type
+        self.center_names = center_names
         if self.par_type == "charge":
-            assert "cooperators" in kwargs
-            self.cooperators = kwargs["cooperators"]
             assert "neighbors" in kwargs
             self.neighbors = kwargs["neighbors"]
 
@@ -41,10 +39,6 @@ class nbgroup(object):
             # TODO: convert to scale functionality (YYL)
 
         if self.par_type == "charge":
-            # "roc" stands for the "ratios of cooperators
-            # (to center in terms of change of charges)"
-            assert "roc" in kwargs
-            self.roc = kwargs["roc"]
             assert "ron" in kwargs
             self.ron = kwargs["ron"]
             # We might want to add a checker here to verify
@@ -98,14 +92,6 @@ class nbgroup(object):
         elif self.par_type == "charge":
             # initialize name list
             name_list = [name]
-            coop_names = []
-            for coop in self.cooperators:
-                coop_names.append(
-                    coop + '_' + self.center_names[0] + '_' + self.par_type
-                )
-                name_list.append(
-                    coop + '_' + self.center_names[0] + '_' + self.par_type
-                )
             neib_names = []
             for neib in self.neighbors:
                 neib_names.append(
@@ -114,51 +100,47 @@ class nbgroup(object):
                 name_list.append(
                     neib + '_' + self.center_names[0] + '_' + self.par_type
                 )
-            return [name, coop_names, neib_names]
+            return [name, neib_names]
         else:
             return None
 
     def __repr__(self):
         # par_type, center_names,
         if self.par_type == "charge":
-            return "nbgroup(par_type = '{}', center_names = {}," \
+            return "NonbondedGroup(par_type = '{}', center_names = {}," \
                 "original_p = {}, targeted_range = {}, neighbors = {}," \
-                " cooperators = {}, ron = {}, roc = {})\n".format(
+                " ron = {})\n".format(
                     self.par_type, self.center_names, self.original_p,
-                    self.targeted_range, self.neighbors, self.cooperators,
-                    self.ron, self.roc
+                    self.targeted_range, self.neighbors, self.ron
                 )
         elif self.par_type == "epsilon" or self.par_type == "sigma":
-            return "nbgroup(par_type = '{}', center_names = {}," \
+            return "NonbondedGroup(par_type = '{}', center_names = {}," \
                 "original_p = {}, targeted_range = {})\n".format(
                     self.par_type, self.center_names,
                     self.original_p, self.targeted_range
                 )
         else:
-            return "nbgroup(no change)\n"
+            return "nonbonded_group (no change)\n"
 
 
-def empty_nbgroup():
-    return nbgroup(
+def empty_nonbonded_group():
+    return NonbondedGroup(
         par_type=None, center_names=[], original_p=0, targeted_range=[]
     )
 
-# nbgroup(par_type="charge", center_names=["N"], cooperators=[],
-# neighbors=['C12', 'C13', 'C14', 'C15'], original_p=0.5, targeted_range=[
-# 0.4, 0.7], roc=[], ron=[-0.25, -0.25, -0.25, -0.25])
 
 # -----------------------------------------------------------------------------
 # DRUDE -----------------------------------------------------------------------
 
 
-class DrudeParameter:
-    def __init__(self, lipidname, cgid, internal_id,
+class DrudeParameter(object):
+    def __init__(self, lipid_name, cgid, internal_id,
                  par_type, center_names, original_p, targeted_range,
                  neighbors=None, drude_particles=None, **kwargs):
         """
         Class contains
         Args:
-            lipidname: str, the lipid it belongs to
+            lipid_name: str, the lipid it belongs to
             cgid: int, the group id it belongs to (see dlipid)
             partype: can be 'charge, alpha, thole, sigma, epsilon
             center_names:
@@ -167,7 +149,7 @@ class DrudeParameter:
             targeted_range:
             **kwargs:
         """
-        self.lipid = lipidname
+        self.lipid = lipid_name
         self.cgid = cgid
         self.internal_id = internal_id
         self.par_type = par_type
@@ -303,7 +285,7 @@ class DrudeParameter:
 
 def empty_drude_parameter():
     return DrudeParameter(
-        lipidname='EMPTY', cgid=0, internal_id=0,
+        lipid_name='EMPTY', cgid=0, internal_id=0,
         par_type=None, center_names=[], original_p=0, targeted_range=[]
     )
 

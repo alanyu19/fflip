@@ -65,7 +65,7 @@ class ReweightTarget(object):
             return len(self.lipid_scheme.parse())
         elif isinstance(self.groups, list):
             return len(
-                self.lipid_scheme.parse(groups=self.groups)
+                self.lipid_scheme.parse(id_allowed=self.groups)
             )
         else:
             raise Exception

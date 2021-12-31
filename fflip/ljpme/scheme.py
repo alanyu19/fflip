@@ -204,7 +204,7 @@ class LipidScheme(object):
         if type(self.lipid_) == DrudeLipid:
             return self.lipid_.parse_groups(**kwargs)
         elif type(self.lipid_) == Lipid:
-            return self.lipid_.parse_nbgroups(**kwargs)
+            return self.lipid_.parse_groups(**kwargs)
 
     def param_ids(self, **kwargs):
         if type(self.lipid_) == DrudeLipid:
@@ -215,7 +215,7 @@ class LipidScheme(object):
             return ids
         elif type(self.lipid_) == Lipid:
             return list(
-                range(1, len(self.lipid_.parse_nbgroups(**kwargs)) + 1)
+                range(1, len(self.lipid_.parse_groups(**kwargs)) + 1)
             )
 
 

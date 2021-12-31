@@ -68,13 +68,13 @@ def get_parameter_set_and_offset_by_index(index, lipid, amount):
     Returns:
         the parameter group and the offset
     """
-    parameter_sets = lipid.parse_nbgroups()
+    parameter_sets = lipid.parse_groups()
     pset = [parameter_sets[index-1]]
     offset = [gen_param_offset(parameter_sets[index-1], amount)]
     return pset, offset
 
 
-def get_one_group_with_offset(index, lipid, amount, id_allowed, drude=False):
+def get_one_group_with_offset(index, lipid, amount, id_allowed):
     """
     Upgraded function for get_parameter_set_and_offset_by_index.
 
@@ -89,10 +89,7 @@ def get_one_group_with_offset(index, lipid, amount, id_allowed, drude=False):
     Returns:
         the parameter group and the offset.
     """
-    if not drude:
-        parameter_sets = lipid.parse_nbgroups(id_allowed=id_allowed)
-    else:
-        parameter_sets = lipid.parse_groups(id_allowed=id_allowed)
+    parameter_sets = lipid.parse_groups(id_allowed=id_allowed)
     pset = [parameter_sets[index-1]]
     offset = [
         gen_param_offset(

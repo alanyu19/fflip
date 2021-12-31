@@ -304,6 +304,7 @@ def torsion_match_two_ff(
     optimizer = DihedralOptimizer(dihdata_fix, dihdata_ref, reweighter)
     optim = optimizer()
     print("The residue from the fixed multiplicity fitting is:", optim.fun)
+    print("Force constants: ", [ki/4.184 for ki in optim.x])
     # The following condition should be changed to judge the optim found above
     # is good or not
     two_stages = False

@@ -80,21 +80,17 @@ def smart_select(topology, group_info):
     """
     par_type = group_info.par_type
     if par_type == "charge":
-        atom_sele_cooper = []
         atom_sele_neighb = []
         atom_sele_center = []
         for name in group_info.center_names:
             # several arrays like [array([...]), array([...])]
             atom_sele_center.append(topology.select(
                 "name {}".format(name)))
-        for name in group_info.cooperators:
-            atom_sele_cooper.append(topology.select(
-                "name {}".format(name)))
         for name in group_info.neighbors:
             atom_sele_neighb.append(topology.select(
                 "name {}".format(name)))
         # these element themselves are list containing array(s)
-        return [atom_sele_center, atom_sele_cooper, atom_sele_neighb]
+        return [atom_sele_center, atom_sele_neighb]
 
     if par_type == "sigma" or par_type == "epsilon":
         atom_sele = []
@@ -171,7 +167,7 @@ def initialize_parameter_offset(topology, force, groups):
 
             atom_sele = smart_select(topology, group)
             if group.par_type == "charge":
-                center, cooperator, neighbor = convert_selection_to_int(
+                center, neighbor = convert_selection_to_int(
                     atom_sele
                 )
                 for p_group in center:
@@ -179,9 +175,6 @@ def initialize_parameter_offset(topology, force, groups):
                     add_nonbonded_offset(
                         force, group.force_names[0], p_group, group.par_type
                     )
-                for p_group, f_name in zip(cooperator, group.force_names[1]):
-                    # p_group is group of particle indexes.
-                    add_nonbonded_offset(force, f_name, p_group, group.par_type)
                 for p_group, f_name in zip(neighbor, group.force_names[2]):
                     add_nonbonded_offset(force, f_name, p_group, group.par_type)
             else:
@@ -206,7 +199,6 @@ def brutal_nonbonded_parameter(system, topology, paragroup, paraoffset):
         if isinstance(force, NonbondedForce):
             # CHARGE
             if par_type == 'charge':
-                atom_sele_cooper = []
                 atom_sele_neighb = []
                 atom_sele_center = []
                 # Fill in atom selections for center atoms and others
@@ -214,12 +206,6 @@ def brutal_nonbonded_parameter(system, topology, paragroup, paraoffset):
                     atom_sele_center.append(
                         topology.select(
                             "name {}".format(paragroup.center_names[i])
-                        )
-                    )
-                for i in range(len(paragroup.cooperators)):
-                    atom_sele_cooper.append(
-                        topology.select(
-                            "name {}".format(paragroup.cooperators[i])
                         )
                     )
                 for i in range(len(paragroup.neighbors)):
@@ -246,18 +232,6 @@ def brutal_nonbonded_parameter(system, topology, paragroup, paraoffset):
                 new = charge_new._value
 
                 ''' Change charge parameters for other associated atoms '''
-                for i in range(len(paragroup.cooperators)):
-                    for atom in atom_sele_cooper[i]:
-                        atom = int(atom)
-                        charge, sigma, epsilon = \
-                            force.getParticleParameters(atom)
-                        charge_new = charge + u.Quantity(
-                            paraoffset*paragroup.roc[i],
-                            unit=u.elementary_charge
-                        )
-                        force.setParticleParameters(
-                            atom, charge_new, sigma, epsilon
-                        )
                 for i in range(len(paragroup.neighbors)):
                     for atom in atom_sele_neighb[i]:
                         atom = int(atom)

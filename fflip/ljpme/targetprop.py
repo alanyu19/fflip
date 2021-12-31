@@ -334,7 +334,7 @@ class TargetProperty(TargetSystem):
         pass
 
     def parameter_offsets(self):
-        parameter_sets = self.lipid.parse_nbgroups(groups=self.groups)
+        parameter_sets = self.lipid.parse_groups(groups=self.groups)
         offsets = [
             gen_param_offset(
                 ps, amount=self.perturbation
@@ -360,7 +360,7 @@ class TargetProperty(TargetSystem):
     @property
     def parameters(self):
         if not isinstance(self.lipid, DrudeLipid):
-            return self.lipid.parse_nbgroups(groups=self.groups)
+            return self.lipid.parse_groups(groups=self.groups)
         else:
             return self.lipid.parse_groups(id_allowed=self.groups)
 

@@ -13,33 +13,34 @@ def add_a_new_group(existing_groups, new_group):
     existing_groups.append(new_group)
 
 
-class CharmmGroup:
-    def __init__(self, **kwargs):
-        self.num_atom_category = kwargs["num_atom_category"]
-        self.atoms = kwargs["atoms"]  # should be list inside list structure
-        self.charges = kwargs["charges"]
-        self.half_r_mins = kwargs["half_r_mins"]
-        self.epsilons = kwargs["epsilons"]
-        self.add_lj_nbgroup = kwargs["add_lj_nbgroup"]
-        self.atoms_same_lj = kwargs["atoms_same_lj"]
-        self.add_charge_nbgroup = kwargs["add_charge_nbgroup"]
-        self.neighbors = kwargs["neighbors"]
-        self.cooperators = kwargs["cooperators"]
-        self.atoms_same_charge = kwargs["atoms_same_charge"]
+class CharmmGroup(object):
+    def __init__(self, num_atom_category, atoms, charges, half_r_mins,
+                 epsilons, add_charge_group, atoms_same_charge,
+                 neighbors, add_lj_group, atoms_same_lj, **kwargs):
+        self.num_atom_category = num_atom_category
+        self.atoms = atoms  # should be list inside list structure
+        self.charges = charges
+        self.half_r_mins = half_r_mins
+        self.epsilons = epsilons
+        # Charge
+        self.add_charge_group = add_charge_group
+        self.atoms_same_charge = atoms_same_charge
+        self.neighbors = neighbors
+        # LJ
+        self.add_lj_group = add_lj_group
+        self.atoms_same_lj = atoms_same_lj
         if "exclusion" in kwargs:
             self.exclusion = kwargs["exclusion"]
         else:
             self.exclusion = []
 
-class Lipid:
-    def __init__(self, **kwargs):
-        assert "charmm_group_list" in kwargs
-        self.charmm_group_list = kwargs["charmm_group_list"]
+
+class Lipid(object):
+    def __init__(self, charmm_group_list, name, **kwargs):
+        self.charmm_group_list = charmm_group_list
         self.num_charmm_groups = len(self.charmm_group_list)
-        assert "lipname" in kwargs or "name" in kwargs
-        if "name" in kwargs:
-            self.name = kwargs["name"]
-        elif "lipname" in kwargs:
+        self.name = name
+        if "lipname" in kwargs:
             warnings.warn(
                 "'lipname' will not be supported in future versions, please use 'name'!"
             )
@@ -54,28 +55,29 @@ class Lipid:
         else:
             pass
 
-    def parse_nbgroups(self, groups='all', print_level=0):
+    def parse_groups(self, id_allowed='all', print_level=0):
         gs = []
         for counter, chm_gp in enumerate(self.cgroups):
-            if groups is not 'all':
-                assert isinstance(groups, list)
-                if counter not in groups:
+            if id_allowed is not 'all':
+                assert isinstance(id_allowed, list)
+                if counter not in id_allowed:
                     continue
             self.level_print(
-                "Creating 'nbgroup's for {} group {} ... ".format(
+                "Creating 'NonbondedGroup's for {} group {} ... ".format(
                     self.name, counter+1
                 ), 1, print_level
             )
             for i in range(chm_gp.num_atom_category):
                 # LJ
-                if chm_gp.add_lj_nbgroup[i]:
+                if chm_gp.add_lj_group[i]:
                     atom_list=[]
                     for atom in chm_gp.atoms[i]:
                         atom_list.append(atom)
                     for atom in chm_gp.atoms_same_lj[i]:
                         atom_list.append(atom)
                     add_a_new_group(
-                        gs, nbgroup(
+                        gs, NonbondedGroup(
+                            lipid_name=self.name,
                             par_type="sigma", center_names=atom_list,
                             original_p=round(
                                 (1/2)**(1/6) * chm_gp.half_r_mins[i] * 0.2, 5
@@ -84,7 +86,8 @@ class Lipid:
                         )
                     )
                     add_a_new_group(
-                        gs, nbgroup(
+                        gs, NonbondedGroup(
+                            lipid_name=self.name.lower(),
                             par_type="epsilon", center_names=atom_list,
                             original_p=round(chm_gp.epsilons[i] * 4.184, 4),
                             targeted_range=[0.8, 1.2]
@@ -97,18 +100,14 @@ class Lipid:
                         ), 2, print_level
                     )
                 # Charge
-                if chm_gp.add_charge_nbgroup[i]:
-                    center_names=[]; nb_names=[]; coop_names=[]
+                if chm_gp.add_charge_group[i]:
+                    center_names=[]; nb_names=[]
                     # Create and fill in the atoms with the current CHARMM group
                     for atom in chm_gp.atoms[i]:
                         center_names.append(atom)
                     for nb_index in chm_gp.neighbors[i]:
                         for atom in chm_gp.atoms[nb_index]:
                             nb_names.append(atom)
-                    if chm_gp.cooperators is not None:
-                        for coop_index in chm_gp.cooperators[i]:
-                            for atom in chm_gp.atoms[coop_index]:
-                                coop_names.append(atom)
                     # Find any associated charges in other groups
                     if (chm_gp.atoms_same_charge is not None) and \
                             (i not in chm_gp.exclusion):
@@ -117,13 +116,7 @@ class Lipid:
                         for nb_index in chm_gp.neighbors[i]:
                             for atom in chm_gp.atoms_same_charge[nb_index]:
                                 nb_names.append(atom)
-                        if chm_gp.cooperators is not None:
-                            for coop_index in chm_gp.cooperators[i]:
-                                for atom in chm_gp.atoms_same_charge[
-                                    coop_index
-                                ]:
-                                    coop_names.append(atom)
-                    # Now we have the name lists, create the 'nbgroup' for charge:
+                    # Now we have the name lists, create the 'NonbondedGroup' for charge:
                     roc = []
                     ron = []
                     # I think this decision will influence the speed of the
@@ -133,9 +126,10 @@ class Lipid:
                     # for r in range(len(roc)):
                     #     roc.append(1)
                     add_a_new_group(
-                        gs, nbgroup(
+                        gs, NonbondedGroup(
+                            lipid_name=self.name.lower(),
                             par_type="charge", center_names=center_names,
-                            cooperators=coop_names, neighbors=nb_names,
+                            neighbors=nb_names,
                             original_p=chm_gp.charges[i],
                             targeted_range=[round(chm_gp.charges[i] - 0.2, 2),
                                             round(chm_gp.charges[i] + 0.2, 2)],
@@ -150,7 +144,7 @@ class Lipid:
                     )
             self.level_print("", 1, print_level)
         self.level_print(
-            "Total {} nbgroups created for {}\n".format(len(gs), self.name),
+            "Total {} NonbondedGroups created for {}\n".format(len(gs), self.name),
             1, print_level
         )
         return gs
