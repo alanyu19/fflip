@@ -346,7 +346,7 @@ class TargetProperty(TargetSystem):
     def _exp(self):
         if 'rmsd' in self.name.lower():
             return 0
-        if 'peak' in self.name or 'foot' in self.name:
+        if 'peak' in self.name or 'foot' in self.name or 'rmsd' in self.name:
             name_exp = self.name.split('_')[0]
         else:
             name_exp = self.name
@@ -446,8 +446,7 @@ class TargetProperty(TargetSystem):
             # fr = FutureResult()
 
     def gen_reweight_target(self, iteration):
-
-        if 'peak' in self.name or 'foot' in self.name:
+        if 'peak' in self.name or 'foot' in self.name or 'rmsd' in self.name:
             name_to_reweight = self.name.split('_')[0]
         elif 'scd' in self.name:
             name_to_reweight = self.name
@@ -529,7 +528,8 @@ class TargetProperty(TargetSystem):
             diff = self.reweight_target.robustness_analysis(
                 first, last, self.pot_block_size, self.prop_block_size, **kwargs
             )
-            if 'area' in self.name or 'scd' in self.name or 'db' in self.name:
+            if 'area' in self.name or 'scd' in self.name or 'db' in self.name \
+                or 'dhh' in self.name or 'rmsd' in self.name:
                 self.robustness = np.abs(
                     np.mean(np.array(diff), axis=0) /
                     np.std(np.array(diff), axis=0)
