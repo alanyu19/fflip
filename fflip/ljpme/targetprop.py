@@ -344,6 +344,8 @@ class TargetProperty(TargetSystem):
 
     @property
     def _exp(self):
+        if 'rmsd' in self.name.lower():
+            return 0
         if 'peak' in self.name or 'foot' in self.name:
             name_exp = self.name.split('_')[0]
         else:
