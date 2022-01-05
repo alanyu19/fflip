@@ -85,11 +85,17 @@ def scalc(property_indexes, first_trj, last_trj, block_size_potential,
             properties[i].update_block_sizes(potential=block_size_potential)
         if block_size_observable > 0:
             properties[i].update_block_sizes(observable=block_size_observable)
+        if count % 3 == 0:
+            if count != 0:
+                for thread_ in threads:
+                    thread_.join()
+            threads = []
         thread = Thread(
             target=properties[i].get_sensitivity,
             kwargs={'iteration': iteration, 'force_redo': True, 'partition': partition}
         )
         thread.start()
+        threads.append(thread)
         # properties[i].get_sensitivity(iteration, force_redo=True)
 
 
@@ -154,6 +160,11 @@ def rcalc(property_indexes, first_trj, last_trj, block_size_potential,
             properties[i].update_block_sizes(potential=block_size_potential)
         if block_size_observable > 0:
             properties[i].update_block_sizes(observable=block_size_observable)
+        if count % 3 == 0:
+            if count != 0:
+                for thread_ in threads:
+                    thread_.join()
+            threads = []
         thread = Thread(
             target=properties[i].get_robustness,
             kwargs={'iteration': iteration, 
@@ -161,7 +172,12 @@ def rcalc(property_indexes, first_trj, last_trj, block_size_potential,
                     'block_size': int((last - first + 1) / 3),
                     'partition': partition}
         )
-        thread.start()
+        # thread.start()
+        # threads.append(thread)
+        # properties[i].get_robustness(
+        #     iteration=iteration, fromfile=False, partition=partition,
+        #     block_size = int((last - first + 1) / 3)
+        # )
 
 
 @main.command()

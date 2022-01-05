@@ -273,7 +273,7 @@ class TargetProperty(TargetSystem):
         self.robdir = self.folder_naming.robustness_dir()
         self.first_trj, self.last_trj = \
             make_guess_of_trajectory_range(self.name)
-        self.trj_intvl_e, self.trj_intvl_p = make_guess_of_intervals(self.name)
+        # self.trj_intvl_e, self.trj_intvl_p = make_guess_of_intervals(self.name)
         self.lipid = lipid
         self.lipid_scheme = LipidScheme(self.lipid)
         self.ff = ff
@@ -484,7 +484,7 @@ class TargetProperty(TargetSystem):
         if (not self.reweight_target.done_reweighting and not quit) or force_to:
             self.reweight_target.reweight(
                 self.first_trj, self.last_trj,
-                self.trj_intvl_e, self.trj_intvl_p,
+                self.pot_block_size, self.prop_block_size,
                 use_cluster=use_cluster, partition=partition,
                 **kwargs
             )
@@ -525,7 +525,7 @@ class TargetProperty(TargetSystem):
                     )
                 )
             diff = self.reweight_target.robustness_analysis(
-                first, last, self.trj_intvl_e, self.trj_intvl_p, **kwargs
+                first, last, self.pot_block_size, self.prop_block_size, **kwargs
             )
             if 'area' in self.name or 'scd' in self.name or 'db' in self.name:
                 self.robustness = np.abs(

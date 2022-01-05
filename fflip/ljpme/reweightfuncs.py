@@ -21,20 +21,17 @@ class DataLoader(object):
 
 
 class CoreReweighter(object):
-    def __init__(self, **kwargs):
+    def __init__(self, temperature, **kwargs):
         """
         The reweighter to do weightings
         Args:
-            **kwargs:
-                - temperature: defaul=323.15, the original temperature,
-                if temperature_perturbed is not provided, it's also used as
-                the temperature of the reweighted state.
-                - temperature_perturbed: the temperature of the reweighted state
+           temperature: the original temperature,
+           if temperature_perturbed is not provided, it's also used as
+           the temperature of the reweighted state.
+           **kwargs:
+              temperature_perturbed: the temperature of the reweighted state.
         """
-        if "temperature" not in kwargs:
-            self.beta = beta_kjmol(323.15)
-        else:
-            self.beta = beta_kjmol(float(kwargs["temperature"]))
+        self.beta = beta_kjmol(float(temperature))
         if "temperature_perturbed" not in kwargs:
             self.beta2 = self.beta
         else:
@@ -55,7 +52,8 @@ class CoreReweighter(object):
         """
         assert \
             (len(property_data) == len(o_energy_data) == len(p_energy_data)), \
-            "Data are of different size!"
+            "Data are of different size! observable: {}; org_energy: {}; pert_energy: {}".format(
+                len(property_data), len(o_energy_data), len(p_energy_data))
         o_energy_data = np.array(o_energy_data)
         p_energy_data = np.array(p_energy_data)
         property_data = np.array(property_data)

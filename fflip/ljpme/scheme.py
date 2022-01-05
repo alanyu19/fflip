@@ -197,25 +197,25 @@ class SimOptScheme(object):
 
 
 class LipidScheme(object):
-    def __init__(self, lipid_):
-        self.lipid_ = lipid_
+    def __init__(self, lipid):
+        self.lipid = lipid
 
     def parse(self, **kwargs):
-        if type(self.lipid_) == DrudeLipid:
-            return self.lipid_.parse_groups(**kwargs)
-        elif type(self.lipid_) == Lipid:
-            return self.lipid_.parse_groups(**kwargs)
+        if type(self.lipid) == DrudeLipid:
+            return self.lipid.parse_groups(**kwargs)
+        elif type(self.lipid) == Lipid:
+            return self.lipid.parse_groups(**kwargs)
 
     def param_ids(self, **kwargs):
-        if type(self.lipid_) == DrudeLipid:
-            groups = self.lipid_.parse_groups(**kwargs)
+        if type(self.lipid) == DrudeLipid:
+            groups = self.lipid.parse_groups(**kwargs)
             ids = []
             for g in groups:
                 ids.append(str(g.cgid) + '_' + str(g.internal_id))
             return ids
-        elif type(self.lipid_) == Lipid:
+        elif type(self.lipid) == Lipid:
             return list(
-                range(1, len(self.lipid_.parse_groups(**kwargs)) + 1)
+                range(1, len(self.lipid.parse_groups(**kwargs)) + 1)
             )
 
 

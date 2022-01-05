@@ -122,10 +122,12 @@ class ReweightTarget(object):
             from dask_jobqueue import SLURMCluster
             cluster = SLURMCluster(
                 queue=partition,
-                cores=1,
+                cores=4,
+                processes=1,
+                job_cpu=4,
                 walltime="00:30:00",
                 shebang='#!/usr/bin/bash',
-                memory="4 GB"
+                memory="6GB",
             )
             cluster.scale(jobs=1)
             client = Client(cluster)
@@ -142,6 +144,8 @@ class ReweightTarget(object):
             )
             self.sim = future_result.result()[0]
             self.rew = future_result.result()[1]
+            cluster.close()
+            client.close()
 
     def save_reweighted(self):
         check_and_make_dir(os.path.abspath(self.result_dir))
@@ -188,17 +192,23 @@ class ReweightTarget(object):
             from dask.distributed import Client
             from dask_jobqueue import SLURMCluster
             dask_futures = []
+            dask_clients = []
+            dask_clusters = []
             param_ids = self.lipid_scheme.param_ids(**kwargs)
             for starting_trj in range(first_trj, last_trj, block_size):
                 cluster = SLURMCluster(
                     queue=partition,
                     cores=1,
+                    processes=1,
+                    job_cpu=1,
                     walltime="00:30:00",
                     shebang='#!/usr/bin/bash',
-                    memory="4 GB"
+                    memory="4GB",
                 )
                 cluster.scale(jobs=1)
+                dask_clusters.append(cluster)
                 client = Client(cluster)
+                dask_clients.append(client)
                 dask_futures.append(
                     client.submit(
                         reweight_many_params,
@@ -232,6 +242,9 @@ class ReweightTarget(object):
                 else:
                     # we can also use the sensitivity_evaluator here!
                     diff.append(perturbed - original)
+            for cluster, client in zip(dask_clusters, dask_clients):
+                cluster.close()
+                client.close()
             return diff
 
     def retrieve_sim_rew(self):

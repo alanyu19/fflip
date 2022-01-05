@@ -125,7 +125,7 @@ class NonbondedGroup(object):
 
 def empty_nonbonded_group():
     return NonbondedGroup(
-        par_type=None, center_names=[], original_p=0, targeted_range=[]
+        lipid_name='I am a fatty lipid', par_type=None, center_names=[], original_p=0, targeted_range=[]
     )
 
 
