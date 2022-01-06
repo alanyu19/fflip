@@ -17,7 +17,8 @@ class ReweightTarget(object):
         """
         Args:
             name (str): name for reweighting
-            full_name (str): name for determining property_type and etc.
+            full_name (str): full name of the property, 
+            for determining property_type and etc.
             temperature (float): temperature
             property_dir (str): path to observable files
             energy_dir (str): path to energy files
@@ -244,7 +245,6 @@ class ReweightTarget(object):
             for future_result in dask_futures:
                 original = future_result.result()[0]
                 perturbed = future_result.result()[1]
-                # if not ('area' in self.name or 'scd' in self.name):
                 if not self.property_type == 1:
                     # all rdf-related, peak/foot will return 3d array -
                     # [param, x/y, peak/foot #]
@@ -264,14 +264,14 @@ class ReweightTarget(object):
             return diff
 
     def retrieve_sim_rew(self):
-        if not self.sim:
+        if self.sim is None:
             try:
                 self.sim = np.loadtxt(
                     os.path.join(self.result_dir, self.name + '.sim')
                 )
             except NoSimDataError:
                 return 0
-        if not self.rew:
+        if self.rew is None:
             try:
                 self.rew = np.loadtxt(
                     os.path.join(self.result_dir, self.name + '.rew')
