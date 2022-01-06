@@ -458,3 +458,4 @@ class SensitivityEvaluator(object):
             for i, rmsdi in enumerate(rmsd_rew):
                 diff_list.append(rmsd_rew[i] - rmsd_sim)
             return np.array(diff_list)
+

@@ -250,7 +250,7 @@ def make_guess_of_intervals(name):
         return 10, 10
     elif 'area' in name:
         return 10, 10
-    elif 'db' in name:
+    elif 'db' in name or 'dhh' in name:
         return 10, 10
     else:
         return 10, 1
@@ -264,9 +264,11 @@ def make_guess_of_scaling(name):
         return 1 / 1
     elif 'foot' in name:
         return 1 / 0.5
+    elif 'rmsd' in name:
+        return 1 / 1
     elif 'scd' in name:
         return 1 / 0.15
-    elif 'db' in name:
+    elif 'db' in name or 'dhh' in name:
         return 1 / 40
     elif 'ka' in name:
         return 1 / 200
