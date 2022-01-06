@@ -10,25 +10,27 @@ from fflip.ljpme.scheme import LipidScheme
 
 
 class ReweightTarget(object):
-    def __init__(self, name, temperature, property_dir, energy_dir,
-                 property_file_template, result_dir,
-                 exp, lipid, exp_dir, parse_groups,
+    def __init__(self, name, full_name, temperature,
+                 property_dir, energy_dir, property_file_template,
+                 result_dir, exp, lipid, exp_dir, parse_groups,
                  sim_rdf_r_range=(0.0015, 0.999), sim_rdf_r_intvl=0.003):
         """
         Args:
-            name:
-            temperature:
-            property_dir:
-            energy_dir:
-            property_file_template:
-            result_dir:
-            exp:
-            lipid:
-            exp_dir:
-            sim_rdf_r_range:
-            sim_rdf_r_intvl:
+            name (str): name for reweighting
+            full_name (str): name for determining property_type and etc.
+            temperature (float): temperature
+            property_dir (str): path to observable files
+            energy_dir (str): path to energy files
+            property_file_template (str): observable file template
+            result_dir (str): path to save result 
+            exp (float/int): experimental value
+            lipid (str): name of the lipid
+            exp_dir (str): path to the experimental data
+            sim_rdf_r_range (tuple): rdf specific range (min, max)
+            sim_rdf_r_intvl (float): rdf specific interval
         """
         self.name = name
+        self.full_name = full_name
         self.temperature = temperature
         self.property_dir = property_dir
         self.energy_dir = energy_dir
@@ -76,6 +78,17 @@ class ReweightTarget(object):
             return 2
         else:
             return 1
+
+    @property
+    def sens_type(self):
+        if self.property_type == 1:
+            return 1
+        elif self.property_type == 2:
+            if 'rmsd' in self.full_name:
+                return 3
+            else:
+                # peak/foot
+                return 2
 
     @property
     def sim_x(self):
@@ -156,7 +169,7 @@ class ReweightTarget(object):
 
     def robustness_analysis(self, first_trj, last_trj,
                             trj_interval_energy, trj_interval_prop=None,
-                            block_size=50, use_cluster=True,
+                            block_size=100, use_cluster=True,
                             partition=None,
                             **kwargs):
         if use_cluster:
@@ -231,10 +244,13 @@ class ReweightTarget(object):
             for future_result in dask_futures:
                 original = future_result.result()[0]
                 perturbed = future_result.result()[1]
-                if not ('area' in self.name or 'scd' in self.name):
+                # if not ('area' in self.name or 'scd' in self.name):
+                if not self.property_type == 1:
+                    # all rdf-related, peak/foot will return 3d array -
+                    # [param, x/y, peak/foot #]
                     evaluator = SensitivityEvaluator(
                         self.ngroups, self.exp_x, self.exp, self.sim_x,
-                        original, perturbed, sens_type=self.property_type,
+                        original, perturbed, sens_type=self.sens_type,
                         n_peaks=2
                     )
                     one_diff = evaluator.diff_rew_sim
@@ -272,14 +288,15 @@ class ReweightTarget(object):
             self.sim = np.array(self.sim)
             self.rew = np.array(self.rew)
         if self.name == 'O2-OW' or self.name == 'Ob-OW':
+            # TODO: this should not be project-dependent!!!
             evaluator = SensitivityEvaluator(
                 self.ngroups, self.exp_x, self.exp, self.sim_x, self.sim,
-                self.rew, sens_type=self.property_type, n_peaks=1
+                self.rew, sens_type=self.sens_type, n_peaks=1
             )
         else:
             evaluator = SensitivityEvaluator(
                 self.ngroups, self.exp_x, self.exp, self.sim_x, self.sim,
-                self.rew, sens_type=self.property_type
+                self.rew, sens_type=self.sens_type
             )
         self.sensitivity_evaluator = evaluator
 
@@ -318,7 +335,7 @@ class SensitivityEvaluator(object):
         self.ngroups = ngroups
         self.sim = sim
         self.exp = exp
-        if sens_type == 2:
+        if sens_type == 2 or sens_type == 3:
             self.exp_x = exp_x
             self.sim_x = sim_x
         self.rew = rew
@@ -367,6 +384,10 @@ class SensitivityEvaluator(object):
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             return (x_sim - x_exp)/x_exp, (y_sim - y_exp)/y_exp
+        elif self.sens_type == 3:
+            # RDF rmsd, same as absolute, because exp is 0 (can't divide)
+            rmsd_sim = rmsd(self.sim, self.sim_x, self.exp, self.exp_x)
+            return np.array(rmsd_sim)
 
     @property
     def diff_rew_sim(self):
@@ -375,6 +396,7 @@ class SensitivityEvaluator(object):
             sim_tiled = np.tile(self.sim, self.ngroups)
             return rew - sim_tiled
         elif self.sens_type == 2:
+            # RDF peak/foot
             x_sim, y_sim = find_rdf_peaks_and_foots(
                 self.sim, self.sim_x, first_n_peaks=self.n_peaks,
                 first_n_foots=self.n_foots, smooth_window_size=1
@@ -386,6 +408,15 @@ class SensitivityEvaluator(object):
             diff_list = []
             for i, (r, pfv) in enumerate(zip(r_list, peak_foot_value_list)):
                 diff_list.append(np.array([r - x_sim, pfv - y_sim]))
+            return np.array(diff_list)
+        elif self.sens_type == 3:
+            # RDF rmsd
+            rmsd_sim = rmsd(self.sim, self.sim_x, self.exp, self.exp_x)
+            # This is a list
+            rmsd_rew = rmsd(self.rew, self.sim_x, self.exp, self.exp_x)
+            diff_list = []
+            for i, rmsdi in enumerate(rmsd_rew):
+                diff_list.append(rmsd_rew[i] - rmsd_sim)
             return np.array(diff_list)
 
     @property
@@ -414,11 +445,12 @@ class SensitivityEvaluator(object):
                 )
             return np.array(rel_diff_list)
 
-            
-
-
-
-
-
-
-
+        elif self.sens_type == 3:
+            # RDF rmsd, same as absolute, because exp is 0 (can't divide)
+            rmsd_sim = rmsd(self.sim, self.sim_x, self.exp, self.exp_x)
+            # This is a list
+            rmsd_rew = rmsd(self.rew, self.sim_x, self.exp, self.exp_x)
+            diff_list = []
+            for i, rmsdi in enumerate(rmsd_rew):
+                diff_list.append(rmsd_rew[i] - rmsd_sim)
+            return np.array(diff_list)

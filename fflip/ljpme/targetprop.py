@@ -455,6 +455,7 @@ class TargetProperty(TargetSystem):
 
         self.reweight_target = ReweightTarget(
             name=name_to_reweight,
+            full_name=self.name,
             temperature=self.temperature,
             property_dir=self.folder_naming.property_data_folder(iteration),
             energy_dir=self.folder_naming.potential_data_folder(iteration),
