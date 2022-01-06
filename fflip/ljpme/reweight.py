@@ -363,6 +363,10 @@ class SensitivityEvaluator(object):
                 first_n_foots=self.n_foots, smooth_window_size=1
             )
             return x_sim - x_exp, y_sim - y_exp
+        elif self.sens_type == 3:
+            # RDF rmsd, same as relative, because exp is 0 (can't divide)
+            rmsd_sim = rmsd(self.sim, self.sim_x, self.exp, self.exp_x)
+            return np.array(rmsd_sim)
 
     @property
     def rel_diff_sim_exp(self):
