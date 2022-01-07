@@ -47,6 +47,14 @@ class Optimizer(object):
             return None
 
     @property
+    def parameter_info(self):
+        return self.parameters
+
+    @property
+    def all_properties(self):
+        return self.target_properties + self.special_properties
+
+    @property
     def num_qmc(self):
         return len(self.qmc)
     
@@ -398,14 +406,13 @@ class PropertyLinearEstimator(Optimizer):
             startpars: the starting vector
             algorithm: optimization algorithm
         """
-        self.target_properties = target_properties
-        self.special_properties = special_properties
+        # self.target_properties = target_properties
+        # self.special_properties = special_properties
+        # self.uncertainty_scaling = uncertainty_scaling
+        super().__init__(
+            target_properties, special_properties, [], uncertainty_scaling
+        )
         self.targets = []  # might not be useful in the end
-        self.uncertainty_scaling = uncertainty_scaling
-
-    @property
-    def all_properties(self):
-        return self.target_properties + self.special_properties
 
     @property
     def target_prop_perturbations(self):

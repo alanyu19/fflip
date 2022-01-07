@@ -344,8 +344,6 @@ class TargetProperty(TargetSystem):
 
     @property
     def _exp(self):
-        if 'rmsd' in self.name.lower():
-            return 0
         if 'peak' in self.name or 'foot' in self.name or 'rmsd' in self.name:
             name_exp = self.name.split('_')[0]
         else:
@@ -362,7 +360,7 @@ class TargetProperty(TargetSystem):
     @property
     def parameters(self):
         if not isinstance(self.lipid, DrudeLipid):
-            return self.lipid.parse_groups(groups=self.groups)
+            return self.lipid.parse_groups(id_allowed=self.groups)
         else:
             return self.lipid.parse_groups(id_allowed=self.groups)
 

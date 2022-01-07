@@ -212,12 +212,12 @@ class ReweightTarget(object):
             for starting_trj in range(first_trj, last_trj, block_size):
                 cluster = SLURMCluster(
                     queue=partition,
-                    cores=1,
+                    cores=4,
                     processes=1,
-                    job_cpu=1,
+                    job_cpu=4,
                     walltime="00:30:00",
                     shebang='#!/usr/bin/bash',
-                    memory="4GB",
+                    memory="6GB",
                 )
                 cluster.scale(jobs=1)
                 dask_clusters.append(cluster)

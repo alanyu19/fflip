@@ -150,3 +150,41 @@ def extract_exp(name, exp):
         return pfs[order]
     else:
         return exp
+
+
+def rmsd_single_profile(rdf, r, exp_rdf, exp_r, exp_index_range=(68, 202)):
+    r_exp_sele = exp_r[exp_index_range[0]:exp_index_range[1]]
+    rdf_exp_sele = exp_rdf[exp_index_range[0]:exp_index_range[1]]
+    interp = np.interp(r_exp_sele, r, rdf)
+    return np.sqrt(((interp - rdf_exp_sele)**2).sum()/interp.shape[0])
+
+
+def rmsd(rdf, r, rdf_ref, r_ref, r_range=(0.2, 0.6)):
+    """
+
+    Args:
+        rdf_ref: exp rdf
+        r_ref: exp rdf's r
+        rdf: rdf (sim)
+        r: rdf's r
+        r_range: range to compute RMSD, not used in current code
+
+    Returns: the rmsd of two rdf curves
+
+    """
+    rdf = np.array(rdf)
+    shape_original = np.shape(rdf)
+    if len(shape_original) == 2:
+        # process rew data
+        rmsd_list = []
+        for i in range(int(shape_original[0])):
+            # loop over the parameters
+            copy_of_rdf = rdf[i, :]
+            rmsdi = rmsd_single_profile(copy_of_rdf, r, rdf_ref, r_ref)
+            rmsd_list.append(rmsdi)
+        return rmsd_list
+    else:
+        # process sim data
+        rmsd = rmsd_single_profile(rdf, r, rdf_ref, r_ref)
+        return rmsd
+
