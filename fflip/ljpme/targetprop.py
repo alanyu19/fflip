@@ -472,10 +472,10 @@ class TargetProperty(TargetSystem):
     ):
         """
         Args:
-            use_cluster:
-            force_to:
-            save_result:
-            quit: if we want to quit if there is no available result
+            use_cluster (bool): if use cluster
+            force_to (bool): if force the calculation on a computing node
+            save_result (bool): if save the result
+            quit (bool): if we want to quit if there is no available result
 
         Returns: None
         """
@@ -585,7 +585,8 @@ class TargetProperty(TargetSystem):
             # which is not the usual case anyway
             self.gen_reweight_target(iteration)
         self.reweight(
-            force_to=force_redo, use_cluster=use_cluster, partition=partition, quit=quit
+            force_to=force_redo, use_cluster=use_cluster, partition=partition,
+            quit=quit
         )
         self.reweight_target.add_sensitivity_evaluator()
         # get raw
@@ -597,6 +598,7 @@ class TargetProperty(TargetSystem):
             self.rel_sensitivity = self.reweight_target.rel_diff_rew_sim / \
                 self.perturbation
         else:
+            # TODO: this should be provied as customized function in future
             # testing, the name of rdf peak should be
             # "atom-pair_peak/foot_#ofpeak/foot
             order = order_peak_foot(self.name)
@@ -612,5 +614,3 @@ class TargetProperty(TargetSystem):
             self.rel_sensitivity = \
                 self.reweight_target.rel_diff_rew_sim[:, 1, order] / \
                 self.perturbation
-
-

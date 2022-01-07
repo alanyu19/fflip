@@ -406,9 +406,6 @@ class PropertyLinearEstimator(Optimizer):
             startpars: the starting vector
             algorithm: optimization algorithm
         """
-        # self.target_properties = target_properties
-        # self.special_properties = special_properties
-        # self.uncertainty_scaling = uncertainty_scaling
         super().__init__(
             target_properties, special_properties, [], uncertainty_scaling
         )
@@ -461,26 +458,18 @@ class PropertyLinearEstimator(Optimizer):
         self.num_qm = num_qm_charge
 
     def get_weight_matrix(
-            self, qm_weight=0.01,
-            hard_bounds={'sigma': 0.05, 'epsilon': 0.05, 'charge': 0.02},
-            drop_bounds={'sigma': 1, 'epsilon': 1, 'charge': 1},
-            forbid={'charge': ['N', 'H13A', 'C13', 'C12', 'H2R', 'H11A', 'C11', 'P', 'O13', 'O11'],
-                    'alpha': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
-                    'thole': ['N', 'C13', 'C12', 'C11', 'P', 'O13', 'O11'],
-                    'epsilon': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13', 'O13', 'O11', 'C1', 'O21', 'C21', 'O22', 'C22'],
-                    'sigma': ['C12', 'H11A', 'P', 'C2', 'N', 'HS', 'C13', 'O13', 'O11', 'C1', 'O21', 'C21', 'O22', 'C22']},
-            verbose=True
+        self, qm_weight, hard_bounds, drop_bounds, forbid={}, verbose=True
     ):
         """
         Generate the weight matrix
         Args:
-            qm_weight: float, the weight for QM charges.
-            hard_bounds: dictionary, the lower bound of the robustness,
-            key should be the parameter type ('charge',
-            ...).
-            drop_bounds: dictionary, the upper bound for the uncertainty,
+            qm_weight (float): the weight for QM charges.
+            hard_bounds (dictionary): the lower bound of the robustness,
+            key should be the parameter type ('charge', ...).
+            drop_bounds (dictionary): the upper bound for the uncertainty,
             if exceeded, that parameter won't change.
-            forbid: dictionary, parameters we don't want to touch at all.
+            forbid (dictionary): parameters we don't want to touch at all.
+            verbose (bool): verbose
         """
         rows = self.num_all_properties + self.num_qm + self.num_parameters
         cols = rows
