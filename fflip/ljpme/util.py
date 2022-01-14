@@ -199,3 +199,10 @@ def parse_first_last(inp):
             return [index]
         except:
             raise Exception('Invalid trajectory index(es)!')
+
+
+def dict_to_str(dictionary):
+    string = ""
+    for key, value in dictionary.items():
+        string += "{0:10s}: {1:10s}\n".format(str(key), str(value))
+    return string

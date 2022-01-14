@@ -378,7 +378,7 @@ def parse_md_options(md_options):
     return mdo
 
 
-def filter_solution(file_to_load='solution.txt', threshold=0.1):
+def filter_solution(file_to_load='solution.txt', threshold=0.0001):
     data = np.loadtxt(file_to_load)
     sol = []
     for d in data:

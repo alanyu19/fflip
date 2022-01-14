@@ -107,15 +107,15 @@ class NonbondedGroup(object):
     def __repr__(self):
         # par_type, center_names,
         if self.par_type == "charge":
-            return "NonbondedGroup(par_type = '{}', center_names = {}," \
-                "original_p = {}, targeted_range = {}, neighbors = {}," \
-                " ron = {})\n".format(
+            return "NonbondedGroup(par_type='{}', center_names={}," \
+                "original_p={}, targeted_range={}, neighbors={}," \
+                " ron={})\n".format(
                     self.par_type, self.center_names, self.original_p,
                     self.targeted_range, self.neighbors, self.ron
                 )
         elif self.par_type == "epsilon" or self.par_type == "sigma":
-            return "NonbondedGroup(par_type = '{}', center_names = {}," \
-                "original_p = {}, targeted_range = {})\n".format(
+            return "NonbondedGroup(par_type='{}', center_names={}," \
+                "original_p={}, targeted_range={})\n".format(
                     self.par_type, self.center_names,
                     self.original_p, self.targeted_range
                 )
@@ -268,14 +268,14 @@ class DrudeParameter(object):
                         self.original_p, self.targeted_range
                     )
         elif self.par_type == "epsilon" or self.par_type == "sigma":
-            return "DrudeParameter(par_type = '{}', center_names = {}," \
-                "original_p = {}, targeted_range = {})\n".format(
+            return "DrudeParameter(par_type='{}', center_names={}," \
+                "original_p={}, targeted_range={})\n".format(
                     self.par_type, self.center_names,
                     self.original_p, self.targeted_range
                 )
         elif self.par_type == "nbthole":
-            return "DrudeParameter(par_type = '{}', center_names = {}," \
-                "original_p = {}, targeted_range = {})\n".format(
+            return "DrudeParameter(par_type='{}', center_names={}," \
+                "original_p={}, targeted_range={})\n".format(
                     self.par_type, self.center_names,
                     self.original_p, self.targeted_range
                 )

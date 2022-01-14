@@ -19,7 +19,7 @@ class ObjfuncDihedral(object):
         )
 
 
-class DihedralOptimizer:
+class DihedralOptimizer(object):
     """
     An CHARMM dihedral optimizer that allows you to change the member
     (depending on the reweighter provided) of multiplicities in the original FF

@@ -100,7 +100,8 @@ class MixedOptimizer(Optimizer):
         self.qmc_weight = qmc_weight
         self.gen_weight_matrix(
             self.hard_bounds, self.drop_bounds, forbid=self.forbid,
-            qmc_weight=self.qmc_weight, qmscan_weights=self.qmscan_weights
+            qmc_weight=self.qmc_weight, qmscan_weights=self.qmscan_weights,
+            verbose=0
         )
         self.gen_sensitivity_matrix(scale=1)
         opt = nlopt.opt(method, dimension)

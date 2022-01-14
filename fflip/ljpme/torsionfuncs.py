@@ -300,7 +300,7 @@ class DihedralTarget(object):
             all_trj_data.append(data)
         return np.array(all_trj_data)
 
-    
+
 def prob_distribution(
     data, num_bins, lower_bound, upper_bound,
     temperature=323.15, original_energy=None, perturbed_energy=None,

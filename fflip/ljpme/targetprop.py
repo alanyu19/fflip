@@ -104,12 +104,12 @@ class TargetSystem(object):
     def simulate(self, iteration, trj_folder, last_seqno=None,
                  boxx=None, boxz=None, zmode=None,
                  barostat=None, integrator=None,
-                 change_para=False, solution_file=None, torfix_file=None,
+                 change_param=False, solution_file=None, torfix_file=None,
                  overwrite=False, start=False, verbose=0):
         if self.sim_template is None:
             return 0  # exit
 
-        if change_para:
+        if change_param:
             assert solution_file is not None  # and torfix_file is not None
 
         trj_loc = self.folder_naming.trajectory_folder(iteration, trj_folder)
@@ -144,11 +144,11 @@ class TargetSystem(object):
         else:
             options["barostat"] = self.option_scheme.barostat
         if integrator is not None:
-            options["intgrt"] = integrator
+            options["integrator"] = integrator
         else:
-            options["intgrt"] = self.option_scheme.intgrt
-        options["change_para"] = 'yes' if change_para else 'no'
-        if change_para:
+            options["integrator"] = self.option_scheme.integrator
+        options["change_param"] = 'yes' if change_param else 'no'
+        if change_param:
             options["sfile"] = solution_file
             options["tfile"] = torfix_file
         options["psf"] = self.psf_file
@@ -212,7 +212,7 @@ class SpecialProperty(TargetSystem):
 
     def get_sensitivity(self, iteration):
         for p in self.parent_properties:
-            p.get_sensitivity(iteration)
+            p.get_sensitivity(iteration, use_cluster=False)
         generator = self.generator(self.parent_properties, **self.options)
         self.rew = generator.gen_rew()
         self.sim = generator.gen_sim()
@@ -374,7 +374,7 @@ class TargetProperty(TargetSystem):
     def simulation(self, iteration, trj_folder, last_seqno=None):
         super().simulate(
             self, iteration, trj_folder, last_seqno=last_seqno,
-            change_para=False, solution_file=None, torfix_file=None
+            change_param=False, solution_file=None, torfix_file=None
         )
 
     def recalc_energy(self, iteration, traj_root, toppar_path,

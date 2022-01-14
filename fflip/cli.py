@@ -12,7 +12,7 @@ if os.path.isfile('targets.py'):
 if os.path.isfile('models.py'):
     from models import *
 import fflip
-from fflip.ljpme.util import construct_indexes, parse_first_last
+from fflip.ljpme.util import construct_indexes, parse_first_last, dict_to_str
 
 
 @click.group()
@@ -214,7 +214,7 @@ def simulate(location, time, change_parameters, sfile, tfile,
     for prop in properties:
         prop.simulate(
             iteration=iteration, trj_folder=location, last_seqno=time,
-            change_para=cp_match[change_parameters],
+            change_param=cp_match[change_parameters],
             torfix_file=tfile, solution_file=sfile,
             boxx=boxx, boxz=boxz, zmode=zmode,
             barostat=barostat, integrator=integrator, start=start,
@@ -400,36 +400,70 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
     if hasqm:
         le.get_qm_charge_from_file(root + '/qm/qm.csv')
         assert qmw is not None
-    else:
-        le.zero_qm_charge()
-        qmw = 0
-    le.get_sensitivity_matrix()
-    le.get_weight_matrix(
-        qm_weight=qmw, hard_bounds={
+    # else:
+    #     le.zero_qm_charge()
+    #     qmw = 0
+    le.gen_sensitivity_matrix()
+    le.gen_weight_matrix(
+        hard_bounds={
             'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst,
             'thole': tlrst, 'alpha': aprst
         },
         # This is currently hard-coded
-        drop_bounds={'sigma': 0.2, 'epsilon': 0.2, 'charge': 0.2, 'alpha': 0.2, 'thole': 0.2},
+        drop_bounds={
+            'sigma': 1, 'epsilon': 1, 'charge': 1,
+            'alpha': 1, 'thole': 1},
+        qmc_weight=qmw, verbose=True
     ) 
-    le.get_deviation_vector()
-
+    le.gen_target_vector()
+    # mkdir for result
+    if not os.path.isdir("solutions"):  # directory for slurm output files
+        os.mkdir("solutions")
+    if not os.path.isdir("solutions/iter{}".format(iteration)):  # directory for slurm output files
+        os.mkdir("solutions/iter{}".format(iteration))
+    result_path = "solutions/iter{}".format(iteration)
+    # save matrixes
+    np.savetxt(os.path.join(result_path, "w.mtx"), le.W)
+    np.savetxt(os.path.join(result_path, "s.mtx"), le.S)
+    np.savetxt(os.path.join(result_path, "t.mtx"), le.T)
     solution = le(save_result=False)
     le.update_weight(
         hard_bounds={'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst,
                      'thole': tlrst, 'alpha': aprst},
         # parameter change (measured in % or 0.01 e) 
         # smaller than this would be dropped
-        lower_bound=0.2
+        min_change=0.002
     )
-    if not os.path.isdir("solutions"):  # directory for slurm output files
-        os.mkdir("solutions")
     solution = le(
-        save_result=ssr, ssr_file='./solutions/ssr_' + iteration + '.png',
-        result_file='./solutions/predicted_{}.csv'.format(iteration)
+        save_result=ssr, ssr_file=os.path.join(result_path, "ssr_" + iteration + ".png"),
+        result_file=os.path.join(result_path, "predicted_{}.csv".format(iteration))
     )
+    # save essential optimization parameters
+    with open(
+        os.path.join(result_path, "optimization_info.txt"), "w" 
+    ) as fw:
+        fw.write("uncertainty_scaling:\n")
+        fw.write(str(le.uncertainty_scaling) + "\n")
+        fw.write("----------------\n")
+        fw.write("hard_bounds:\n")
+        fw.write(dict_to_str(le.hard_bounds))
+        fw.write("----------------\n")
+        fw.write("drop_bounds:\n")
+        fw.write(dict_to_str(le.drop_bounds))
+        fw.write("----------------\n")
+        fw.write("forbidden:\n")
+        fw.write(dict_to_str(le.forbid))
+        fw.write("----------------\n")
+        fw.write("min_change:\n")
+        fw.write(str(le.min_change))
+    # write out solutions
     if previous is None:
-        np.savetxt('./solutions/solution_{}.txt'.format(iteration), solution)
+        np.savetxt(os.path.join(result_path, "solution_{}.txt".format(iteration)), solution)
+        with open(
+            os.path.join(result_path, "solution_{}_with_param.txt".format(iteration)), 'w'
+        ) as fw:
+            for param, s in zip(le.parameters, solution):
+                fw.write("{0:5s} {1:10s} {2:>9.4f}\n".format(param.center_names[0], param.par_type, s))
     else:
         # currently only support one lipid type at once
         lipid_ = le.target_properties[0].lipid
@@ -438,6 +472,11 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
         previous = np.loadtxt('./solutions/solution_{}.txt'.format(previous))
         final = combine_solutions([previous, solution], param)
         np.savetxt('./solutions/solution_{}.txt'.format(iteration), final)
+        with open(
+            os.path.join(result_path, "solution_{}_with_param.txt".format(iteration)), 'w'
+        ) as fw:
+            for param, s in zip(le.parameters, final):
+                fw.write("{0:5s} {1:10s} {2:>9.4f}\n".format(param.center_names[0], param.par_type, s))
 
 
 def entrypoint():

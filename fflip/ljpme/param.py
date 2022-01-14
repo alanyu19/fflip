@@ -10,13 +10,12 @@ def get_sign(x):
     return math.copysign(1, x)
 
 
-def gen_param_offset(param_group, amount, sign=1):
+def gen_param_offset(param_group, amount):
     """
     Function to generate the nonbonded parameter offset for a group of atoms.
     Args:
         param_group: the parameter group
         amount (float): the size of the offset
-        sign (int): default to 1, the sign of the offset, can be 1/-1
     Returns:
         the offset of the parameter
     """

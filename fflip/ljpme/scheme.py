@@ -175,7 +175,7 @@ class SimOptScheme(object):
         )]
 
     @property
-    def intgrt(self):
+    def integrator(self):
         return 'L'
 
     @property
