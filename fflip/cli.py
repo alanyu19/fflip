@@ -204,9 +204,10 @@ def rcalc(property_indexes, first_trj, last_trj, block_size_potential,
 @click.option("--start", is_flag=True,
               help="start immediately? (otherwise go to sim folders to start manually)")
 @click.option("-v", "--verbose", type=int, default=1)
+@click.option("--overwrite", is_flag=True)
 def simulate(location, time, change_parameters, sfile, tfile,
              boxx, boxz, zmode, integrator, barostat, iteration,
-             start, verbose):
+             start, verbose, overwrite):
     """
     Initiate the simulations 
     """
@@ -218,7 +219,7 @@ def simulate(location, time, change_parameters, sfile, tfile,
             torfix_file=tfile, solution_file=sfile,
             boxx=boxx, boxz=boxz, zmode=zmode,
             barostat=barostat, integrator=integrator, start=start,
-            verbose=verbose
+            verbose=verbose, overwrite=overwrite
         )
 
 

@@ -190,6 +190,10 @@ def BrutalNonbondedParameter(system, topology, paragroup, paraoffset):
     return brutal_nonbonded_parameter(system, topology, paragroup, paraoffset)
 
 
+def change_additive_ff_parameters(system, topology, parameter, paraoffset):
+    return brutal_nonbonded_parameter(system, topology, parameter, paraoffset)
+
+
 def brutal_nonbonded_parameter(system, topology, paragroup, paraoffset):
     """
     Change some nonbonded parameters of the system.
@@ -405,21 +409,19 @@ def change_nb_exceptions(psf, system, isdrude=False):
         )
 
 
-def find_nb_parameter(system, topology, names, par_types):
-    values = []
+def find_nb_parameter(system, topology, name, par_type):
     for force in system.getForces():
         if isinstance(force, NonbondedForce):
-            for name, par_type in zip(names, par_types):
-                atoms = topology.select("name {}".format(name))
-                atom = int(atoms[0])
-                charge, sigma, epsilon = force.getParticleParameters(atom)
-                if par_type == 'charge':
-                    values.append(charge._value)
-                elif par_type == 'sigma':
-                    values.append(sigma._value)
-                elif par_type == 'epsilon':
-                    values.append(epsilon._value)
-    return values
+            atoms = topology.select("name {}".format(name))
+            atom = int(atoms[0])
+            charge, sigma, epsilon = force.getParticleParameters(atom)
+            if par_type == 'charge':
+                value = charge._value
+            elif par_type == 'sigma':
+                value = sigma._value
+            elif par_type == 'epsilon':
+                value = epsilon._value
+    return value
 
 
 def find_drude_nb_forces(system):

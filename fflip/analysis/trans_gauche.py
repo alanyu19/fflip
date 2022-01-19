@@ -20,7 +20,7 @@ def get_all_dihedrals_in_a_tail(
                                       'C{}{}'.format(sn, carbon+1), 
                                       'C{}{}'.format(sn, carbon+2),
                                       'C{}{}'.format(sn, carbon+3))
-            data.append(dihe_ang(trj))
+            data.append(dihe_ang(trj, skip=100))
         data = np.array(data) * 180/ np.pi
         all_carbon.append(data)
     if verbose:

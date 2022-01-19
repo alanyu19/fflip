@@ -142,13 +142,13 @@ class DihedralAngle(object):
         self.sele3 = self.topology.select("name {}".format(self.atom3))
         self.sele4 = self.topology.select("name {}".format(self.atom4))
         
-    def __call__(self, traj):
+    def __call__(self, traj, skip=1):
         """
         Requirement:
         mdtraj installed and imported as md
         """
         dihedral_every_frame = md.compute_dihedrals(
-            traj,
+            traj[::skip],
             np.swapaxes(
                 np.array([self.sele1, self.sele2, self.sele3, self.sele4]), 0, 1
             )

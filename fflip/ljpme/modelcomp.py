@@ -13,7 +13,8 @@ from fflip.omm.genclac import OmmJobGenerator
 from fflip.omm.torsionfuncs import *
 from fflip.chm import *
 from fflip.drude import *
-from fflip.omm.util import *
+from fflip.omm.playpara import *
+# from fflip.omm.util import *
 
 
 class ModelCompoundPool(object):
@@ -172,9 +173,15 @@ class ModelCompound(Lipid, DrudeLipid):
         
     def change_nb_params(self, params, offsets):
         for p, o in zip(params, offsets):
-            if p.par_type is not 'nbthole':
+            if p.par_type is 'nbthole':
+                raise Exception("nbthole is not supported! Quit...")
+            elif self.ff.lower() is 'drude':
                 change_drude_ff_parameters(
                     self.system, self.topology, p, o, self.psf
+                )
+            else:
+                change_additive_ff_parameters(
+                    self.system, self.topology, p, o
                 )
     
     def generate_context(self):
