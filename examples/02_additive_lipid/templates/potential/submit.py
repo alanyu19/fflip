@@ -22,6 +22,6 @@ first_dcd = int(opts['first_trj'])
 last_dcd = int(opts['last_trj'])
 blk_size = int(opts['block_size'])  # number of traj files each block
 
-for index, t in enumerate(range(first_dcd, last_dcd, blk_size)):
-    os.system("python seedcalc.py {}".format(t))
+for index, t in enumerate(range(first_dcd, last_dcd + 1, blk_size)):
+    os.system("sbatch calc.py {}".format(t))
 

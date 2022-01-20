@@ -30,7 +30,7 @@ for temperature, surface_tension, wt in zip(
         # this is needed by the code
         name="area_dppc_bilayer_{}_{}".format(surface_tension, temperature),
         system_type='bilayer',
-        lipname="dppc",
+        lipid_name="dppc",
         lipid=pc_demo,  # imported from def_lipids
         num_lipids=36,
         weight_factor=wt,
@@ -53,7 +53,7 @@ for temperature in [323.15, 333.15]:
         prop_type="db",
         name="db_dppc_bilayer_0_{}".format(temperature),
         system_type='bilayer',
-        lipname="dppc",
+        lipid_name="dppc",
         lipid=pc_demo,  # imported from def_lipids
         num_lipids=36,
         weight_factor=5,

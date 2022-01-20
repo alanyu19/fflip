@@ -5,7 +5,7 @@
 #SBATCH --output=./log/master_%A_%a.out
 #SBATCH --error=./log/master_%A_%a.err
 #SBATCH --time=00:30:00
-#SBATCH --partition=shared
+#SBATCH --partition=ivy
 #SBATCH --ntasks=1
 #SBATCH -J thickness
 

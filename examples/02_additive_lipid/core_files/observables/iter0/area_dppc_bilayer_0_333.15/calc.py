@@ -4,9 +4,10 @@
 
 #SBATCH --output=./log/master_%A_%a.out
 #SBATCH --error=./log/master_%A_%a.err
-#SBATCH --time=00:30:00
-#SBATCH --partition=ivy,sbr,hwell
+#SBATCH --time=01:00:00
+#SBATCH --partition=ivy
 #SBATCH --ntasks=1
+#SBATCH -J area
 
 from simtk.openmm.app import LJPME
 
@@ -24,12 +25,12 @@ blk_size = int(opts['block_size'])  # number of traj files each block
 traj_template = os.path.join(str(opts['trj_location']), 'trj/dyn{}.dcd')
 psf_file = str(opts['psf'])
 nlipids = int(opts['nlip'])
-lipname = str(opts['lipname'])
+lipname = str(opts['name'])
 
 starting_traj = int(os.environ['SLURM_ARRAY_TASK_ID'])
 
 
-parameter_files = glob.glob("/u/alanyu/top_yalun/for_ljpme/y4less/*")
+parameter_files = glob.glob("./toppar/*")
 
 psf, topology, parameters = read_structure_parameter_files(
     psf_file, parameter_files

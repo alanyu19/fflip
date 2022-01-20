@@ -5,7 +5,7 @@
 #SBATCH --output=./log/master_%A_%a.out
 #SBATCH --error=./log/master_%A_%a.err
 #SBATCH --time=01:00:00
-#SBATCH --partition=shared
+#SBATCH --partition=ivy
 #SBATCH --ntasks=1
 #SBATCH -J area
 
@@ -25,7 +25,7 @@ blk_size = int(opts['block_size'])  # number of traj files each block
 traj_template = os.path.join(str(opts['trj_location']), 'trj/dyn{}.dcd')
 psf_file = str(opts['psf'])
 nlipids = int(opts['nlip'])
-lipname = str(opts['lipname'])
+lipname = str(opts['name'])
 
 starting_traj = int(os.environ['SLURM_ARRAY_TASK_ID'])
 

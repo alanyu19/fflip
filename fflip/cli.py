@@ -347,6 +347,7 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, block_size_potential
                     iteration, traj_root=traj_loc, overwrite=overwrite,
                 )
             if calctype.lower() == 'all' or calctype.lower() == 'potential':
+                toppar = os.path.realpath(toppar)
                 properties[i].recalc_energy(
                     iteration, traj_root=traj_loc, overwrite=overwrite, 
                     last_solution=solution, torfix=torfix,
@@ -358,16 +359,16 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, block_size_potential
               help="iteration index/label")
 @click.option("-p", "--perturbation", type=str,
               help="perturbation used in the reweighting")
-@click.option("-s", "--sigrst", type=float, default=0.05,
-              help="restraint on sigma, default is 0.05, increase for more restraint")
-@click.option("-e", "--epsrst", type=float, default=0.05,
-              help="restraint on epsilon, defult is 0.05, increase for more restraint")
-@click.option("-t", "--tlrst", type=float, default=0.05,
-              help="restraint on thole, default is 0.05, increase for more restraint")
-@click.option("-a", "--aprst", type=float, default=0.05,
-              help="restraint on alpha, defult is 0.05, increase for more restraint")
-@click.option("-c", "--chrgrst", type=float, default=0.025,
-              help="restraint on charge, defualt is 0.025, increase for more restraint")
+@click.option("-s", "--sigrst", type=float, default=5,
+              help="restraint on sigma, default is 5, increase for more restraint")
+@click.option("-e", "--epsrst", type=float, default=5,
+              help="restraint on epsilon, defult is 5, increase for more restraint")
+@click.option("-t", "--tlrst", type=float, default=4,
+              help="restraint on thole, default is 4, increase for more restraint")
+@click.option("-a", "--aprst", type=float, default=4,
+              help="restraint on alpha, defult is 4, increase for more restraint")
+@click.option("-c", "--chrgrst", type=float, default=3,
+              help="restraint on charge, defualt is 3, increase for more restraint")
 @click.option("-u", "--uncertainty_scaling", type=float, default=500,
               help="default is 500, increase to apply more restraint")
 @click.option("--hasqm", is_flag=True,

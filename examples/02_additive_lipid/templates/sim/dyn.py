@@ -14,6 +14,7 @@ from rflow.integrators import NoseHooverChainVelocityVerletIntegrator
 from rflow import RickFlow, FreeEnergyCosineSeries, RelativePartialCenterOfMassRestraint
 from fflip.omm.playpara import *
 from fflip.omm.paragroup import *
+from fflip.ljpme.param import *
 from fflip.omm.util import *
 from fflip.chm import *
 
@@ -25,17 +26,17 @@ mdo = parse_md_options(options)
 
 psf_file = mdo['psf'] 
 crd_file = mdo['crd']
-surface_tension = mdo['surf_ts'] 
+surface_tension = mdo['surface_tension'] 
 xvec = mdo['xvec']
 yvec = mdo['yvec']
 zvec = mdo['zvec']
-lipname = mdo['lipname']
+lipname = mdo['lipid']
 lipid = match_lipid[lipname]
-temp = mdo['temp'] 
-baro = mdo['baro']
-intgrt = mdo['intgrt']
+temp = mdo['temperature'] 
+baro = mdo['barostat']
+intgrt = mdo['integrator']
 zmode = mdo['zmode']
-change_para = mdo['change_para']
+change_para = mdo['change_param']
 if change_para.lower() == 'yes':
     try:
         os.system("cp {} solution.txt".format(mdo['sfile']))
@@ -102,8 +103,8 @@ elif baro == 'MC':
 if change_para.lower() == 'yes':
     # don't change this line, solution.txt is copied over by the program
     sol = filter_solution('solution.txt')
-    parameter_sets = lipid.parse_gtcnp()
-    all_offsets = [gen_sensitivity_offset(ps, percentage = sol[i]) for i, ps in enumerate(parameter_sets)]
+    parameter_sets = lipid.parse_groups()
+    all_offsets = [gen_param_offset(ps, amount=sol[i]) for i, ps in enumerate(parameter_sets)]
     topology = md.Topology.from_openmm(workflow.psf.topology)
     for g, offset in zip(parameter_sets, all_offsets):
         workflow._system, oldp, newp = BrutalNonbondedParameter(workflow.system, topology, g, offset)
