@@ -24,25 +24,25 @@ step 8. Update your targets in **targets.py**
 
 (1) Run your simulation by: ***fflip simulate [OPTIONS]*** (use "--help" to see what you can do with this)  
 &nbsp;&nbsp;&nbsp;*in this example, the following command was used:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip  simulate -l simulation -c no -x 100 -z 100 --zmode 10 -i L -b MCM -I 0 -t 400 --start  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip  simulate -l simulation -c no -x 48.55 -z 66.01 --zmode 0 -i L -b MCM -I 0 -t 40 --start  
 &nbsp;&nbsp;&nbsp;if not the "--start" flag, go to your simulation folders and run "rflow submit sdyn.sh" to start your simulations* 
 
 (2) Run your observable/potential calculations by ***fflip obsopt [OPTIONS]***  
 &nbsp;&nbsp;&nbsp;*in this example, the following commands were used:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip obspot -i 0,1,2,3 -tl simulation -f 11 -l 40 -c observable -p 0.1 --iteration 0 (4 observables)   
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip obspot -i 0,1 -tl simulation -f 11 -l 40 -c potential -p 0.1 --iteration 0 (only 2 systems)*  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip obspot -i 0,1,2,3 -tl simulation -f 11 -l 40 -c observable -p 0.001 --iteration 0 (4 observables)   
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip obspot -i 0,1 -tl simulation -f 11 -l 40 -c potential -p 0.001 --iteration 0 --toppar ./templates/sim/toppar/ (only 2 systems)*  
 
 (3) Run your reweighting by ***fflip scalc [OPTIONS]***  
 &nbsp;&nbsp;&nbsp;*in this example, the following command was used:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip scalc -i all -f 11 -l 40 -p 0.1 --iteration 0 -P hwell*  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip scalc -i all -f 11 -l 40 -bsp 5 -bso 10 -p 0.001 --iteration 0 -P hwell*  
 
 (4) Run your error analysis on the sensitivity by ***fflip rcalc [OPTIONS]***  
 &nbsp;&nbsp;&nbsp;*in this example, the following command was used:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip rcalc -i all -f 11 -l 40 -p 0.1 --iteration 0 -P hwell*  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip rcalc -i all -f 11 -l 40 -bsp 5 -bso 10 -p 0.001 --iteration 0 -P hwell*  
 
 (5) Run a linear optimization by ***fflip linearopt [OPTIONS]***
 &nbsp;&nbsp;&nbsp;*in this example, the following command was used:  
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip linearopt -i 0 -p 0.1 -s 0.06 -e 0.06 -c 0.03 --ssr*  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fflip linearopt -i 0 -p 0.001 -u 30000 --ssr*  
 
 <h4> Now you can find FFLiP's solution for nonbonded parameters in the solutions folder!</h4>  
 
