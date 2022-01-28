@@ -10,20 +10,6 @@ fflip
 =====
 
 
-.. image:: https://gitlab.com/alanyu/fflip/badges/master/build.svg
-        :target: https://gitlab.com/alanyu/fflip/pipelines
-        :alt: Continuous Integration
-
-.. image:: https://img.shields.io/pypi/v/fflip.svg
-        :target: https://pypi.python.org/pypi/fflip#
-        :alt: pypi
-
-.. image https://img.shields.io/travis/Olllom/coffe.svg
-        :target: https://travis-ci.org/Olllom/coffe
-
-.. image:: https://readthedocs.org/projects/coffe/badge/?version=latest
-        :target: https://coffe.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
 
 .. see https://anaconda.org/conda-forge/plotly/badges for conda badges
 
