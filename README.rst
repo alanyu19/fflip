@@ -33,8 +33,8 @@ Features
 Third-party Software
 --------------------
 
-The following third-party software is **not** required to install coffe.
-However, a lot of coffe's functionality depends on molecular simulation packages.
+The following third-party software is **not** required to install fflip.
+However, a lot of fflip's functionality depends on molecular simulation packages.
 In order to use program-specific functions, these programs have to be installed.
 
 1) CHARMM (optional): Required for fflip/uachain. Make sure the command *charmm* can be called from a terminal.
