@@ -10,20 +10,6 @@ fflip
 =====
 
 
-.. image:: https://gitlab.com/alanyu/fflip/badges/master/build.svg
-        :target: https://gitlab.com/alanyu/fflip/pipelines
-        :alt: Continuous Integration
-
-.. image:: https://img.shields.io/pypi/v/fflip.svg
-        :target: https://pypi.python.org/pypi/fflip#
-        :alt: pypi
-
-.. image https://img.shields.io/travis/Olllom/coffe.svg
-        :target: https://travis-ci.org/Olllom/coffe
-
-.. image:: https://readthedocs.org/projects/coffe/badge/?version=latest
-        :target: https://coffe.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
 
 .. see https://anaconda.org/conda-forge/plotly/badges for conda badges
 
@@ -47,8 +33,8 @@ Features
 Third-party Software
 --------------------
 
-The following third-party software is **not** required to install coffe.
-However, a lot of coffe's functionality depends on molecular simulation packages.
+The following third-party software is **not** required to install fflip.
+However, a lot of fflip's functionality depends on molecular simulation packages.
 In order to use program-specific functions, these programs have to be installed.
 
 1) CHARMM (optional): Required for fflip/uachain. Make sure the command *charmm* can be called from a terminal.
