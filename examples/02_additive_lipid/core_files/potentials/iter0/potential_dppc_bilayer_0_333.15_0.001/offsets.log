@@ -1,0 +1,11 @@
+       pc     C2    charge    0.0010000
+       PC    O21     sigma    0.0010000
+       pc    O21   epsilon    0.0010000
+       pc    O21    charge    0.0005000
+       pc    C21    charge    0.0005000
+       PC    O22     sigma    0.0010000
+       pc    O22   epsilon    0.0010000
+       pc    O22    charge    0.0005000
+       pc    C22    charge    0.0005000
+       pc    H2R    charge    0.0002500
+       pc     C3    charge    0.0010000

@@ -217,7 +217,7 @@ class DihedralTarget(object):
         )
         if self.torsionfix != 0:
             # todo: test
-            system = BrutalTorsionParameters(
+            system = brutal_torsion_parameters(
                 system, self.psf, self.torsionfix
             )
         self.system = system

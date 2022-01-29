@@ -4,7 +4,7 @@ from rflow.trajectory import *
 
 
 def normalizecoor(trajectory, coordinates=2, com_selection=None, subselect="all",
-              use_fixed_box_length=False, box_length_fixed=None):
+                  use_fixed_box_length=False, box_length_fixed=None, force_shift=True):
     """
     Normalize the trajectory so that all coordinates are in [0,1] and the center of
     mass of the membrane is at 0.5. [copied and modified from rickflow]
@@ -42,6 +42,8 @@ def normalizecoor(trajectory, coordinates=2, com_selection=None, subselect="all"
 
     if com_selection is not None and len(com_selection) > 0:
         z_normalized += 0.5  # shift so that com is at 0.5
+    elif force_shift:
+        z_normalized += 0.5
 
     z_normalized = np.mod(z_normalized, 1.0).transpose()
 

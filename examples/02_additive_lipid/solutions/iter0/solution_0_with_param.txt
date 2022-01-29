@@ -1,0 +1,11 @@
+C2    charge        0.0740
+O21   sigma         0.0000
+O21   epsilon      -0.0059
+O21   charge        0.0649
+C21   charge        0.0303
+O22   sigma        -0.0484
+O22   epsilon      -0.0161
+O22   charge       -0.0791
+C22   charge        0.0270
+H2R   charge       -0.0000
+C3    charge       -0.0629

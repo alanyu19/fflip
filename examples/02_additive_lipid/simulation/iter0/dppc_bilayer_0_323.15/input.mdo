@@ -1,0 +1,13 @@
+mdo::input.mdo
+surface_tension::0
+boxx::48.55
+boxz::66.01
+temperature::323.15
+zmode::0
+barostat::MCM
+integrator::L
+change_param::no
+psf::/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/psf_files/bi_72_dppc_c36.psf
+crd::/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/crd_files/bi_72_dppc_c36.crd
+lipid::dppc
+last_seqno::40

@@ -415,7 +415,8 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
         drop_bounds={
             'sigma': 1, 'epsilon': 1, 'charge': 1,
             'alpha': 1, 'thole': 1},
-        qmc_weight=qmw, verbose=True
+        qmc_weight=qmw, verbose=True,
+        # forbid={'charge': ['C2', 'C3', 'H2R', 'H2S', 'H2X', 'H2Y']}
     ) 
     le.gen_target_vector()
     # mkdir for result

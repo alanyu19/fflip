@@ -257,7 +257,7 @@ class MembraneDhh(BinEdgeUpdater):
         return np.array(dhh_per_frame)
 
 
-class ElectronDensityFactory:
+class ElectronDensityFactory(object):
     """
     Do production calculation and grouping
     """

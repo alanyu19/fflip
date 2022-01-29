@@ -1,0 +1,5 @@
+2022-01-20 11:13:40,371 - DEBUG - CoffeWorkDir: /u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/core_files/observables/iter0/db_dppc_bilayer_0_323.15
+2022-01-20 11:13:40,373 - DEBUG - ... running OmmCalculation
+2022-01-20 11:13:40,373 - DEBUG - ... with variables {'self': <fflip.omm.sim.OmmCalculation object at 0x7fb529e99790>, 'structure': '/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/crd_files/bi_72_dppc_c36.crd', 'psf_file': '/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/psf_files/bi_72_dppc_c36.psf', 'options_file': 'obscalc.inp', 'work_dir': '/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/core_files/observables/iter0/db_dppc_bilayer_0_323.15', 'options': {'option_file': 'obscalc.inp', 'nlip': 36, 'trj_location': '/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/simulation/iter0/dppc_bilayer_0_323.15', 'first_trj': 11, 'last_trj': 40, 'block_size': 10, 'name': 'dppc'}, 'overwrite': False, 'checkpoint': None, '__class__': <class 'fflip.omm.sim.OmmCalculation'>}
+2022-01-20 11:13:40,375 - INFO - Running calculation
+2022-01-20 11:13:41,519 - INFO - Omm calculation finished.

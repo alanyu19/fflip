@@ -1,0 +1,12 @@
+option_file::potcalc.inp
+name::dppc
+amount::0.001
+trj_location::/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/simulation/iter0/dppc_bilayer_0_323.15
+first_trj::11
+last_trj::40
+block_size::5
+toppar_path::/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/templates/sim/toppar
+solution::None
+torfix::None
+psf::/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/psf_files/bi_72_dppc_c36.psf
+crd::/u/alanyu/plrzbcode/fflip/examples/02_additive_lipid/crd_files/bi_72_dppc_c36.crd

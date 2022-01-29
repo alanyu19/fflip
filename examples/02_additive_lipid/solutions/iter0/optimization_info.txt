@@ -1,0 +1,21 @@
+uncertainty_scaling:
+30000.0
+----------------
+hard_bounds:
+sigma     : 5.0       
+epsilon   : 5.0       
+charge    : 3.0       
+thole     : 4.0       
+alpha     : 4.0       
+----------------
+drop_bounds:
+sigma     : 1         
+epsilon   : 1         
+charge    : 1         
+alpha     : 1         
+thole     : 1         
+----------------
+forbidden:
+----------------
+min_change:
+0.002
