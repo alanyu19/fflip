@@ -96,17 +96,17 @@ class OrderParameterCalculation(object):
             self.scd_up = 0.0
             self.scd_low = 0.0
 
-    def __call__(self, traj, per_mol=False):
+    def __call__(self, traj, skip=1, per_mol=False):
         if not self.sep_leaflet:
             sele1 = self.topology.select(
                 "resname {} and name {}".format(self.residue, self.atom1)
             )
-            center_atom = traj.xyz[:, sele1]
+            center_atom = traj.xyz[::skip, sele1]
             for i, atom in enumerate(self.atom2):
                 sele2 = self.topology.select(
                     "resname {} and name {}".format(self.residue, atom)
                 )
-                the_other_atom = traj.xyz[:, sele2]
+                the_other_atom = traj.xyz[::skip, sele2]
                 vectors = the_other_atom - center_atom
                 if i == 0:
                     scd = vectors[:, :, 2] * vectors[:, :, 2] / (
@@ -124,8 +124,8 @@ class OrderParameterCalculation(object):
 
             # update the average scd
             self.scd = self.n_frames * self.scd + \
-                (-1.5 * np.mean(scd) + 0.5) * traj.n_frames
-            self.n_frames += traj.n_frames
+                (-1.5 * np.mean(scd) + 0.5) * traj.n_frames / skip
+            self.n_frames += traj.n_frames / skip
             self.scd /= self.n_frames
 
             # return the scd for every frame
@@ -139,15 +139,15 @@ class OrderParameterCalculation(object):
                 "resname {} and name {}".format(self.residue, self.atom1)
             )
             sele1_up, sele1_low = hard_up_low_atoms(sele1, self.recipe)
-            center_atom_up = traj.xyz[:, sele1_up]
-            center_atom_low = traj.xyz[:, sele1_low]
+            center_atom_up = traj.xyz[::skip, sele1_up]
+            center_atom_low = traj.xyz[::skip, sele1_low]
             for i, atom in enumerate(self.atom2):
                 sele2 = self.topology.select(
                     "resname {} and name {}".format(self.residue, atom)
                 )
                 sele2_up, sele2_low = hard_up_low_atoms(sele2, self.recipe)
-                other_atom_up = traj.xyz[:, sele2_up]
-                other_atom_low = traj.xyz[:, sele2_low]
+                other_atom_up = traj.xyz[::skip, sele2_up]
+                other_atom_low = traj.xyz[::skip, sele2_low]
                 vectors_up = other_atom_up - center_atom_up
                 vectors_low = other_atom_low - center_atom_low
                 if i == 0:
@@ -177,10 +177,10 @@ class OrderParameterCalculation(object):
 
             # update the average scd
             self.scd_up = self.n_frames * self.scd_up + \
-                (-1.5 * np.mean(scd_up) + 0.5) * traj.n_frames
+                (-1.5 * np.mean(scd_up) + 0.5) * traj.n_frames / skip
             self.scd_low = self.n_frames * self.scd_low + \
-                (-1.5 * np.mean(scd_low) + 0.5) * traj.n_frames
-            self.n_frames += traj.n_frames
+                (-1.5 * np.mean(scd_low) + 0.5) * traj.n_frames / skip
+            self.n_frames += traj.n_frames / skip
             self.scd_up /= self.n_frames
             self.scd_low /= self.n_frames
 
