@@ -9,52 +9,50 @@ from fflip.ljpme.param import gen_param_offset
 
 
 class KaGenerator(object):
-    def __init__(self, target_properties, **kwargs):
+    def __init__(self, target_properties, delta_gamma):
         """
         Args:
-            properties: a list contains at least two TargetProperty object
-        Returns:
-            the deviation and sensitivity
+            target_properties: a list contains three TargetProperty objects (
+            from lowest surface tension to highest).
+            delta_gamma (float): the difference between the surface tension
+            of the two TargetProperty objects' simulations.
         """
-        if 'delta' in kwargs:
-            self.deltagamma = kwargs['delta']
-        else:
-            self.deltagamma = 10
+        self.delta_gamma = delta_gamma
         self.target_properties = target_properties
 
     def gen_sim(self):
+        """ Return the Ka determined from the simulations """
         delta_a = self.target_properties[1].reweight_target.sim - \
                   self.target_properties[2].reweight_target.sim
         a_0 = self.target_properties[0].reweight_target.sim
-        return 2 * a_0 * self.deltagamma / delta_a
+        return 2 * a_0 * self.delta_gamma / delta_a
 
     def gen_rew(self):
+        """ Return the Ka based on reweighting """
         delta_a = self.target_properties[1].reweight_target.rew - \
                  self.target_properties[2].reweight_target.rew
         a_0 = self.target_properties[0].reweight_target.rew
-        return 2 * a_0 * self.deltagamma / delta_a
+        return 2 * a_0 * self.delta_gamma / delta_a
 
     def gen_sensitivity(self):
+        """ Return the sensitivity of Ka """
         a_0 = self.target_properties[0].reweight_target.sim
         delta_a = self.target_properties[1].reweight_target.sim - \
             self.target_properties[2].reweight_target.sim
         sens_a0 = self.target_properties[0].sensitivity
         sens_delta_a = self.target_properties[1].sensitivity - \
             self.target_properties[2].sensitivity
-        return 2 * self.deltagamma * (
+        return 2 * self.delta_gamma * (
                 sens_a0 / delta_a - a_0 * sens_delta_a / delta_a ** 2
         )
 
 
 class DeltaGenerator(object):
-    def __init__(self, target_properties, **kwargs):
+    def __init__(self, target_properties):
         """
         Currently used for temperature dependence
         Args:
-            target_properties:  a list contains two TargetProperty object
-            **kwargs:
-        Returns
-            the deviation and sensitivity
+            target_properties:  a list contains two TargetProperty objects.
         """
         self.target_properties = target_properties
 
@@ -69,6 +67,7 @@ class DeltaGenerator(object):
         return delta
 
     def gen_sensitivity(self):
+        """ Return the sensitivity of this property """
         sens_delta = self.target_properties[1].sensitivity - \
             self.target_properties[0].sensitivity
         return sens_delta
@@ -88,6 +87,23 @@ class TargetSystem(object):
                  option_scheme=SimOptScheme,
                  naming_scheme=FolderNamingScheme,
                  ff='c36'):
+        """
+        Args:
+            system_type (str): the type of the simulated system (
+            bilayer/monolayer/bulk).
+            lipid_name (str): the name of the lipid (for example, 'dppc').
+            num_lipids (int): number of lipids in the system.
+            temperature (float): simulation temperature of the system.
+            surface_tension (float): surface tension of the simulated system
+            (dyn/cm).
+            psf_file (str): psf file.
+            crd_file (str): crd file.
+            pot_template (str): potential calculation template.
+            sim_template (str): simulation template.
+            option_scheme: use default.
+            naming_scheme: use default.
+            ff:
+        """
         self.system_type = system_type
         self.lipid_name = lipid_name
         self.num_lipids = num_lipids

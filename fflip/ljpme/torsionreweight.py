@@ -5,18 +5,42 @@ from fflip.ljpme.torsionfuncs import *
 
 
 class ObjfuncDihedral(object):
-    def __init__(self, sim, ref, reweighter):
+    def __init__(self, sim, ref, reweighter, criterion="prob",
+                 boltzmann=True):
+        """
+        Args:
+            sim (array like): the simulated dihedral distribution.
+            ref (array like): the reference dihedral distribution.
+            reweighter: a CharmmDihedralReweighter object.
+            criterion (str): can be "energy" or "prob" (probability).
+            boltzmann: if use Boltzmann weighting for "energy"
+        """
         self.sim_data = sim
         self.ref_data = ref
         self.reweighter = reweighter
+        self.criterion = criterion
+        self.boltzmann = boltzmann
 
     def __call__(self, x):
         x = list(x)
         ref_distribution, reweighted_distribution = \
             self.reweighter.get_distributions(self.sim_data, self.ref_data, x)
-        return np.sum(
-            np.array(ref_distribution - reweighted_distribution) ** 2
-        )
+        if self.criterion == "prob":
+            return np.sum(
+                np.array(ref_distribution - reweighted_distribution)**2
+            )
+        elif self.criterion == "energy":
+            ref_e_in_kt = - np.log(ref_distribution)
+            rew_e_in_kt = - np.log(reweighted_distribution)
+            if self.boltzmann:
+                factor = 0.5 * (ref_distribution + reweighted_distribution)
+                return np.sum(factor * (ref_e_in_kt - rew_e_in_kt)**2)
+            else:
+                return np.sum((ref_e_in_kt - rew_e_in_kt)**2)
+        else:
+            raise Exception(
+                "Criterion `{}` not accepted!".format(self.criterion)
+            )
 
 
 class DihedralOptimizer(object):
@@ -25,8 +49,8 @@ class DihedralOptimizer(object):
     (depending on the reweighter provided) of multiplicities in the original FF
     """
     def __init__(
-        self, sim_dihedrals, ref_dihedrals, reweighter,
-        method='BFGS', options={'eps': 1e-2, 'gtol': 1e-04}
+        self, sim_dihedrals, ref_dihedrals, reweighter, criterion="prob",
+        boltzmann=True, method='BFGS', options={'eps': 1e-2, 'gtol': 1e-04}
     ):
         """
         Args:
@@ -38,7 +62,8 @@ class DihedralOptimizer(object):
             options: dict, the options for the scipy optimizer
         """
         self.obj_func = ObjfuncDihedral(
-            sim_dihedrals, ref_dihedrals, reweighter
+            sim_dihedrals, ref_dihedrals, reweighter, criterion=criterion,
+            boltzmann=True
         )
         self.reweighter = reweighter
         self.sim_dihedrals = sim_dihedrals
@@ -231,8 +256,10 @@ def torsion_match_two_ff(
         traj_fix, first_fix, last_fix,
         last_torfix=0,
         allowed_m=[1, 2, 3, 4, 5, 6],
-        temperature=323.15, nbins=100, plot=True,
-        save_plot_to='.'
+        criterion="prob", boltzmann=True,
+        temperature=323.15,
+        min_ssr_to_add_mult=0.002,
+        plot=True, save_plot_to="."
 ):
     """
 
@@ -248,9 +275,12 @@ def torsion_match_two_ff(
         first_fix: integer, first trajectory index used for the optimization
         last_fix: integer, last trajectory index used for the optimization
         allowed_m: list of integers, the multiplicities allowed in the optimization
-        temperature: float, temperature of the simulation
-        nbins: integer, number of bins for distribution of the dihedral
-        plot: bool, if plot the distribution or not
+        criterion (str): can be "energy" or "prob" (probability)
+        boltzmann (bool): if use Boltzmann weighting for "energy"
+        temperature (float): temperature of the simulation
+        nbins (integer): number of bins for distribution of the dihedral
+        min_ssr_to_add_mult (float): minimum ssr to expand multiplicity
+        plot (bool): if plot the distribution or not
     Returns:
         A dictionary use the multiplicity as key and
         [phase, force_constant] as content
@@ -272,12 +302,14 @@ def torsion_match_two_ff(
     existing_ps = copy.deepcopy(dih_f_old.p)
     existing_ks_dict = {}
     existing_ps_dict = {}
-    print("Here are the torsional terms before fitting:")
+    print("Here are the torsional terms before fitting:\n")
     for ek, em, ep in zip(existing_ks, existing_ms, existing_ps):
         print(
-            str(ek) + '(kj/mole) OR ' +
-            str(round(ek/4.184, 4)) +
-            '(kcal/mole)', ', ', em, ', ', ep
+            str(round(ek, 4)) + '(kj/mole) OR ' +
+            str(round(ek/4.184, 4)) + '(kcal/mole)',
+            ', for m={}'.format(em),
+            ', phase={}'.format(round(180*ep/np.pi, 0)),
+            '\n\n'
         )
         existing_ks_dict[em] = ek
         existing_ps_dict[em] = ep
@@ -301,42 +333,56 @@ def torsion_match_two_ff(
     reweighter = CharmmDihedralReweighter(
         dih_f_old, dih_f_old, temperature=temperature
     )
-    optimizer = DihedralOptimizer(dihdata_fix, dihdata_ref, reweighter)
+    optimizer = DihedralOptimizer(
+        dihdata_fix, dihdata_ref, reweighter, criterion, boltzmann
+    )
     optim = optimizer()
     print("The residue from the fixed multiplicity fitting is:", optim.fun)
     print("Force constants: ", [ki/4.184 for ki in optim.x])
     # The following condition should be changed to judge the optim found above
     # is good or not
     two_stages = False
-    if optim.fun > 0.00001 * nbins:
+    if optim.fun > min_ssr_to_add_mult:
         two_stages = True
-        print("Using more multiplicities ...")
+        print("Expanding multiplicities ...")
         reweighter2 = CharmmDihedralReweighter(
             dih_f_old, dih_f_free, temperature=temperature
         )
-        optimizer2 = DihedralOptimizer(dihdata_fix, dihdata_ref, reweighter2)
+        optimizer2 = DihedralOptimizer(
+            dihdata_fix, dihdata_ref, reweighter2, criterion, boltzmann
+        )
         optim2 = optimizer2()
     # prepare return value before plotting
     return_dic = {}
-    print("Here are the fixed torsional terms:")
+    print("Here are the fixed torsional terms:\n")
     if not two_stages:
-        for tm, tp, tk in zip(target.multp, target.phase, list(optim.x)):
-            print(
-                str(tk) + '(kj/mole) OR ' +
-                str(round(tk/4.184, 4)) +
-                '(kcal/mole)', ', ', tm, ', ', tp
-            )
-            return_dic[tm] = [tp, tk]
+        pass
     else:
-        print('Before adding more ')
+        print('Before adding more multiplicities:')
+    for tm, tp, tk in zip(target.multp, target.phase, list(optim.x)):
+        print(
+            str(round(tk, 4)) + '(kj/mole) OR ' +
+            str(round(tk / 4.184, 4)) + '(kcal/mole)',
+            ', for m={}'.format(tm),
+            ', phase={}'.format(round(180 * tp / np.pi, 0)),
+            '\n'
+        )
+        if not two_stages:
+            return_dic[tm] = [tp, tk]
+        else:
+            pass
+    if two_stages:
+        print("After adding more multiplicities:")
         for tm, tp, tk in zip(new_ms, new_ps, list(optim2.x)):
             print(
-                str(tk) + '(kj/mole) OR ' + str(round(tk/4.184, 4)) +
-                '(kcal/mole)', ', ', tm, ', ', tp
+                str(round(ek, 4)) + '(kj/mole) OR ' +
+                str(round(ek / 4.184, 4)) + '(kcal/mole)',
+                ', for m={}'.format(em),
+                ', phase={}'.format(round(180 * ep / np.pi, 0)),
+                '\n\n'
             )
             return_dic[tm] = [tp, tk]
     if plot:
-        print('\n' + 'Plotting...')
         obj_func = ObjfuncDihedral(dihdata_fix, dihdata_ref, reweighter)
         ref_distrib, fixed_distrib = obj_func.reweighter.get_distributions(
             dihdata_fix, dihdata_ref, optim.x
@@ -352,42 +398,43 @@ def torsion_match_two_ff(
                 dihdata_fix, dihdata_ref, optim2.x
             )
         xaxis = np.arange(-180, 180, 3.6)
-        plt.figure(figsize=(8, 5))
+        plt.figure(figsize=(6, 4))
         plt.plot(
             xaxis, ref_distrib, label='Reference (PME)',
-            alpha=0.75, linewidth=5, color='red'
+            alpha=0.75, linewidth=4, color='red'
         )
         plt.plot(
             xaxis, unfixed_distrib, label='Before fitting',
-            alpha=0.75, linewidth=3, color='royalblue'
+            alpha=0.75, linewidth=2, color='k'
         )
         plt.plot(
             xaxis, fixed_distrib, label='After fitting',
-            alpha=0.75, linewidth=5, color='darkorange'
+            alpha=0.75, linewidth=2, color='b'
         )
         if two_stages:
+            plt.figure()
             plt.plot(
                 xaxis, fixed_distrib2, label='Adding multiplicities',
-                alpha=0.75, linewidth=5, color='yellowgreen'
+                alpha=0.75, linewidth=3, color='g'
             )
-        plt.title(
-            '{}-{}-{}-{}'.format(
+            plt.title(
+            "{}-{}-{}-{}".format(
                 atoms[0].upper(), atoms[1].upper(),
                 atoms[2].upper(), atoms[3].upper()
-            ),
-            fontsize=24, fontname='URW Gothic'
+            ), fontsize=18
         )
-        plt.xticks(fontsize=22, fontname='URW Gothic')
-        plt.yticks(fontsize=22, fontname='URW Gothic')
-        plt.xlabel('Dihedral Angle', fontsize=24, fontname='URW Gothic')
-        plt.ylabel('Population', fontsize=24, fontname='URW Gothic')
-        plt.legend(fontsize=18)
+        plt.xticks(fontsize=14)  # fontname='URW Gothic'
+        plt.yticks(fontsize=14)
+        plt.xlabel('Dihedral Angle', fontsize=18)
+        plt.ylabel('Population', fontsize=18)
+        plt.legend(fontsize=12)
         plt.savefig(
             os.path.join(save_plot_to, 'tfix-{}-{}-{}-{}.png'.format(
                 atoms[0], atoms[1], atoms[2], atoms[3]
             )), dpi=200, bbox_inches='tight'
         )
         plt.show()
+        plt.close()
     return return_dic
 
 
