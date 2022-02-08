@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import scipy.optimize as sopt
-from fflip.omm.torsionfuncs import *
+from fflip.ljpme.torsionfuncs import *
 from fflip.omm.util import *
 import os
 

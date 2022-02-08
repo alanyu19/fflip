@@ -308,11 +308,11 @@ def torsion_match_two_ff(
             str(round(ek, 4)) + '(kj/mole) OR ' +
             str(round(ek/4.184, 4)) + '(kcal/mole)',
             ', for m={}'.format(em),
-            ', phase={}'.format(round(180*ep/np.pi, 0)),
-            '\n\n'
+            ', phase={}'.format(round(180*ep/np.pi, 0))
         )
         existing_ks_dict[em] = ek
         existing_ps_dict[em] = ep
+    print("\n\n")
     new_ks = list(np.zeros(len(allowed_m)))
     new_ms = allowed_m
     new_ps = list(np.zeros(len(allowed_m)))
@@ -365,12 +365,12 @@ def torsion_match_two_ff(
             str(round(tk / 4.184, 4)) + '(kcal/mole)',
             ', for m={}'.format(tm),
             ', phase={}'.format(round(180 * tp / np.pi, 0)),
-            '\n'
         )
         if not two_stages:
             return_dic[tm] = [tp, tk]
         else:
             pass
+    print("\n")
     if two_stages:
         print("After adding more multiplicities:")
         for tm, tp, tk in zip(new_ms, new_ps, list(optim2.x)):
@@ -378,10 +378,10 @@ def torsion_match_two_ff(
                 str(round(ek, 4)) + '(kj/mole) OR ' +
                 str(round(ek / 4.184, 4)) + '(kcal/mole)',
                 ', for m={}'.format(em),
-                ', phase={}'.format(round(180 * ep / np.pi, 0)),
-                '\n\n'
+                ', phase={}'.format(round(180 * ep / np.pi, 0))
             )
             return_dic[tm] = [tp, tk]
+        print("\n\n")
     if plot:
         obj_func = ObjfuncDihedral(dihdata_fix, dihdata_ref, reweighter)
         ref_distrib, fixed_distrib = obj_func.reweighter.get_distributions(
@@ -400,7 +400,7 @@ def torsion_match_two_ff(
         xaxis = np.arange(-180, 180, 3.6)
         plt.figure(figsize=(6, 4))
         plt.plot(
-            xaxis, ref_distrib, label='Reference (PME)',
+            xaxis, ref_distrib, label='Reference',
             alpha=0.75, linewidth=4, color='red'
         )
         plt.plot(
@@ -412,7 +412,6 @@ def torsion_match_two_ff(
             alpha=0.75, linewidth=2, color='b'
         )
         if two_stages:
-            plt.figure()
             plt.plot(
                 xaxis, fixed_distrib2, label='Adding multiplicities',
                 alpha=0.75, linewidth=3, color='g'

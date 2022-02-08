@@ -2,7 +2,7 @@
 
 import scipy.optimize as sopt
 import nlopt
-from fflip.omm.torsionfuncs import *
+from fflip.ljpme.torsionfuncs import *
 # from fflip.ljpme.util import * ## change to specific class/function(s)
 
 
@@ -45,11 +45,11 @@ def generate_weights(
         return w
 
 
-def read_dihedral_series(file):
-    with open(file, 'r') as f:
+def read_dihedral_series(filename):
+    with open(filename, 'r') as f:
         header = f.readline()
         atoms = header.split()
-    dihedrals = np.loadtxt(file, skiprows=1)
+    dihedrals = np.loadtxt(filename, skiprows=1)
     return atoms, dihedrals
 
 
@@ -254,7 +254,7 @@ class DihedralFitter(object):
             self.weights = None
         self.optimum = None
 
-    def __call__(self, method, lower_bounds=None, upper_bounds=None, maxiter=None):
+    def nlopt_fit(self, method, lower_bounds=None, upper_bounds=None, maxiter=None):
         self.obj_func = ObjfuncDihFit(
             self.dihedral_dict, self.m_dict, self.p_dict, self.pforce_dict,
             self.dihedral_names_sorted, self.qme, self.mme,
@@ -288,6 +288,69 @@ class DihedralFitter(object):
         # print(x, minf)
         self.optimum = x
         self.opt = opt
+
+    def simulated_annealing(self, lower_bounds=None, upper_bounds=None, nsteps=10000, tempr0=1000):
+        """
+        Args:
+            lower_bounds (array like): lower bounds for k
+            upper_bounds (array like): upper bounds for k
+            nsteps (int): total steps to run
+            tempr0 (float): initial temperature for the simulated annealing algorithm
+        """
+        import logging
+        import random
+        logger = logging.getLogger(".")
+        logger.setLevel(logging.DEBUG)
+        if os.path.isfile("rmsd.log"):
+            os.system("rm rmsd.log")
+        file_handler = logging.FileHandler('rmsd.log')
+        file_handler.setLevel(logging.DEBUG)
+        logger.addHandler(file_handler)
+        if lower_bounds == None:
+            lower_bounds = -3 * np.ones(self.dimension)
+        if upper_bounds == None:
+            upper_bounds = 3 * np.ones(self.dimension)
+        x = np.random.uniform(
+            low=max(lower_bounds), high=min(upper_bounds), size=(self.dimension)
+        )
+        assert np.array(lower_bounds).shape == np.array(upper_bounds).shape == x.shape
+        self.obj_func = ObjfuncDihFit(
+            self.dihedral_dict, self.m_dict, self.p_dict, self.pforce_dict,
+            self.dihedral_names_sorted, self.qme, self.mme,
+            self.weights, self.extra_weights, self.offset_method
+        )
+        # initialize with large rmsd
+        rmsd_old = 1e2
+        rmsd_best = 1e2
+        step = 0
+        while step < nsteps:
+            step += 1
+            tempr = tempr0 * np.exp(-(step/(nsteps/4.0)))
+            rmsd = self.obj_func(x, 0)
+            if step == 0:
+                p =0.0
+            else:
+                drmsd = rmsd - rmsd_old
+                boltz = -1.0 * drmsd / (0.001987*tempr)
+                p  = np.exp(boltz)
+            p0 = random.uniform(0.0, 1.0)
+            if p0 < p:
+                accepted = 1
+            else:
+                accepted = 0
+            if accepted:
+                rmsd_old = rmsd
+                if rmsd_old < rmsd_best:
+                    rmsd_best = rmsd_old
+                    x_best = x
+            logger.info("{}".format(round(rmsd_best, 4)))
+            for i in range(len(x)):
+                # the max random move size is hard-coded
+                x[i] = x[i] + random.uniform(-0.5, 0.5)
+                x[i] = max(lower_bounds[i], x[i])
+                x[i] = min(upper_bounds[i], x[i])
+        self.optimum = x_best
+        self.rmsd_best = rmsd_best
     
     def quick_rmsd(self, x):
         return self.obj_func.rmsd(x)

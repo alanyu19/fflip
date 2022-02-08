@@ -107,6 +107,9 @@ class CharmmDihedralReweighter(object):
         e_sim = self.calc_sim_energy(current_ensemble_data)
         # recalc the perturbed energy
         e_new = self.recalc_energy(current_ensemble_data, k)
+        # print(e_sim.shape)
+        # print(e_new.shape)
+        # print(current_ensemble_data.shape)
         distrib_a = prob_distribution(
             ref_ensemble_data,
             100, -np.pi, np.pi,
@@ -304,18 +307,17 @@ class DihedralTarget(object):
 def prob_distribution(
     data, num_bins, lower_bound, upper_bound,
     temperature=323.15, original_energy=None, perturbed_energy=None,
-    do_reweighting=False
+    do_reweighting=False, method='ensemble'
 ):
     """
-    data: can be any thing to get distribution
-    num_bins: the number of bins we want
-    lower_bound: the lower boundary of binning
-    upper_bound: the upper boundary of binning
-    temperature: the temeprature of the reweighting
-    original_energy: in kJ/mole
-    perturbed_energy: in kJ/mole
-    do_reweighting:
-    if set to False, return only the original distribution,
+    data (array like): can be any thing to get distribution
+    num_bins (int): the number of bins we want
+    lower_bound (float): the lower boundary of binning
+    upper_bound (float): the upper boundary of binning
+    temperature (float): the temeprature of the reweighting
+    original_energy (array like): in kJ/mole
+    perturbed_energy (array like): in kJ/mole
+    do_reweighting (bool): if set to False, return only the original distribution,
     if set to True, return both the original and the perturbed distributions.
     """
     data = np.array(data)
@@ -334,12 +336,23 @@ def prob_distribution(
         'Please make sure that the inputs (energies and the property data) ' \
         'are in the same shape! your data is {}, energies are {}(original) ' \
         'and {}(perturbed)'.format(data.shape, o_energy.shape, p_energy.shape)
-        tune = beta * np.mean(p_energy) - beta * np.mean(o_energy)
-        obs = [np.sum((digitized==i) * np.exp(
-            -beta * p_energy + beta * o_energy + tune
-        )) for i in range(num_bins)]
-        ptf = np.sum(np.exp(-beta * p_energy + beta * o_energy + tune))
-        return obs/ptf
+        if method is 'single':
+            tune = beta * np.mean(p_energy) - beta * np.mean(o_energy)
+            obs = [np.sum((digitized==i) * np.exp(
+                -beta * p_energy + beta * o_energy + tune
+            )) for i in range(num_bins)]
+            ptf = np.sum(np.exp(-beta * p_energy + beta * o_energy + tune))
+            return obs/ptf
+        elif method is 'ensemble':
+            print(p_energy.shape)
+            p_energy_ensemble = p_energy.sum(axis=2)
+            o_energy_ensemble = o_energy.sum(axis=2)
+            tune = beta * np.mean(p_energy_ensemble) - beta * np.mean(o_energy_ensemble)
+            for i in range(num_bins):
+                temp = digitized == i
+                print(temp.shape)
+                print(temp.sum(axis=2)[0, :10])
+
     
     
 def get_torsion_ids_slow(torsion_force, psf, at1, at2, at3, at4):
