@@ -288,20 +288,27 @@ def torsion_match_two_ff(
         [phase, force_constant] as content
     """
     from matplotlib import pyplot as plt
+    from datetime import datetime
+    print('step1', datetime.now())
     target = DihedralTarget(
         atoms, psf_file_fix, parameter_files_fix, torsionfix=last_torfix
     )
     target_comp = DihedralTarget(
         atoms, psf_file_comp, parameter_files_comp, torsionfix=last_torfix
     )
+    print('step2', datetime.now())
     target.get_cosine_series()
     target_comp.get_cosine_series()
+    print('step3', datetime.now())
     dihdata_fix = target.get_dihedrals(traj_fix, first_fix, last_fix)
     dihdata_ref = target_comp.get_dihedrals(traj_comp, first_comp, last_comp)
+    print('step4', datetime.now())
     dih_f_old = DihedralFunction(target.k, target.multp, target.phase)
+    print('step5', datetime.now())
     existing_ks = copy.deepcopy(dih_f_old.k)
     existing_ms = copy.deepcopy(dih_f_old.m)
     existing_ps = copy.deepcopy(dih_f_old.p)
+    print('finish', datetime.now())
     existing_ks_dict = {}
     existing_ps_dict = {}
     print("Here are the torsional terms before fitting:\n")
