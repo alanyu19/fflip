@@ -107,9 +107,9 @@ class CharmmDihedralReweighter(object):
         e_sim = self.calc_sim_energy(current_ensemble_data)
         # recalc the perturbed energy
         e_new = self.recalc_energy(current_ensemble_data, k)
-        # print(e_sim.shape)
-        # print(e_new.shape)
-        # print(current_ensemble_data.shape)
+        print(e_sim.shape)
+        print(e_new.shape)
+        print(current_ensemble_data.shape)
         distrib_a = prob_distribution(
             ref_ensemble_data,
             num_bins=100,
@@ -180,6 +180,11 @@ class DihedralTarget(object):
         self.psf_file = psf_file
         self.parameter_files = parameter_files
         self.torsionfix = torsionfix
+        psf, topology, parameters = read_structure_parameter_files(
+            self.psf_file, self.parameter_files
+        )
+        self.psf = psf
+        self.top = topology
     
     @property
     def name(self):
@@ -187,22 +192,8 @@ class DihedralTarget(object):
             if i == 0:
                 name = a,
             else:
-                name = name + '-' + a
+                name = name + "-" + a
         return name
-    
-    @property
-    def psf(self): 
-        psf, topology, parameters = read_structure_parameter_files(
-            self.psf_file, self.parameter_files
-        )
-        return psf
-    
-    @property
-    def top(self):
-        psf, topology, parameters = read_structure_parameter_files(
-            self.psf_file, self.parameter_files
-        )
-        return topology
 
     def create_system(self):
         """
@@ -228,14 +219,13 @@ class DihedralTarget(object):
                 system, self.psf, self.torsionfix
             )
         self.system = system
-        
-    @property
-    def torsion_force(self):
+
+    def get_torsion_force(self):
         if not hasattr(self, 'system'):
             self.create_system()
         for force in self.system.getForces():
             if isinstance(force, PeriodicTorsionForce):
-                return force
+                self.torsion_force = force
     
     @property
     def _atomtypes(self):
@@ -266,7 +256,9 @@ class DihedralTarget(object):
         count = 0
         k = []
         multp = []
-        phase = []
+        phase = []å
+        if not hasattr(self, 'torsion_force'):
+            self.get_torsion_force()
         for torsion_id in range(self.torsion_force.getNumTorsions()):
             a1, a2, a3, a4, x, y, z = self.torsion_force.getTorsionParameters(
                 torsion_id
@@ -349,7 +341,7 @@ def prob_distribution(
             return obs/ptf
         elif method is 'ensemble':
             print(p_energy.shape)
-            print(n_bins)
+            print(num_bins)
             p_energy_ensemble = p_energy.sum(axis=2)
             o_energy_ensemble = o_energy.sum(axis=2)
             tune = beta * np.mean(p_energy_ensemble) - beta * np.mean(o_energy_ensemble)
