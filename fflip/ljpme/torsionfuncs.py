@@ -112,7 +112,9 @@ class CharmmDihedralReweighter(object):
         # print(current_ensemble_data.shape)
         distrib_a = prob_distribution(
             ref_ensemble_data,
-            100, -np.pi, np.pi,
+            num_bins=100,
+            lower_bound=-np.pi,
+            upper_bound=np.pi,
             temperature=self.temp,
             original_energy=None,
             perturbed_energy=None,
@@ -120,7 +122,9 @@ class CharmmDihedralReweighter(object):
         )
         distrib_b = prob_distribution(
             current_ensemble_data,
-            100, -np.pi, np.pi,
+            num_bins=100,
+            lower_bound=-np.pi,
+            upper_bound=np.pi,
             temperature=self.temp,
             original_energy=e_sim,
             perturbed_energy=e_new,
@@ -345,13 +349,14 @@ def prob_distribution(
             return obs/ptf
         elif method is 'ensemble':
             print(p_energy.shape)
+            print(n_bins)
             p_energy_ensemble = p_energy.sum(axis=2)
             o_energy_ensemble = o_energy.sum(axis=2)
             tune = beta * np.mean(p_energy_ensemble) - beta * np.mean(o_energy_ensemble)
             for i in range(num_bins):
                 temp = digitized == i
-                print(temp.shape)
-                print(temp.sum(axis=2)[0, :10])
+                #print(temp.shape)
+                #print(temp.sum(axis=2)[0, :10])
 
     
     

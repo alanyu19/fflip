@@ -156,19 +156,20 @@ class ObjfuncDihFit(object):
             self.mcount_dict[dn] = len(self.m_dict[dn])
         dn0 = self.dihedral_names_sorted[0]
         for dn in self.dihedral_names_sorted:
-            assert self.dihedral_dict[dn].shape == self.dihedral_dict[dn0].shape
-        assert self.qme.shape == self.dihedral_dict[dn0].shape
-        assert self.mme.shape == self.dihedral_dict[dn0].shape
+            for dihedral_series in self.dihedral_dict[dn]:
+                dihedral_series.shape == self.dihedral_dict[dn0][0].shape
+        assert self.qme.shape == self.dihedral_dict[dn0][0].shape
+        assert self.mme.shape == self.dihedral_dict[dn0][0].shape
 
     def rmsd(self, x):
         dn0 = self.dihedral_names_sorted[0]
         mme = copy.deepcopy(self.mme)
         k_dict = separate_k(x, self.mcount_dict, self.dihedral_names_sorted)
         for dn in self.dihedral_names_sorted:
-            energy = mm_energy(self.dihedral_dict[dn], k_dict[dn], self.m_dict[dn])
+            for dihedral_series in self.dihedral_dict[dn]:
+                mme += mm_energy(dihedral_series, k_dict[dn], self.m_dict[dn])
             # new_k = correct_phase(self.p_dict[dn], k_dict[dn])
             # energy = mm_energy(self.dihedral_dict[dn], new_k, self.m_dict[dn])
-            mme += energy
         if self.weights is None:  # indicating cross is used
             # TODO: wrapper for this
             weights = generate_weights(
@@ -367,7 +368,7 @@ class DihedralFitter(object):
             logger.info("{}".format(round(rmsd_best, 4)))
             for i in range(len(x)):
                 # the max random move size is hard-coded
-                x[i] = x[i] + random.uniform(-0.5, 0.5)
+                x[i] = x[i] + random.uniform(-1, 1)
                 x[i] = max(lower_bounds[i], x[i])
                 x[i] = min(upper_bounds[i], x[i])
         self.optimum = x_best

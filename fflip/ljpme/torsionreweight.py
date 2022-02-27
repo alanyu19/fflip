@@ -262,7 +262,9 @@ def torsion_match_two_ff(
         plot=True, save_plot_to="."
 ):
     """
-
+    Predict the good force constants to match the reference ensemble's dihedral
+    distribution. Multiplicities are expanded to "allowed_m" if original multiplicities
+    (read from the parameter files) can't fulfill the "min_ssr_to_add_mult".
     Args:
         atoms: list of strings, the four atom names in the dihedral
         psf_file_comp: string, the psf file of the comparison system
