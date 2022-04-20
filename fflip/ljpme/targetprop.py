@@ -371,6 +371,7 @@ class TargetProperty(TargetSystem):
         if not hasattr(self, 'exchanged_exp'):
             return extract_exp(self.name, self._exp)
         else:
+            print('!!!')
             return extract_exp(self.name, self.exchanged_exp)
 
     @property
@@ -475,7 +476,7 @@ class TargetProperty(TargetSystem):
             energy_dir=self.folder_naming.potential_data_folder(iteration),
             property_file_template=self.property_file_format,
             result_dir=self.folder_naming.reweighting_folder(iteration),
-            exp=self._exp,
+            exp=self.exp,
             exp_dir=self.exp_dir,
             lipid=self.lipid,
             parse_groups=self.groups

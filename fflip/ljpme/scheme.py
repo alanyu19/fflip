@@ -133,9 +133,9 @@ class SimOptScheme(object):
             "dppc_monolayer_40": 49,
             "dppc_monolayer_55": 52,
             "dlpc_bilayer_0": 44.95,
-            "dmpc_bilayer_0": 45.6,
+            "dmpc_bilayer_0": 49.14,  # 45.6,
             "dspc_bilayer_0": 46.75,
-            "popc_bilayer_0": 46.4,
+            "popc_bilayer_0": 49.63,  # 46.4,
             "sopc_bilayer_0": 46,
             "prpc_bulk_0": 43
         }
@@ -164,9 +164,9 @@ class SimOptScheme(object):
             "dppc_monolayer_40": 223,
             "dppc_monolayer_55": 223,
             "dlpc_bilayer_0": 67.25,
-            "dmpc_bilayer_0": 68.5,
+            "dmpc_bilayer_0": 56.20,  # 68.5,
             "dspc_bilayer_0": 78.85,
-            "popc_bilayer_0": 72.5,
+            "popc_bilayer_0": 64.32,  # 72.5,
             "sopc_bilayer_0": 78.8,
             "prpc_bulk_0": None
         }

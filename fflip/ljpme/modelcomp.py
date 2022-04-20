@@ -10,7 +10,7 @@ from openmm import Context, LangevinIntegrator
 import openmm.unit as u
 
 from fflip.omm.genclac import OmmJobGenerator
-from fflip.omm.torsionfuncs import *
+from fflip.ljpme.torsionfuncs import *
 from fflip.chm import *
 from fflip.drude import *
 from fflip.omm.playpara import *
@@ -175,7 +175,7 @@ class ModelCompound(Lipid, DrudeLipid):
         for p, o in zip(params, offsets):
             if p.par_type is 'nbthole':
                 raise Exception("nbthole is not supported! Quit...")
-            elif self.ff.lower() is 'drude':
+            elif self.ff.lower() == 'drude':
                 change_drude_ff_parameters(
                     self.system, self.topology, p, o, self.psf
                 )
