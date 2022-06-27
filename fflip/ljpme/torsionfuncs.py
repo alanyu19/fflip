@@ -4,7 +4,7 @@
 from simtk.openmm import PeriodicTorsionForce
 from simtk.openmm.app import LJPME
 
-from rflow.trajectory import *
+# from rflow.trajectory import *
 from fflip.omm.util import *
 
 
@@ -256,7 +256,7 @@ class DihedralTarget(object):
         count = 0
         k = []
         multp = []
-        phase = []å
+        phase = []
         if not hasattr(self, 'torsion_force'):
             self.get_torsion_force()
         for torsion_id in range(self.torsion_force.getNumTorsions()):
