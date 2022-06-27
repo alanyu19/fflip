@@ -8,7 +8,7 @@ from fflip.ljpme.torsionfuncs import *
 
 def generate_weights(
         energy_series, energy_series_cross=None, criterion="boltzmann",
-        cutoff=None, temperature=303.15, extra_weights=None
+        cutoff=8, temperature=303.15, extra_weights=None
 ):
     energy_series = np.array(energy_series)
     energy_series = energy_series - energy_series.min()
@@ -26,17 +26,19 @@ def generate_weights(
         else:
             w = np.exp(-1.0 * energy_series / (0.001987 * temperature)) + \
                 np.exp(-1.0 * energy_series_cross / (0.001987 * temperature))
-    elif criterion == 'boltzmann':
+    elif criterion == "boltzmann":
         if cutoff is not None:
             assert cutoff > 0
             new_series = np.minimum(energy_series, cutoff * np.ones(energy_series.shape[0]))
             w = np.exp(-1.0 * new_series / (0.001987 * temperature))
         else:
             w = np.exp(-1.0 * energy_series / (0.001987 * temperature))
-    elif criterion == 'uniform':
+    elif criterion == "uniform":
         w = np.ones(energy_series.shape[0])
     else:
-        raise Exception("Criterion '{}' not accepted!".format(criterion))
+        raise Exception(
+            "Criterion '{}' not accepted! Please use 'boltzmann' or 'uniform'.".format(criterion)
+        )
     if extra_weights is not None:
         extra_weights = np.array(extra_weights)
         assert w.shape == extra_weights.shape
@@ -98,7 +100,7 @@ def rmsd_qm_mm(energy_series_1, energy_series_2, weights, offset_method):
 def phase_penalty(phase_allowed, k, pforce):
     """
     Args:
-        phase_allowed (list): allowed phase (-1, 0, or 1)
+        phase_allowed (list): allowed phase [-1 (0.0), 0 (don't care), or 1 (180.0))
         k (list): force constants
         pforce (list): force constants of the restraints
 
@@ -106,41 +108,61 @@ def phase_penalty(phase_allowed, k, pforce):
     """
     penalty = 0
     for p, k, f in zip(phase_allowed, k, pforce):
-        if p * k <= 0:
+        if p * k <= 0 or p == 0:
             pass
         else:
-            penalty += f * p**2 * k**2
+            penalty += f * k**2
     return penalty
 
 
-def correct_phase(phase_allowed, k):
+def k_correct_phase(phase_allowed, k):
     """
-    currently only support 0 (-1) and 180 (1), or no restriction (0)
-    :param phase_allowed: list of allowed phase (-1, 0, or 1)
-    :param k: list of force constants
-    :return: correct force constant
+    Currently only support 0 (-1) and 180 (1), or no restriction (0)
+    
+    Args:
+        phase_allowed: list of allowed phase (-1, 0, or 1)
+        k: list of force constants
+        return: force constants agree with the phases
     """
-    penalty = 0
     new_k = []
     for p, k in zip(phase_allowed, k):
         if p * k <= 0:
-            new_k.append(k)
+            new_k.append(abs(k))
         else:
-            new_k.append(-k)
+            new_k.append(-abs(k))
     return new_k
+
+
+def phase_from_k(k_list):
+    """
+    Return the phases based on k. positive k means phase of 0,
+    negative k means 0
+    
+    Args:
+        k_list: list of force constants
+    Return: list of phases
+    """
+    phase_list = []
+    for k in k_list:
+        if k >= 0:
+            phase_list.append(0.0)
+        else:
+            phase_list.append(180.0)
+    return phase_list
 
 
 class ObjfuncDihFit(object):
     def __init__(
-        self, dihedral_dict, m_dict, p_dict, pforce_dict,
+        self, temperature, dihedral_dict, m_dict, p_dict, pforce_dict,
         dihedral_names_sorted, qme, mme, weights, extra_weights,
-        offset_method
+        offset_method, weight_energy_cutoff=8
     ):
         """
         Args:
             dihedral_list: dictionary of dihedral series
             m_list: dictionary of multiplicities allowed by each fitted dihedral
         """
+        self.temperature = temperature
         self.dihedral_dict = dihedral_dict
         self.m_dict = m_dict
         self.p_dict = p_dict
@@ -152,6 +174,7 @@ class ObjfuncDihFit(object):
         self.weights = weights
         self.extra_weights = extra_weights  # only used for "cross"
         self.offset_method = offset_method
+        self.weight_energy_cutoff = weight_energy_cutoff
         for dn in self.dihedral_names_sorted:
             self.mcount_dict[dn] = len(self.m_dict[dn])
         dn0 = self.dihedral_names_sorted[0]
@@ -173,8 +196,8 @@ class ObjfuncDihFit(object):
         if self.weights is None:  # indicating cross is used
             # TODO: wrapper for this
             weights = generate_weights(
-                self.qme, mme, criterion="cross", cutoff=None,
-                temperature=303.15, extra_weights=self.extra_weights
+                self.qme, mme, criterion="cross", cutoff=self.weight_energy_cutoff,
+                temperature=self.temperature, extra_weights=self.extra_weights
             )
         else:
             weights = self.weights
@@ -192,14 +215,15 @@ class ObjfuncDihFit(object):
             )
             for dihedral_series in self.dihedral_dict[dn]:
                 mme += mm_energy(
-                    dihedral_series, k_dict[dn], self.m_dict[dn])
+                    dihedral_series, k_dict[dn], self.m_dict[dn]
+                )
             # new_k = correct_phase(self.p_dict[dn], k_dict[dn])
             # energy = mm_energy(self.dihedral_dict[dn], new_k, self.m_dict[dn])
         if self.weights is None:  # indicating cross is used
             # TODO: wrapper for this
             weights = generate_weights(
-                self.qme, mme, criterion="cross", cutoff=None,
-                temperature=303.15, extra_weights=self.extra_weights
+                self.qme, mme, criterion="cross", cutoff=self.weight_energy_cutoff,
+                temperature=self.temperature, extra_weights=self.extra_weights
             )
         else:
             weights = self.weights
@@ -216,7 +240,7 @@ class ObjfuncDihFit(object):
 class DihedralFitter(object):
     def __init__(self, dihedral_files, allowed_m, phase, pforce, qme, mme,
                  temperature, weight_criterion, offset_method,
-                 energy_cutoff=None, extra_weights=None):
+                 energy_cutoff=8, extra_weights=None):
         """
         Args:
             dihedral_files: list of file names
@@ -234,12 +258,14 @@ class DihedralFitter(object):
         self.pforce_dict = dict()
         self.mcount_dict = dict()
         self.dimension = 0
+        self.temperature = temperature
+        self.energy_cutoff = energy_cutoff
         dihedral_names = []
         for dfile, ms, ps, pf in zip(
             dihedral_files, allowed_m, phase, pforce
         ):
             # This line of code assumes that the four atom types are the
-            # header of the file (separated by space or tab)
+            # header of the file (separated by spaces or tab)
             atoms, dihedral_series = read_dihedral_series(dfile)
             dihedral_name = "{}-{}-{}-{}".format(
                 atoms[0], atoms[1], atoms[2], atoms[3]
@@ -275,12 +301,14 @@ class DihedralFitter(object):
             self.weights = None
         self.optimum = None
 
-    def nlopt_fit(self, method, lower_bounds=None,
+    def nlopt_fit(self, method, start=None, lower_bounds=None,
                   upper_bounds=None, maxiter=None):
         self.obj_func = ObjfuncDihFit(
-            self.dihedral_dict, self.m_dict, self.p_dict, self.pforce_dict,
+            self.temperature, self.dihedral_dict, self.m_dict,
+            self.p_dict, self.pforce_dict,
             self.dihedral_names_sorted, self.qme, self.mme,
-            self.weights, self.extra_weights, self.offset_method
+            self.weights, self.extra_weights, self.offset_method,
+            self.energy_cutoff
         )
         opt = nlopt.opt(method, self.dimension)
         if lower_bounds is None:
@@ -292,26 +320,30 @@ class DihedralFitter(object):
         if maxiter is not None:
             opt.set_maxeval(maxiter)
         opt.set_min_objective(self.obj_func)
-        opt.set_xtol_rel(0.005)  # hard-coded
+        opt.set_xtol_rel(0.0002)  # hard-coded
         if method is nlopt.G_MLSL_LDS or method is nlopt.G_MLSL:
             opt.set_local_optimizer(nlopt.opt(nlopt.LN_SBPLX, self.dimension))
         # x = opt.optimize(np.zeros(self.dimension))
         # print(max(lower_bounds), min(upper_bounds))
-        x = opt.optimize(
-            np.random.uniform(
-                low=max(lower_bounds), high=min(upper_bounds),
-                size=(self.dimension)
+        if start is not None:
+            x = opt.optimize(start)
+        else:
+            x = opt.optimize(
+                np.random.uniform(
+                    low=max(lower_bounds), high=min(upper_bounds),
+                    size=(self.dimension)
+                )
             )
-        )
         minf = opt.last_optimum_value()
         # print(x, minf)
         self.optimum = x
         self.opt = opt
 
-    def simulated_annealing(self, lower_bounds=None, upper_bounds=None,
+    def simulated_annealing(self, start=None, lower_bounds=None, upper_bounds=None,
                             nsteps=10000, tempr0=1000):
         """
         Args:
+            start (array-like): initial parameters
             lower_bounds (array like): lower bounds for k
             upper_bounds (array like): upper bounds for k
             nsteps (int): total steps to run
@@ -329,17 +361,24 @@ class DihedralFitter(object):
         logger.addHandler(file_handler)
         if lower_bounds is None:
             lower_bounds = -3 * np.ones(self.dimension)
+            print("Auto Lower Bounds:", lower_bounds)
         if upper_bounds is None:
             upper_bounds = 3 * np.ones(self.dimension)
-        x = np.random.uniform(
-            low=max(lower_bounds), high=min(upper_bounds), size=self.dimension
-        )
+            print("Auto upper Bounds:", upper_bounds, '\n')
+        if start is not None:
+            x = np.array(start)
+        else:
+            x = np.random.uniform(
+                low=max(lower_bounds), high=min(upper_bounds), size=self.dimension
+            )
         assert np.array(lower_bounds).shape == np.array(upper_bounds).shape \
             == x.shape
         self.obj_func = ObjfuncDihFit(
-            self.dihedral_dict, self.m_dict, self.p_dict, self.pforce_dict,
+            self.temperature, self.dihedral_dict, self.m_dict,
+            self.p_dict, self.pforce_dict,
             self.dihedral_names_sorted, self.qme, self.mme,
-            self.weights, self.extra_weights, self.offset_method
+            self.weights, self.extra_weights, self.offset_method,
+            self.energy_cutoff
         )
         # initialize with large rmsd
         rmsd_old = 1e2
@@ -349,12 +388,9 @@ class DihedralFitter(object):
             step += 1
             tempr = tempr0 * np.exp(-(step/(nsteps/4.0)))
             rmsd = self.obj_func(x, 0)
-            if step == 0:
-                p =0.0
-            else:
-                drmsd = rmsd - rmsd_old
-                boltz = -1.0 * drmsd / (0.001987*tempr)
-                p = np.exp(boltz)
+            drmsd = rmsd - rmsd_old
+            boltz = -1.0 * drmsd / (0.001987 * tempr)
+            p = np.exp(boltz)
             p0 = random.uniform(0.0, 1.0)
             if p0 < p:
                 accepted = 1
@@ -364,11 +400,11 @@ class DihedralFitter(object):
                 rmsd_old = rmsd
                 if rmsd_old < rmsd_best:
                     rmsd_best = rmsd_old
-                    x_best = x
+                    x_best = copy.deepcopy(x)
             logger.info("{}".format(round(rmsd_best, 4)))
             for i in range(len(x)):
-                # the max random move size is hard-coded
-                x[i] = x[i] + random.uniform(-1, 1)
+                max_move = 0.25 * (upper_bounds[i] - lower_bounds[i])
+                x[i] = x[i] + random.uniform(-max_move, max_move)
                 x[i] = max(lower_bounds[i], x[i])
                 x[i] = min(upper_bounds[i], x[i])
         self.optimum = x_best
@@ -377,7 +413,7 @@ class DihedralFitter(object):
     def quick_rmsd(self, x):
         return self.obj_func.rmsd(x)
 
-    def show_optimum(self, correct_phase=False):
+    def show_optimum(self, with_phase=True):
         assert self.optimum is not None
         # k_dict = separate_k(self.optimum.x, self.mcount_dict,
         # self.dihedral_names_sorted)
@@ -385,8 +421,10 @@ class DihedralFitter(object):
             self.optimum, self.mcount_dict, self.dihedral_names_sorted
         )
         for dn in self.dihedral_names_sorted:
-            if correct_phase:
-                k = correct_phase(self.p_dict[dn], k_dict[dn])
+            if with_phase:
+                phases = phase_from_k(k_dict[dn])
+                new_k = [round(abs(k), 3) for k in k_dict[dn]]
+                print(dn, new_k, phases)
             else:
                 k = k_dict[dn]
-            print(dn, k)
+                print(dn, k)

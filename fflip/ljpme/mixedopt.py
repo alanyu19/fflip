@@ -84,6 +84,8 @@ class MixedOptimizer(Optimizer):
             self.num_all_properties + self.num_qmc + self.num_parameters + self.num_model_compounds
         ]**2)
         if self.counter % self.print_interval == 0:
+            if self.counter == 0:
+                print("        ssr_properties    ssr_qm_charge  ssr_regularization    ssr_qm_torsion     ssr_sum")
             print('Iteration {}: {} {} {} {} {}...'.format(self.counter, ssr_p1, ssr_p2, ssr_p3, ssr_p4, ssr))
         self.counter += 1
         return ssr

@@ -2,44 +2,70 @@
 
 import scipy.optimize as sopt
 from fflip.ljpme.torsionfuncs import *
+from fflip.ljpme.util import isnotebook
+
+
+def prob_to_pmf_kcal_per_mole(dist, temperature, offset=0):
+    dist = dist + offset  # offset can be used to avoid overflow when dist=0
+    return (
+        -np.log(dist/np.sum(dist)) - min(-np.log(dist/np.sum(dist)))
+    ) * (6.02 * 1.3806 * temperature * 0.000239006)
 
 
 class ObjfuncDihedral(object):
-    def __init__(self, sim, ref, reweighter, criterion="prob",
-                 boltzmann=True):
+    def __init__(self, sim, ref, reweighter, temperature, criterion="prob",
+                 method='ensemble', boltzmann=True, pmf_weight=1):
         """
         Args:
             sim (array like): the simulated dihedral distribution.
             ref (array like): the reference dihedral distribution.
             reweighter: a CharmmDihedralReweighter object.
-            criterion (str): can be "energy" or "prob" (probability).
-            boltzmann: if use Boltzmann weighting for "energy"
+            criterion (str): can be "pmf" or "prob" (probability).
+            boltzmann: if use Boltzmann weighting for "pmf"
         """
         self.sim_data = sim
         self.ref_data = ref
         self.reweighter = reweighter
+        self.temperature = temperature
         self.criterion = criterion
+        self.method = method
         self.boltzmann = boltzmann
+        self.pmf_weight = pmf_weight
 
     def __call__(self, x):
         x = list(x)
         ref_distribution, reweighted_distribution = \
-            self.reweighter.get_distributions(self.sim_data, self.ref_data, x)
+            self.reweighter.get_distributions(
+                self.sim_data, self.ref_data, x, method=self.method
+            )
         if self.criterion == "prob":
             return np.sum(
                 np.array(ref_distribution - reweighted_distribution)**2
-            )
-        elif self.criterion == "energy":
-            ref_e_in_kt = - np.log(ref_distribution)
-            rew_e_in_kt = - np.log(reweighted_distribution)
+            ) * ref_distribution.shape[0]  # to account the influence of num_bins
+        elif self.criterion == "pmf" or self.criterion == "prob+pmf":
+            ref_e_in_kcal_per_mole = prob_to_pmf_kcal_per_mole(
+                ref_distribution, self.temperature, 0.00001
+            )  # offset to deal with zero prob
+            rew_e_in_kcal_per_mole = prob_to_pmf_kcal_per_mole(
+                reweighted_distribution, self.temperature, 0.00001
+            )  # offset to deal with zero prob
             if self.boltzmann:
-                factor = 0.5 * (ref_distribution + reweighted_distribution)
-                return np.sum(factor * (ref_e_in_kt - rew_e_in_kt)**2)
+                factor = self.pmf_weight * 0.5 * (ref_distribution + reweighted_distribution) * \
+                    (ref_distribution != 0) * (reweighted_distribution != 0) * \
+                    ref_distribution.shape[0]  # to account the influence of num_bins
             else:
-                return np.sum((ref_e_in_kt - rew_e_in_kt)**2)
+                factor = self.pmf_weight * (ref_distribution != 0) * (reweighted_distribution != 0)
+            ssr = np.mean(factor * (ref_e_in_kcal_per_mole - rew_e_in_kcal_per_mole)**2)
+            if self.criterion == "prob+pmf":
+                ssr += sum(
+                    np.array(ref_distribution - reweighted_distribution)**2
+                ) * ref_distribution.shape[0]  # to account the influence of num_bins
+            return ssr
         else:
             raise Exception(
-                "Criterion `{}` not accepted!".format(self.criterion)
+                "Criterion `{}` not accepted! Only support 'prob', 'pmf', or 'prob+pmf'".format(
+                    self.criterion
+                )
             )
 
 
@@ -49,23 +75,31 @@ class DihedralOptimizer(object):
     (depending on the reweighter provided) of multiplicities in the original FF
     """
     def __init__(
-        self, sim_dihedrals, ref_dihedrals, reweighter, criterion="prob",
-        boltzmann=True, method='BFGS', options={'eps': 1e-2, 'gtol': 1e-04}
+        self, sim_dihedrals, ref_dihedrals, reweighter, temperature, criterion="prob",
+        boltzmann=True, method='BFGS', options={'eps': 1e-2, 'gtol': 1e-04},
+        pmf_weight=1, perturb_method='ensemble'
     ):
         """
         Args:
-            sim_dihedrals: array, the simulation dihedral data (for each,
-            not the average)
+            sim_dihedrals: array, the simulation dihedral data (for each, not the average)
             ref_dihedrals: array, the reference state dihedral data
             reweighter: the CharmmDihedralReweighter
+            temperature: float, temperature of the systems
+            criterion: string, can be 'prob', 'pmf', and 'prob+pmf'
+            boltzmann: bool, use boltzmann weighting in error function
             method: string, the scipy.optimize routine
             options: dict, the options for the scipy optimizer
+            pmf_weight: float, the relative weight of pmf (compared to prob) when use 'prob+pmf'
+            perturb_method: string, can be 'ensemble' and 'single'. If perturb the ensemble
+            (exact but information can be washed out due to noise) or single molecules
+            (approximation in the sense of stat-mech but more robust in practice)
         """
         self.obj_func = ObjfuncDihedral(
-            sim_dihedrals, ref_dihedrals, reweighter, criterion=criterion,
-            boltzmann=True
+            sim_dihedrals, ref_dihedrals, reweighter, temperature, criterion=criterion,
+            method=perturb_method, boltzmann=boltzmann, pmf_weight=pmf_weight
         )
         self.reweighter = reweighter
+        self.temperature = temperature
         self.sim_dihedrals = sim_dihedrals
         self.ref_dihedrals = ref_dihedrals
         self.method = method
@@ -85,169 +119,6 @@ class DihedralOptimizer(object):
         return optimum
 
 
-def do_torsion_optmization(
-        atoms, psf_file, parameter_files,
-        traj_to_compare, first_comp, last_comp,
-        traj_to_fix, first_fix, last_fix,
-        last_torfix=0,
-        allowed_m=[1, 2, 3, 4, 5, 6],
-        temperature=323.15, nbins=100, plot=True,
-        save_plot_to='/u/alanyu/tools/jplots'
-):
-    """
-
-    Args:
-        atoms: list of strings, the four atom names in the dihedral
-        psf_file: string, the psf file
-        parameter_files: list of the parameter files
-        traj_to_compare: string, trajectory template of the reference state
-        first_comp: integer, first trajectory of the reference state
-        last_comp: integer, last trajectory of the regerence state
-        traj_to_fix: string, trajectory template of the simulation
-        first_fix: integer, first trajectory of the simulation the user want
-        to use for the optimization
-        last_fix: integer, last trajectory of the simulation the user
-        want to use for the optimization
-        allowed_m: list of integers, the multiplicity allowed in the
-        optimization
-        temperature: float, temperature of the simulation
-        nbins: integer, number of bins for distribution of the dihedral
-        plot: bool, if plot the distribution or not
-    Returns:
-        A dictionary use the multiplicity as key and
-        [phase, force_constant] as content
-    """
-    from matplotlib import pyplot as plt
-    target = DihedralTarget(
-        atoms, psf_file, parameter_files, torsionfix=last_torfix
-    )
-    target.get_cosine_series()
-    dihdata_fix = target.get_dihedrals(traj_to_fix, first_fix, last_fix)
-    dihdata_ref = target.get_dihedrals(traj_to_compare, first_comp, last_comp)
-    dih_f_old = DihedralFunction(target.k, target.multp, target.phase)
-    existing_ks = copy.deepcopy(dih_f_old.k)
-    existing_ms = copy.deepcopy(dih_f_old.m)
-    existing_ps = copy.deepcopy(dih_f_old.p)
-    existing_ks_dict = {}
-    existing_ps_dict = {}
-    print("Here are the torsional terms before fitting:")
-    for ek, em, ep in zip(existing_ks, existing_ms, existing_ps):
-        print(
-            str(ek) + '(kj/mole) OR ' +
-            str(round(ek/4.184, 4)) +
-            '(kcal/mole)', ', ', em, ', ', ep
-        )
-        existing_ks_dict[em] = ek
-        existing_ps_dict[em] = ep
-    new_ks = list(np.zeros(len(allowed_m)))
-    new_ms = allowed_m
-    new_ps = list(np.zeros(len(allowed_m)))
-    # Generate the new k and m lists that include more multiplicities
-    for m in allowed_m:
-        if m in existing_ms:
-            new_k = existing_ks_dict[m]
-            new_p = existing_ps_dict[m]
-        else:
-            # if missing the multiplicity,
-            # use 0 for the force constant at beginning
-            new_k = 0.0
-            new_p = 0.0
-        new_ks[m - 1] = new_k
-        new_ps[m - 1] = new_p
-        dih_f_free = DihedralFunction(new_ks, new_ms, new_ps)
-    # first try the fixed-m optimizer
-    reweighter = CharmmDihedralReweighter(
-        dih_f_old, dih_f_old, temperature=temperature
-    )
-    optimizer = DihedralOptimizer(dihdata_fix, dihdata_ref, reweighter)
-    optim = optimizer()
-    print("The residue from the fixed multiplicity fitting is:", optim.fun)
-    # The following condition should be changed to judge the optim found above
-    # is good or not
-    two_stages = False
-    if optim.fun > 0.00001 * nbins:
-        two_stages = True
-        print("Using more multiplicities ...")
-        reweighter2 = CharmmDihedralReweighter(
-            dih_f_old, dih_f_free, temperature=temperature
-        )
-        optimizer2 = DihedralOptimizer(dihdata_fix, dihdata_ref, reweighter2)
-        optim2 = optimizer2()
-    # prepare return value before plotting
-    return_dic = {}
-    print("Here are the fixed torsional terms:")
-    if not two_stages:
-        for tm, tp, tk in zip(target.multp, target.phase, list(optim.x)):
-            print(
-                str(tk) + '(kj/mole) OR ' +
-                str(round(tk/4.184, 4)) +
-                '(kcal/mole)', ', ', tm, ', ', tp
-            )
-            return_dic[tm] = [tp, tk]
-    else:
-        print('Before adding more ')
-        for tm, tp, tk in zip(new_ms, new_ps, list(optim2.x)):
-            print(
-                str(tk) + '(kj/mole) OR ' + str(round(tk/4.184, 4)) +
-                '(kcal/mole)', ', ', tm, ', ', tp
-            )
-            return_dic[tm] = [tp, tk]
-    if plot:
-        print('\n' + 'Plotting...')
-        obj_func = ObjfuncDihedral(dihdata_fix, dihdata_ref, reweighter)
-        ref_distrib, fixed_distrib = obj_func.reweighter.get_distributions(
-            dihdata_fix, dihdata_ref, optim.x
-        )
-        _, unfixed_distrib = obj_func.reweighter.get_distributions(
-            dihdata_fix, dihdata_ref, target.k
-        )
-        if two_stages:
-            obj_func2 = ObjfuncDihedral(
-                dihdata_fix, dihdata_ref, reweighter2
-            )
-            _, fixed_distrib2 = obj_func2.reweighter.get_distributions(
-                dihdata_fix, dihdata_ref, optim2.x
-            )
-        xaxis = np.arange(-180, 180, 3.6)
-        plt.figure(figsize=(8, 5))
-        plt.plot(
-            xaxis, ref_distrib, label='Reference (PME)',
-            alpha=0.75, linewidth=5, color='red'
-        )
-        plt.plot(
-            xaxis, unfixed_distrib, label='Before fitting',
-            alpha=0.75, linewidth=3, color='royalblue'
-        )
-        plt.plot(
-            xaxis, fixed_distrib, label='After fitting',
-            alpha=0.75, linewidth=5, color='darkorange'
-        )
-        if two_stages:
-            plt.plot(
-                xaxis, fixed_distrib2, label='Adding multiplicities',
-                alpha=0.75, linewidth=5, color='yellowgreen'
-            )
-        plt.title(
-            '{}-{}-{}-{}'.format(
-                atoms[0].upper(), atoms[1].upper(),
-                atoms[2].upper(), atoms[3].upper()
-            ),
-            fontsize=24, fontname='URW Gothic'
-        )
-        plt.xticks(fontsize=22, fontname='URW Gothic')
-        plt.yticks(fontsize=22, fontname='URW Gothic')
-        plt.xlabel('Dihedral Angle', fontsize=24, fontname='URW Gothic')
-        plt.ylabel('Population', fontsize=24, fontname='URW Gothic')
-        plt.legend(fontsize=18)
-        plt.savefig(
-            os.path.join(save_plot_to, 'tfix-{}-{}-{}-{}.png'.format(
-                atoms[0], atoms[1], atoms[2], atoms[3]
-            )), dpi=200, bbox_inches='tight'
-        )
-        plt.show()
-    return return_dic
-
-
 def torsion_match_two_ff(
         atoms,
         psf_file_comp, parameter_files_comp,
@@ -256,9 +127,14 @@ def torsion_match_two_ff(
         traj_fix, first_fix, last_fix,
         last_torfix=0,
         allowed_m=[1, 2, 3, 4, 5, 6],
-        criterion="prob", boltzmann=True,
+        criterion="prob", 
+        boltzmann=True,
         temperature=323.15,
-        min_ssr_to_add_mult=0.002,
+        min_ssr_to_add_mult=5,
+        perturb_method='ensemble',
+        pmf_weight=1,
+        opt_method="BFGS",
+        opt_options={'eps': 1e-2, 'gtol': 1e-04},
         plot=True, save_plot_to="."
 ):
     """
@@ -277,8 +153,8 @@ def torsion_match_two_ff(
         first_fix: integer, first trajectory index used for the optimization
         last_fix: integer, last trajectory index used for the optimization
         allowed_m: list of integers, the multiplicities allowed in the optimization
-        criterion (str): can be "energy" or "prob" (probability)
-        boltzmann (bool): if use Boltzmann weighting for "energy"
+        criterion (str): can be "pmf" or "prob" (probability)
+        boltzmann (bool): if use Boltzmann weighting for "pmf"
         temperature (float): temperature of the simulation
         nbins (integer): number of bins for distribution of the dihedral
         min_ssr_to_add_mult (float): minimum ssr to expand multiplicity
@@ -288,23 +164,30 @@ def torsion_match_two_ff(
         [phase, force_constant] as content
     """
     from matplotlib import pyplot as plt
+    from datetime import datetime
+    # print('step1', datetime.now())
     target = DihedralTarget(
         atoms, psf_file_fix, parameter_files_fix, torsionfix=last_torfix
     )
     target_comp = DihedralTarget(
         atoms, psf_file_comp, parameter_files_comp, torsionfix=last_torfix
     )
+    # print('step2', datetime.now())
     target.get_cosine_series()
     target_comp.get_cosine_series()
+    # print('step3', datetime.now())
     dihdata_fix = target.get_dihedrals(traj_fix, first_fix, last_fix)
     dihdata_ref = target_comp.get_dihedrals(traj_comp, first_comp, last_comp)
+    #  print('step4', datetime.now())
     dih_f_old = DihedralFunction(target.k, target.multp, target.phase)
+    # print('step5', datetime.now())
     existing_ks = copy.deepcopy(dih_f_old.k)
     existing_ms = copy.deepcopy(dih_f_old.m)
     existing_ps = copy.deepcopy(dih_f_old.p)
+    # print('finish', datetime.now())
     existing_ks_dict = {}
     existing_ps_dict = {}
-    print("Here are the torsional terms before fitting:\n")
+    # print("Here are the torsional terms before fitting:\n")
     for ek, em, ep in zip(existing_ks, existing_ms, existing_ps):
         print(
             str(round(ek, 4)) + '(kj/mole) OR ' +
@@ -336,22 +219,37 @@ def torsion_match_two_ff(
         dih_f_old, dih_f_old, temperature=temperature
     )
     optimizer = DihedralOptimizer(
-        dihdata_fix, dihdata_ref, reweighter, criterion, boltzmann
+        sim_dihedrals=dihdata_fix,
+        ref_dihedrals=dihdata_ref,
+        reweighter=reweighter,
+        temperature=temperature,
+        criterion=criterion,
+        boltzmann=boltzmann,
+        method=opt_method,
+        options=opt_options,
+        pmf_weight=pmf_weight,
+        perturb_method=perturb_method
     )
     optim = optimizer()
     print("The residue from the fixed multiplicity fitting is:", optim.fun)
-    print("Force constants: ", [ki/4.184 for ki in optim.x])
     # The following condition should be changed to judge the optim found above
     # is good or not
     two_stages = False
     if optim.fun > min_ssr_to_add_mult:
         two_stages = True
-        print("Expanding multiplicities ...")
+        print("Expanding multiplicities ...\n")
         reweighter2 = CharmmDihedralReweighter(
             dih_f_old, dih_f_free, temperature=temperature
         )
         optimizer2 = DihedralOptimizer(
-            dihdata_fix, dihdata_ref, reweighter2, criterion, boltzmann
+            sim_dihedrals=dihdata_fix,
+            ref_dihedrals=dihdata_ref,
+            reweighter=reweighter2,
+            temperature=temperature,
+            criterion=criterion,
+            boltzmann=boltzmann,
+            pmf_weight=pmf_weight,
+            perturb_method=perturb_method
         )
         optim2 = optimizer2()
     # prepare return value before plotting
@@ -377,27 +275,29 @@ def torsion_match_two_ff(
         print("After adding more multiplicities:")
         for tm, tp, tk in zip(new_ms, new_ps, list(optim2.x)):
             print(
-                str(round(ek, 4)) + '(kj/mole) OR ' +
-                str(round(ek / 4.184, 4)) + '(kcal/mole)',
-                ', for m={}'.format(em),
-                ', phase={}'.format(round(180 * ep / np.pi, 0))
+                str(round(tk, 4)) + '(kj/mole) OR ' +
+                str(round(tk / 4.184, 4)) + '(kcal/mole)',
+                ', for m={}'.format(tm),
+                ', phase={}'.format(round(180 * tp / np.pi, 0))
             )
             return_dic[tm] = [tp, tk]
         print("\n\n")
     if plot:
-        obj_func = ObjfuncDihedral(dihdata_fix, dihdata_ref, reweighter)
+        obj_func = ObjfuncDihedral(
+            dihdata_fix, dihdata_ref, reweighter, temperature, method=perturb_method
+        )
         ref_distrib, fixed_distrib = obj_func.reweighter.get_distributions(
-            dihdata_fix, dihdata_ref, optim.x
+            dihdata_fix, dihdata_ref, optim.x, method=perturb_method
         )
         _, unfixed_distrib = obj_func.reweighter.get_distributions(
-            dihdata_fix, dihdata_ref, target.k
+            dihdata_fix, dihdata_ref, target.k, method=perturb_method
         )
         if two_stages:
             obj_func2 = ObjfuncDihedral(
-                dihdata_fix, dihdata_ref, reweighter2
+                dihdata_fix, dihdata_ref, reweighter2, temperature, method=perturb_method
             )
             _, fixed_distrib2 = obj_func2.reweighter.get_distributions(
-                dihdata_fix, dihdata_ref, optim2.x
+                dihdata_fix, dihdata_ref, optim2.x, method=perturb_method
             )
         xaxis = np.arange(-180, 180, 3.6)
         plt.figure(figsize=(6, 4))
@@ -427,14 +327,57 @@ def torsion_match_two_ff(
         plt.xticks(fontsize=14)  # fontname='URW Gothic'
         plt.yticks(fontsize=14)
         plt.xlabel('Dihedral Angle', fontsize=18)
-        plt.ylabel('Population', fontsize=18)
+        plt.ylabel('(Relative) Population', fontsize=18)
         plt.legend(fontsize=12)
         plt.savefig(
             os.path.join(save_plot_to, 'tfix-{}-{}-{}-{}.png'.format(
                 atoms[0], atoms[1], atoms[2], atoms[3]
             )), dpi=200, bbox_inches='tight'
         )
-        plt.show()
+        if isnotebook():
+            plt.show()
+        plt.close()
+        
+        # PMF plot
+        plt.figure(figsize=(6, 4))
+        # ref_e_in_kt = - np.log(ref_distribution + 0.0001) 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            plt.plot(
+                xaxis, prob_to_pmf_kcal_per_mole(ref_distrib, temperature),
+                label='Reference', alpha=0.75, linewidth=4, color='r'
+            )
+            plt.plot(
+                xaxis, prob_to_pmf_kcal_per_mole(unfixed_distrib, temperature),
+                label='Before fitting', alpha=0.75, linewidth=2, color='k'
+            )
+            plt.plot(
+                xaxis, prob_to_pmf_kcal_per_mole(fixed_distrib, temperature),
+                label='After fitting', alpha=0.75, linewidth=2, color='b'
+            )
+        if two_stages:
+            plt.plot(
+                xaxis, prob_to_pmf_kcal_per_mole(fixed_distrib2, temperature),
+                label='Adding multiplicities', alpha=0.75, linewidth=3, color='g'
+            )
+            plt.title(
+            "{}-{}-{}-{} (PMF)".format(
+                atoms[0].upper(), atoms[1].upper(),
+                atoms[2].upper(), atoms[3].upper()
+            ), fontsize=18
+        )
+        plt.xticks(fontsize=14)  # fontname='URW Gothic'
+        plt.yticks(fontsize=14)
+        plt.xlabel('Dihedral Angle', fontsize=18)
+        plt.ylabel('PMF (kcal/mole)', fontsize=18)
+        plt.legend(fontsize=12)
+        plt.savefig(
+            os.path.join(save_plot_to, 'tfix-{}-{}-{}-{}-pmf.png'.format(
+                atoms[0], atoms[1], atoms[2], atoms[3]
+            )), dpi=200, bbox_inches='tight'
+        )
+        if isnotebook():
+            plt.show()
         plt.close()
     return return_dic
 
@@ -556,8 +499,6 @@ def perturb_any_dihedral(
     dt.get_cosine_series()
     # start to get the dihedrals and energies
     tj = trj_index
-    # oelist = []
-    # pelist = [[] for _ in range(len(dt_list[0].k))]
     pe_dict = dict()
     if isinstance(trj_index, list):
         dd = dt.get_dihedrals(traj_template, tj[0], tj[1])

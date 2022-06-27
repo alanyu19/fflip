@@ -387,6 +387,7 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
         special_properties, 
         uncertainty_scaling=uncertainty_scaling  # larger scaling should be used for more restraint
     )
+    # le.exchange_exp_value('scd-c22-h2r', 'scd-c22-h2s')
     
     for prop in le.target_properties:
         prop.update_amount_of_perturbation(perturbation)
