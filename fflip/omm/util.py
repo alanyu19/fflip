@@ -2,6 +2,9 @@
 
 """Utility and helper functions for OpenMM"""
 
+# my test change
+# test change
+
 from __future__ import absolute_import, division, print_function
 
 import os
@@ -59,7 +62,7 @@ def beta_kcalmol(temperature_kelvin):
 # --------------------------- OpenMM Iteractions ---------------------------
 
 def read_structure_parameter_files(psf, toppar):
-    parameters = CharmmParameterSet(*toppar) 
+    parameters = CharmmParameterSet(*toppar)
     import warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", CharmmPSFWarning)
@@ -167,7 +170,7 @@ def get_contexts(system_old, psf, paragroups, paraoffsets, **kwargs):
                     force.setUseDispersionCorrection(False)
                 if isinstance(force, CustomNonbondedForce):
                     force.setUseLongRangeCorrection(False)
-        if 'use_platform' in kwargs:   
+        if 'use_platform' in kwargs:
             platform = Platform.getPlatformByName(kwargs['use_platform'])
             print('Using Platform {}'.format(kwargs['use_platform']))
             if kwargs['use_platform'] == 'CUDA':
@@ -388,7 +391,6 @@ def filter_solution(file_to_load='solution.txt', threshold=0.0001):
             sol.append(d)
     return sol
 
-
 def create_system_with_lj_offset(
     parameter_group, parameter_offset, psf_file, parameter_files,
     unitcell_lengths, nbmethod=LJPME, nbcutoff=1.0, change_14=True
@@ -412,9 +414,9 @@ def create_system_with_lj_offset(
     atom_type = None
     for name in parameter_group.center_names:
         atoms = topology.select(
-            "resname {} and name {}".format(
-                parameter_group.lipid.upper(), name
-             )
+            "name {}".format(name) 
+             # changed because parameter_group.lipid.upper
+             # is not necessarily resname
         )
         first_atom_index = int(atoms[0])
         assert psf.atom_list[first_atom_index].name == name
