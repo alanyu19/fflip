@@ -19,24 +19,46 @@ class FolderNamingScheme(object):
         return os.path.join(self.tp.root_dir, "reweightings")
 
     def trajectory_folder(self, iteration, traj_root):
-        subdir = "iter{}/{}_{}_{}_{}".format(
-            iteration, self.tp.lipid_name, self.tp.system_type,
-            self.tp.surface_tension, self.tp.temperature
-        )
+        if self.tp.traj_rep < 0:
+            subdir = "iter{}/{}_{}_{}_{}".format(
+                iteration, self.tp.lipid_name, self.tp.system_type,
+                self.tp.surface_tension, self.tp.temperature
+                )
+        else:
+            subdir = "iter{}/{}_{}_{}_{}_{}".format(
+                iteration, self.tp.lipid_name, self.tp.system_type,
+                self.tp.surface_tension, self.tp.temperature, self.tp.traj_rep
+                )
         return os.path.join(traj_root, subdir)
 
     def property_data_folder(self, iteration):
-        subdir = "observables/iter{}/{}_{}_{}_{}_{}".format(
-            iteration, self.tp.prop_type, self.tp.lipid_name, self.tp.system_type,
-            self.tp.surface_tension, self.tp.temperature
-        )
+        if self.tp.traj_rep < 0:
+            subdir = "observables/iter{}/{}_{}_{}_{}_{}".format(
+                iteration, self.tp.prop_type, self.tp.lipid_name,
+                self.tp.system_type, self.tp.surface_tension,
+                self.tp.temperature
+                )
+        else:
+            subdir = "observables/iter{}/{}_{}_{}_{}_{}_{}".format(
+                iteration, self.tp.prop_type, self.tp.lipid_name,
+                self.tp.system_type, self.tp.surface_tension,
+                self.tp.temperature, self.tp.traj_rep
+                )
         return os.path.join(self.tp.root_dir, subdir)
 
     def potential_data_folder(self, iteration):
-        subdir = "potentials/iter{}/potential_{}_{}_{}_{}_{}".format(
-            iteration, self.tp.lipid_name, self.tp.system_type,
-            self.tp.surface_tension, self.tp.temperature, self.tp.perturbation
-        )
+        if self.tp.traj_rep < 0:
+            subdir = "potentials/iter{}/potential_{}_{}_{}_{}_{}".format(
+                iteration, self.tp.lipid_name, self.tp.system_type,
+                self.tp.surface_tension, self.tp.temperature,
+                self.tp.perturbation
+                )
+        else:
+            subdir = "potentials/iter{}/potential_{}_{}_{}_{}_{}_{}".format(
+                iteration, self.tp.lipid_name, self.tp.system_type,
+                self.tp.surface_tension, self.tp.temperature,
+                self.tp.perturbation, self.tp.traj_rep
+                )
         return os.path.join(self.tp.root_dir, subdir)
 
     def reweighting_folder(self, iteration):
@@ -47,29 +69,50 @@ class FolderNamingScheme(object):
         )
 
     def reweighting_file_name(self):
-        return "{}_{}_{}_{}_{}".format(
-            self.tp.prop_type, self.tp.lipid_name, self.tp.system_type,
-            self.tp.surface_tension, self.tp.temperature
-        )
-
+        if self.tp.traj_rep < 0:
+            return "{}_{}_{}_{}_{}".format(
+                self.tp.prop_type, self.tp.lipid_name, self.tp.system_type,
+                self.tp.surface_tension, self.tp.temperature
+                )
+        else:
+            return "{}_{}_{}_{}_{}_{}".format(
+                self.tp.prop_type, self.tp.lipid_name, self.tp.system_type,
+                self.tp.surface_tension, self.tp.temperature, self.tp.traj_rep
+                )
     def robustness_folder(self, iteration):
         return os.path.join(
             self.tp.robdir, 'iter{}/{}'.format(iteration, self.tp.perturbation)
         )
 
     def robustness_diff_file(self, iteration):
-        return os.path.join(
-            self.tp.robdir, 'iter{}/{}/{}_diff.txt'.format(
-                iteration, self.tp.perturbation, self.tp.name
+        if self.tp.traj_rep < 0:
+            return os.path.join(
+                self.tp.robdir, 'iter{}/{}/{}_diff.txt'.format(
+                    iteration, self.tp.perturbation, self.tp.name
+                )
             )
-        )
+        else:
+            return os.path.join(
+                self.tp.robdir, 'iter{}/{}/{}_{}_diff.txt'.format(
+                    iteration, self.tp.perturbation, self.tp.name,
+                    self.tp.traj_rep
+                )
+            )
 
     def robustness_std_file(self, iteration):
-        return os.path.join(
-            self.tp.robdir, 'iter{}/{}/{}_std.txt'.format(
-                iteration, self.tp.perturbation, self.tp.name
+        if self.tp.traj_rep < 0:
+            return os.path.join(
+                self.tp.robdir, 'iter{}/{}/{}_std.txt'.format(
+                    iteration, self.tp.perturbation, self.tp.name
+                )
             )
-        )
+        else:
+            return os.path.join(
+                self.tp.robdir, 'iter{}/{}/{}_{}_std.txt'.format(
+                    iteration, self.tp.perturbation, self.tp.name,
+                    self.tp.traj_rep, self.tp.traj_rep
+                )
+            )
 
 
 class SimOptScheme(object):
@@ -285,5 +328,3 @@ def make_guess_of_layertype(name):
         return 'bilayer'
     else:
         return 'bulk'
-
-

@@ -86,7 +86,8 @@ class TargetSystem(object):
                  sim_template=None,
                  option_scheme=SimOptScheme,
                  naming_scheme=FolderNamingScheme,
-                 ff='c36'):
+                 ff='c36',
+                 traj_rep=-1):
         """
         Args:
             system_type (str): the type of the simulated system (
@@ -103,6 +104,8 @@ class TargetSystem(object):
             option_scheme: use default.
             naming_scheme: use default.
             ff:
+            traj_rep (int): the replica number if using multiple, default
+            is none -1.
         """
         self.system_type = system_type
         self.lipid_name = lipid_name
@@ -116,6 +119,7 @@ class TargetSystem(object):
         self.option_scheme = option_scheme(self)
         self.folder_naming = naming_scheme(self)
         self.ff = ff
+        self.traj_rep = traj_rep
 
     def simulate(self, iteration, trj_folder, last_seqno=None,
                  boxx=None, boxz=None, zmode=None,
@@ -184,7 +188,7 @@ class SpecialProperty(TargetSystem):
     def __init__(self, name, temperature, weight_factor, root_dir,
                  parent_properties, generator, exp_rel_dir='exp', **kwargs):
         """
-        The (sensitivity) evaluator for compressibility of membrane, 
+        The (sensitivity) evaluator for compressibility of membrane,
         based on differential of Ka = 2A0 * (d_gamma / dA)
         Args:
             name: name of the property
@@ -194,7 +198,7 @@ class SpecialProperty(TargetSystem):
             parent_properties: the A0, the A under minus surface tension,
                                and the A under positive surface tension.
             exp_rel_dir: experimental dat dir
-            **kwargs: 
+            **kwargs:
         """
         self.name = name
         self.temperature = temperature
@@ -258,6 +262,7 @@ class TargetProperty(TargetSystem):
                  naming_scheme=FolderNamingScheme,
                  ff='c36',
                  parse_groups='all',
+                 traj_rep = -1,
                  **misc_kwargs):
         """
         misc_kwargs may contain:
@@ -300,6 +305,7 @@ class TargetProperty(TargetSystem):
         self._scaling = make_guess_of_scaling(self.name)
         self._app_weight = weight_factor
         self._perturbation = 1.0
+        self.traj_rep = traj_rep
 
     def update_block_sizes(self, **kwargs):
         if "observable" in kwargs:
@@ -365,7 +371,7 @@ class TargetProperty(TargetSystem):
         else:
             name_exp = self.name
         return np.loadtxt(os.path.join(self.exp_dir, name_exp + '.exp'))
-    
+
     @property
     def exp(self):
         if not hasattr(self, 'exchanged_exp'):
