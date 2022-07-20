@@ -387,7 +387,9 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, block_size_potential
               help="weight of qm charges, performance not tested!")
 @click.option("--previous", type=str, default=None, help="previous iteration index/label")
 @click.option("--ssr", is_flag=True, help="plot properties' contributions to SSR")
-def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, uncertainty_scaling, hasqm, qmw, previous, ssr):
+def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst,
+             sigdb, epsdb, chrgdb, tldb, apdb, chrgdb, uncertainty_scaling,
+             hasqm, qmw, previous, ssr):
     print('there are {} normal properties and {} special properties'.format(
         len(properties), len(special_properties))
     )
