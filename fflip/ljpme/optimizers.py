@@ -17,7 +17,7 @@ class Optimizer(object):
             special_properties (type: list): SpecialProperty objects
             model_compounds（type: dict): model compounds, names as keys
             qmc (type: dict): QM partial charges for available atoms
-            uncertainty_scaling (float): controls the importance of error 
+            uncertainty_scaling (float): controls the importance of error
         """
         self.uncertainty_scaling = uncertainty_scaling
         self.target_properties = target_properties
@@ -57,7 +57,7 @@ class Optimizer(object):
     @property
     def num_qmc(self):
         return len(self.qmc)
-    
+
     @property
     def num_properties(self):
         return len(self.target_properties)
@@ -219,9 +219,9 @@ class Optimizer(object):
             weighted robustness. If exceeded, that parameter won't change.
 
             forbid （type: dictionary): parameters we don't want to touch at all.
-            
+
             qmc_weight (type: float): the weight for QM charges.
-            
+
             qmscan_weights (type: dictionary): the weights for model
             compounds' conformational energies
         """
@@ -262,7 +262,8 @@ class Optimizer(object):
                         print(
                             "{0:>5s} {1:>8s} {2:<30s}".format(
                                 self.parameters[i0].center_names[0], ptype,
-                                "  ** exceeds drop bound **"
+                                "  ** exceeds drop bound {} < {} **".format(
+                                self.robustness[i0], drop_bounds[ptype])
                             )
                         )
                     matrix[i][i] = 1e5
@@ -293,7 +294,8 @@ class Optimizer(object):
                         print(
                             "{0:>5s} {1:>8s} {2:<30s}".format(
                                 self.parameters[i0].center_names[0], ptype,
-                                "  ** exceeds drop bound **"
+                                "  ** exceeds drop bound {} < {} **".format(
+                                self.robustness[i0], drop_bounds[ptype])
                             )
                         )
                     matrix[i][i] = 1e5
@@ -507,7 +509,7 @@ class PropertyLinearEstimator(Optimizer):
                 raise Exception('Error in update_weight!')
         print('{} parameters changed in total'.format(count))
 
-    def __call__(self, save_result=False, result_file='result.csv', 
+    def __call__(self, save_result=False, result_file='result.csv',
                  ssr_file='ssr.png'):
         a = np.matmul(self.W, self.S)
         b = np.matmul(self.W, self.T)
@@ -584,4 +586,3 @@ class PropertyLinearEstimator(Optimizer):
             plt.savefig(ssr_file, bbox_inches='tight')
         self.solution = solution[0]
         return solution[0]
-
