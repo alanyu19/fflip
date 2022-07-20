@@ -262,7 +262,7 @@ class TargetProperty(TargetSystem):
                  naming_scheme=FolderNamingScheme,
                  ff='c36',
                  parse_groups='all',
-                 traj_rep = -1,
+                 traj_rep=-1,
                  **misc_kwargs):
         """
         misc_kwargs may contain:
@@ -305,7 +305,7 @@ class TargetProperty(TargetSystem):
         self._scaling = make_guess_of_scaling(self.name)
         self._app_weight = weight_factor
         self._perturbation = 1.0
-        self.traj_rep = traj_rep
+        self.traj_rep=traj_rep
 
     def update_block_sizes(self, **kwargs):
         if "observable" in kwargs:
