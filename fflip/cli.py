@@ -49,7 +49,7 @@ def scalc(property_indexes, first_trj, last_trj, block_size_potential,
     """
     Perform the sensitivity calculation
     """
-    
+
     indexes = construct_indexes(property_indexes, properties)
 
     if first_trj is not None and last_trj is not None:
@@ -121,7 +121,7 @@ def rcalc(property_indexes, first_trj, last_trj, block_size_potential,
     """
     Perform the error(robustness) analysis on sensitivities
     """
-    
+
     indexes = construct_indexes(property_indexes, properties)
 
     if first_trj is not None and last_trj is not None:
@@ -167,7 +167,7 @@ def rcalc(property_indexes, first_trj, last_trj, block_size_potential,
             threads = []
         thread = Thread(
             target=properties[i].get_robustness,
-            kwargs={'iteration': iteration, 
+            kwargs={'iteration': iteration,
                     'fromfile': False,
                     'block_size': int((last - first + 1) / 3),
                     'partition': partition}
@@ -209,7 +209,7 @@ def simulate(location, time, change_parameters, sfile, tfile,
              boxx, boxz, zmode, integrator, barostat, iteration,
              start, verbose, overwrite):
     """
-    Initiate the simulations 
+    Initiate the simulations
     """
     cp_match = {'yes': True, 'no': False}
     for prop in properties:
@@ -239,7 +239,7 @@ def simulate(location, time, change_parameters, sfile, tfile,
               help="start immediately? (otherwise go to sim folders to start manually)")
 def simulate_mc(location, change_parameters, sfile, tfile, iteration, toppar, start):
     """
-    Initiate the simulations 
+    Initiate the simulations
     """
     cp_match = {'yes': True, 'no': False}
     for mcp in mcps:
@@ -256,7 +256,7 @@ def simulate_mc(location, change_parameters, sfile, tfile, iteration, toppar, st
               help="interation id, can be 0, 1, 2 ... or any string")
 def dihedral_mc(location, iteration):
     """
-    Initiate the simulations 
+    Initiate the simulations
     """
     for mcp in mcps:
         mcp.generate_model_compound()
@@ -349,7 +349,7 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, block_size_potential
             if calctype.lower() == 'all' or calctype.lower() == 'potential':
                 toppar = os.path.realpath(toppar)
                 properties[i].recalc_energy(
-                    iteration, traj_root=traj_loc, overwrite=overwrite, 
+                    iteration, traj_root=traj_loc, overwrite=overwrite,
                     last_solution=solution, torfix=torfix,
                     toppar_path=toppar
                 )
@@ -369,6 +369,16 @@ def obspot(property_indexes, traj_loc, first_trj, last_trj, block_size_potential
               help="restraint on alpha, defult is 4, increase for more restraint")
 @click.option("-c", "--chrgrst", type=float, default=3,
               help="restraint on charge, defualt is 3, increase for more restraint")
+@click.option("-ds", "--sigdb", type=float, default=1,
+              help="drop bound for sigma, defualt is 1")
+@click.option("-de", "--epsdb", type=float, default=1,
+              help="drop bound for epsilon, defualt is 1")
+@click.option("-dt", "--tldb", type=float, default=1,
+              help="drop bound for thole, defualt is 1")
+@click.option("-da", "--apdb", type=float, default=1,
+              help="drop bound for alpha, defualt is 1")
+@click.option("-dc", "--chrgdb", type=float, default=1,
+              help="drop bound for charge, defualt is 1")
 @click.option("-u", "--uncertainty_scaling", type=float, default=500,
               help="default is 500, increase to apply more restraint")
 @click.option("--hasqm", is_flag=True,
@@ -383,22 +393,22 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
     )
 
     le = PropertyLinearEstimator(
-        properties, 
-        special_properties, 
+        properties,
+        special_properties,
         uncertainty_scaling=uncertainty_scaling  # larger scaling should be used for more restraint
     )
     # le.exchange_exp_value('scd-c22-h2r', 'scd-c22-h2s')
-    
+
     for prop in le.target_properties:
         prop.update_amount_of_perturbation(perturbation)
         prop.get_sensitivity(iteration, use_cluster=False, quit=True)
     for prop in le.special_properties:
         prop.get_sensitivity(iteration)
         prop.update_scaling_using_exp()
-    
+
     for prop in le.target_properties:
         prop.get_robustness(iteration)
-    
+
     # This should be an option (TODO: Yalun)
     if hasqm:
         le.get_qm_charge_from_file(root + '/qm/qm.csv')
@@ -414,11 +424,11 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
         },
         # This is currently hard-coded
         drop_bounds={
-            'sigma': 1, 'epsilon': 1, 'charge': 1,
-            'alpha': 1, 'thole': 1},
+            'sigma': sigdb, 'epsilon': epsdb, 'charge': chrgdb,
+            'alpha': apdb, 'thole': tldb},
         qmc_weight=qmw, verbose=True,
         # forbid={'charge': ['C2', 'C3', 'H2R', 'H2S', 'H2X', 'H2Y']}
-    ) 
+    )
     le.gen_target_vector()
     # mkdir for result
     if not os.path.isdir("solutions"):  # directory for slurm output files
@@ -434,7 +444,7 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
     le.update_weight(
         hard_bounds={'sigma': sigrst, 'epsilon': epsrst, 'charge': chrgrst,
                      'thole': tlrst, 'alpha': aprst},
-        # parameter change (measured in % or 0.01 e) 
+        # parameter change (measured in % or 0.01 e)
         # smaller than this would be dropped
         min_change=0.002
     )
@@ -444,7 +454,7 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
     )
     # save essential optimization parameters
     with open(
-        os.path.join(result_path, "optimization_info.txt"), "w" 
+        os.path.join(result_path, "optimization_info.txt"), "w"
     ) as fw:
         fw.write("uncertainty_scaling:\n")
         fw.write(str(le.uncertainty_scaling) + "\n")
@@ -485,4 +495,3 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
 
 def entrypoint():
     sys.exit(main(obj={}))
-
