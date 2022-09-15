@@ -414,7 +414,7 @@ def create_system_with_lj_offset(
     atom_type = None
     for name in parameter_group.center_names:
         atoms = topology.select(
-            "name {}".format(name) 
+            "name {}".format(name)
              # changed because parameter_group.lipid.upper
              # is not necessarily resname
         )
@@ -446,3 +446,78 @@ def create_system_with_lj_offset(
         ewaldErrorTolerance=0.0001
     )
     return system_
+
+# Function to change the LJ parameters compatible with NBFIX
+def change_lj_param(psfworkflow,solution_file,lipid,change_14=True):
+    sol = filter_solution(solution_file)
+    parameter_sets = lipid.parse_groups()
+    all_offsets = [gen_param_offset(ps, amount=sol[i]) \
+    for i, ps in enumerate(parameter_sets)]
+        with warnings.simplefilter("ignore", CharmmPSFWarning)
+    topology = md.Topology.from_openmm(psfworkflow.psf.topology)
+    for g, offset in zip(parameter_sets, all_offsets):
+        if g.par_type == 'sigma':
+            par_type = 'rmin'
+        elif g.par_type == 'epsilon':
+            par_type = 'epsilon'
+        atom_type = None
+        for name in g.center_names:
+            atoms = topology.select("name {}".format(name))
+            first_atom_index = int(atoms[0])
+            assert psf.atom_list[first_atom_index].name == name
+            if not atom_type:
+                atom_type = psf.atom_list[first_atom_index].atom_type
+            else:
+                assert atom_type == psf.atom_list[first_atom_index].attype, \
+                "Different atom types in one parameter (LJ) group!"
+        if par_type == 'rmin':
+            psfworkflow.parameters.atom_types_str[atom_type].rmin *= \
+            ( 1 + offset )
+            if change_14:
+                psfworkflow.parameters.atom_types_str[atom_type].rmin_14 *= \
+                ( 1 + offset )
+        elif par_type == 'epsilon'
+            psfworkflow.parameters.atom_types_str[atom_type].epsilon *= \
+            ( 1 + offset )
+            if change_14:
+                psfworkflow.parameters.atom_types_str[atom_type].epsilon_14 *= \
+                ( 1 + offset )
+    psfworkflow.create_system(cutoff_distance = 10*u.angstrom)
+
+# Function to change the charge parameters of the atoms
+def change_charge_param(solution_file, lipid):
+    sol = filter_solution(solution_file)
+    parameter_sets = lipid.parse_groups()
+    all_offsets = [gen_param_offset(ps, amount=sol[i]) \
+    for i, ps in enumerate(parameter_sets)]
+    for force in workflow.system.getForces():
+        if isinstance(force, NonbondedForce):
+            for g, offset in zip(parameter_sets, all_offsets):
+                if g.par_type == 'charge':
+                    # Initialize the center and neighbor atom lists.
+                    atom_sele_neighb = []
+                    atom_sele_center = []
+                    for i in range(len(g.center_names)):
+                        atom_sele_center.append(
+                            topology.select("name {}".format(g.center_names[i]))
+                        )
+                    for i in range(len(g.neighbors)):
+                        atom_sele_neighb.append(
+                            topology.select("name {}".format(g.neighbors[i]))
+                        )
+
+                    # Change parameters for the center atoms.
+                    for i in range(len(g.center_names)):
+                        for atom in atom_sele_center[i]:
+                            atom = int(atom)
+                            charge, sigma, epsilon - force.getParticleParameters(atom)
+                            charge_new = charge + u.Quantity(offset, unit=u.elementary_charge)
+                            force.setParticleParameters(atom, charge_new, sigma, epsilon)
+
+                    # Change parameters for the neighboring atoms.
+                    for i in range(len(g.neighbors)):
+                        for atom in atom_sele_neighb[i]:
+                            atom = int(atom)
+                            charge, sigma, epsilon = force.getParticleParameters(atom)
+                            charge_new = charge + u.Quantity(offset*g.ron[i], unit=u.elementary_charge)
+                            force.setParticleParameters(atom, charge_new, sigma, epsilon)
