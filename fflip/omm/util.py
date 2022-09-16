@@ -478,7 +478,7 @@ def change_lj_param(psfworkflow,solution_file,lipid,change_14=True):
             if change_14:
                 psfworkflow.parameters.atom_types_str[atom_type].rmin_14 *= \
                 ( 1 + offset )
-        elif par_type == 'epsilon'
+        elif par_type == 'epsilon':
             psfworkflow.parameters.atom_types_str[atom_type].epsilon *= \
             ( 1 + offset )
             if change_14:
