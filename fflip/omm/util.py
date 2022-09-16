@@ -453,7 +453,9 @@ def change_lj_param(psfworkflow,solution_file,lipid,change_14=True):
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
     for i, ps in enumerate(parameter_sets)]
-        with warnings.simplefilter("ignore", CharmmPSFWarning)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", CharmmPSFWarning)
+        psf = CharmmPsfFile(psf_file)
     topology = md.Topology.from_openmm(psfworkflow.psf.topology)
     for g, offset in zip(parameter_sets, all_offsets):
         if g.par_type == 'sigma':
