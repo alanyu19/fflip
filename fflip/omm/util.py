@@ -456,7 +456,6 @@ def change_lj_param(psfworkflow,solution_file,lipid,cutoff_dist=10.0,change_14=T
     for i, ps in enumerate(parameter_sets)]
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", CharmmPSFWarning)
-        psf = CharmmPsfFile(psf_file)
     topology = md.Topology.from_openmm(psfworkflow.psf.topology)
     for g, offset in zip(parameter_sets, all_offsets):
         if g.par_type == 'sigma':
@@ -469,9 +468,9 @@ def change_lj_param(psfworkflow,solution_file,lipid,cutoff_dist=10.0,change_14=T
             first_atom_index = int(atoms[0])
             assert psf.atom_list[first_atom_index].name == name
             if not atom_type:
-                atom_type = psf.atom_list[first_atom_index].atom_type
+                atom_type = psfworkflow.psf.atom_list[first_atom_index].atom_type
             else:
-                assert atom_type == psf.atom_list[first_atom_index].attype, \
+                assert atom_type == psfworkflow.psf.atom_list[first_atom_index].attype, \
                 "Different atom types in one parameter (LJ) group!"
         if par_type == 'rmin':
             psfworkflow.parameters.atom_types_str[atom_type].rmin *= \
