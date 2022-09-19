@@ -25,6 +25,7 @@ from fflip.omm.playpara import (
     prepare_system, BrutalNonbondedParameter, change_nb_exceptions,
     change_drude_ff_parameters
 )
+from fflip.ljpme.param import *
 
 
 # ---------------------------- File Handling ------------------------------
