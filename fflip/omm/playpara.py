@@ -22,8 +22,8 @@ def prepare_system(system, topology, groups):
 def add_global_parameter(force, name, value):
     """
     Args:
-        force: 
-        name: name of the parameter, name should indicates 
+        force:
+        name: name of the parameter, name should indicates
         nonbonded force subtype (charge, epsilon or sigma)
         value: default value
     Returns:
@@ -670,7 +670,7 @@ def change_drude_ff_parameters(
 
 def find_drude_force_parameter(system, topology, name, plrzb=True, dname=None):
     """
-    dname: name of the drude particle, if not provided, 
+    dname: name of the drude particle, if not provided,
     the program will guess based on the name of the heavy atom
     """
     force = None
