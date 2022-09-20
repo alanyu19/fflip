@@ -466,7 +466,7 @@ def change_lj_param(psfworkflow,solution_file,lipid,cutoff_dist=10.0,change_14=T
         for name in g.center_names:
             atoms = topology.select("name {}".format(name))
             first_atom_index = int(atoms[0])
-            assert psf.atom_list[first_atom_index].name == name
+            assert psfworkflow.psf.atom_list[first_atom_index].name == name
             if not atom_type:
                 atom_type = psfworkflow.psf.atom_list[first_atom_index].atom_type
             else:
