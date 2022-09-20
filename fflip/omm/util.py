@@ -449,7 +449,7 @@ def create_system_with_lj_offset(
     return system_
 
 # Function to change the LJ parameters compatible with NBFIX
-def change_lj_param(psfworkflow,solution_file,lipid,cutoff_dist=10.0,change_14=True):
+def change_lj_param(psfworkflow,solution_file,lipid,change_14=True):
     sol = filter_solution(solution_file)
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
@@ -483,7 +483,6 @@ def change_lj_param(psfworkflow,solution_file,lipid,cutoff_dist=10.0,change_14=T
             if change_14:
                 psfworkflow.parameters.atom_types_str[atom_type].epsilon_14 *= \
                 ( 1 + offset )
-    psfworkflow.create_system(cutoff_distance=cutoff_dist*u.angstrom)
 
 
 # Function to change the charge parameters of the atoms
