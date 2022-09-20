@@ -467,11 +467,9 @@ def change_lj_param(psfworkflow,solution_file,lipid,cutoff_dist=10.0,change_14=T
             atoms = topology.select("name {}".format(name))
             first_atom_index = int(atoms[0])
             assert psfworkflow.psf.atom_list[first_atom_index].name == name
-            if not atom_type:
-                atom_type = psfworkflow.psf.atom_list[first_atom_index].atom_type
-            else:
-                assert atom_type == psfworkflow.psf.atom_list[first_atom_index].attype, \
-                "Different atom types in one parameter (LJ) group!"
+            try:
+                atom_type = psfworkflow.psf.atom_list[first_atom_index].attype
+            except AttributeError
         if par_type == 'rmin':
             psfworkflow.parameters.atom_types_str[atom_type].rmin *= \
             ( 1 + offset )
