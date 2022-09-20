@@ -486,12 +486,12 @@ def change_lj_param(psfworkflow,solution_file,lipid,change_14=True):
 
 
 # Function to change the charge parameters of the atoms
-def change_charge_param(solution_file, lipid):
+def change_charge_param(psfworkflow,solution_file,lipid):
     sol = filter_solution(solution_file)
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
     for i, ps in enumerate(parameter_sets)]
-    for force in workflow.system.getForces():
+    for force in psfworkflow.system.getForces():
         if isinstance(force, NonbondedForce):
             for g, offset in zip(parameter_sets, all_offsets):
                 if g.par_type == 'charge':
