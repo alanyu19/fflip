@@ -491,7 +491,7 @@ def change_charge_param(psfworkflow,solution_file,lipid):
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
     for i, ps in enumerate(parameter_sets)]
-    for force in psfworkflow.system.getForces():
+    for force in system.getForces():
         if isinstance(force, NonbondedForce):
             for g, offset in zip(parameter_sets, all_offsets):
                 if g.par_type == 'charge':
