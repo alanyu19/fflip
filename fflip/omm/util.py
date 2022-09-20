@@ -469,7 +469,8 @@ def change_lj_param(psfworkflow,solution_file,lipid,cutoff_dist=10.0,change_14=T
             assert psfworkflow.psf.atom_list[first_atom_index].name == name
             try:
                 atom_type = psfworkflow.psf.atom_list[first_atom_index].attype
-            except AttributeError
+            except AttributeError:
+                print("Psfworkflow does not have attype attribute")
         if par_type == 'rmin':
             psfworkflow.parameters.atom_types_str[atom_type].rmin *= \
             ( 1 + offset )
