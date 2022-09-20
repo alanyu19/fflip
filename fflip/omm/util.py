@@ -20,6 +20,8 @@ from simtk.openmm.app import LJPME, PME, HBonds
 from simtk.openmm import Platform
 import mdtraj as md
 
+from rflow import RickFlow, PsfWorkflow
+
 from fflip.omm import omm_vfswitch  # this should be from omm
 from fflip.omm.playpara import (
     prepare_system, BrutalNonbondedParameter, change_nb_exceptions,
@@ -449,8 +451,10 @@ def create_system_with_lj_offset(
     return system_
 
 # Function to change the LJ parameters compatible with NBFIX
-def change_lj_param(psfworkflow,solution_file,lipid,
+def change_lj_param(psfworkflow,solution_file=None,lipid,
 change_14=True,parameter_group=None,parameter_offset=None):
+    if solution_file is None:
+        return
     sol = filter_solution(solution_file)
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
@@ -520,7 +524,9 @@ change_14=True,parameter_group=None,parameter_offset=None):
 
 
 # Function to change the charge parameters of the atoms
-def change_charge_param(topology,system,solution_file,lipid):
+def change_charge_param(topology,system,solution_file=None,lipid):
+    if solution_file is None:
+        return
     sol = filter_solution(solution_file)
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
@@ -556,3 +562,70 @@ def change_charge_param(topology,system,solution_file,lipid):
                             charge, sigma, epsilon = force.getParticleParameters(atom)
                             charge_new = charge + u.Quantity(offset*g.ron[i], unit=u.elementary_charge)
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
+
+def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,
+solution=None,lipid,parameter_group=None,parameter_offset=None,
+nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
+cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
+    psfworkflow = PsfWorkflow(
+        toppar=parameter_files,
+        psf=psf_file,
+        crd=crd_file,
+        box_dimensions=unit_cell_lengths,
+        center_around='not water'
+    )
+    change_lj_param(psfworkflow,solution,lipid,change_14=True,
+        parameter_group=None,parameter_offset=None)
+    psfworkflow.create_system(
+        nonbondedMethod=nonbonded_method,
+        constraints=HBonds,
+        switch_distance=switch_distance, # idomatic python?
+        cutoff_distance=cutoff_distance,
+        ewaldErrorTolerance=0.0001
+    )
+    change_charge_param(psfworkflow.psf.topology,psfworkflow.system,
+        solution,lipid)
+    return psfworkflow
+
+def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
+lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
+switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
+ewaldErrorTolerance=0.0001):
+    if index == 0:
+        workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
+            box_dimensions,solution,lipid,parameter_group=None,
+            parameter_offset=None,nonbonded_method,switch_distance,
+            cutoff_distance,ewaldErrorTolerance
+        )
+        return ef.ParameterEnergy(
+                workflow.system, workflow.psf,
+                paragroups=[], paraoffsets=[],
+                use_new_method=False, use_platform='CUDA'
+                )
+    elif index > 0:
+        pgroup, offset = get_one_group_with_offset(
+            index, lipid, perturbation_amount, id_allowed='all'
+        )
+        if pgroup[0].par_type not in ['sigma','epsilon']:
+            workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
+                box_dimensions,solution,lipid,parameter_group=pgroup,
+                parameter_offset=offset,nonbonded_method,switch_distance,
+                cutoff_distance,ewaldErrorTolerance
+            )
+            return ef.ParameterEnergy(
+                workflow.system, workflow.psf,
+                paragroups=pgroup, paraoffsets=offset,
+                use_new_method=False, use_platform='CUDA'
+            )
+        )
+        else:
+            workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
+                box_dimensions,solution,lipid,parameter_group=pgroup,
+                parameter_offset=offset,nonbonded_method,switch_distance,
+                cutoff_distance,ewaldErrorTolerance
+            )
+            return ef.ParameterEnergy(
+                workflow.system, workflow.psf,
+                paragroups=[], paraoffsets=[],
+                use_new_method=False, use_platform='CUDA'
+            )
