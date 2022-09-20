@@ -511,7 +511,7 @@ def change_charge_param(topology,system,solution_file,lipid):
                     for i in range(len(g.center_names)):
                         for atom in atom_sele_center[i]:
                             atom = int(atom)
-                            charge, sigma, epsilon - force.getParticleParameters(atom)
+                            charge, sigma, epsilon = force.getParticleParameters(atom)
                             charge_new = charge + u.Quantity(offset, unit=u.elementary_charge)
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
