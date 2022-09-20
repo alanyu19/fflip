@@ -486,7 +486,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
                 ( 1 + offset )
         # include to change specific parameter for energy perturbation,
         # may need to clean up
-        if parameter_group not None:
+        if parameter_group is not None:
             if parameter_group.par_type == 'sigma':
                 par_type = 'rmin'
             elif parameter_group.par_type == 'epsilon':
