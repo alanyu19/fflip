@@ -449,7 +449,8 @@ def create_system_with_lj_offset(
     return system_
 
 # Function to change the LJ parameters compatible with NBFIX
-def change_lj_param(psfworkflow,solution_file,lipid,change_14=True):
+def change_lj_param(psfworkflow,solution_file,lipid,
+change_14=True,parameter_group=None,parameter_offset=None):
     sol = filter_solution(solution_file)
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
@@ -483,6 +484,39 @@ def change_lj_param(psfworkflow,solution_file,lipid,change_14=True):
             if change_14:
                 psfworkflow.parameters.atom_types_str[atom_type].epsilon_14 *= \
                 ( 1 + offset )
+        # include to change specific parameter for energy perturbation,
+        # may need to clean up
+        if parameter_group not None:
+            if parameter_group.par_type == 'sigma':
+                par_type = 'rmin'
+            elif parameter_group.par_type == 'epsilon':
+                par_type = 'epsilon'
+            else:
+                raise Exception(
+                    "Parameter type {} not supported by this function".format(
+                        parameter_group.par_type
+                    )
+                )
+            for name in parameter_group.center_names:
+                atoms = topology.select("name {}".format(name))
+                first_atom_index = int(atoms[0])
+                assert psfworkflow.psf.atom_list[first_atom_index].name == name
+                try:
+                    atom_type = psfworkflow.psf.atom_list[first_atom_index].attype
+                except AttributeError:
+                    raise Exception("Psfworkflow does not have attype attribute")
+            if par_type == 'rmin':
+                psfworkflow.parameters.atom_types_str[atom_type].rmin *= \
+                ( 1 + parameter_offset )
+                if change_14:
+                    psfworkflow.parameters.atom_types_str[atom_type].rmin_14 *= \
+                    ( 1 + parameter_offset )
+            elif par_type == 'epsilon':
+                psfworkflow.parameters.atom_types_str[atom_type].epsilon *= \
+                ( 1 + parameter_offset )
+                if change_14:
+                    psfworkflow.parameters.atom_types_str[atom_type].epsilon_14 *= \
+                    ( 1 + parameter_offset )
 
 
 # Function to change the charge parameters of the atoms
