@@ -451,7 +451,7 @@ def create_system_with_lj_offset(
     return system_
 
 # Function to change the LJ parameters compatible with NBFIX
-def change_lj_param(psfworkflow,solution_file=None,lipid,
+def change_lj_param(psfworkflow,lipid,solution_file=None,
 change_14=True,parameter_group=None,parameter_offset=None):
     if solution_file is None:
         return
@@ -524,7 +524,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
 
 
 # Function to change the charge parameters of the atoms
-def change_charge_param(topology,system,solution_file=None,lipid):
+def change_charge_param(topology,system,lipid,solution_file=None):
     if solution_file is None:
         return
     sol = filter_solution(solution_file)
@@ -574,7 +574,7 @@ cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
         box_dimensions=unit_cell_lengths,
         center_around='not water'
     )
-    change_lj_param(psfworkflow,solution,lipid,change_14=True,
+    change_lj_param(psfworkflow,lipid,solution,change_14=True,
         parameter_group=None,parameter_offset=None)
     psfworkflow.create_system(
         nonbondedMethod=nonbonded_method,
@@ -584,7 +584,7 @@ cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
         ewaldErrorTolerance=0.0001
     )
     change_charge_param(psfworkflow.psf.topology,psfworkflow.system,
-        solution,lipid)
+        lipid,solution)
     return psfworkflow
 
 def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
@@ -593,7 +593,7 @@ switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
 ewaldErrorTolerance=0.0001):
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-            box_dimensions,solution,lipid,parameter_group=None,
+            box_dimensions,lipid,solution,parameter_group=None,
             parameter_offset=None,nonbonded_method,switch_distance,
             cutoff_distance,ewaldErrorTolerance
         )
@@ -608,7 +608,7 @@ ewaldErrorTolerance=0.0001):
         )
         if pgroup[0].par_type not in ['sigma','epsilon']:
             workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-                box_dimensions,solution,lipid,parameter_group=pgroup,
+                box_dimensions,lipid,solution,parameter_group=pgroup,
                 parameter_offset=offset,nonbonded_method,switch_distance,
                 cutoff_distance,ewaldErrorTolerance
             )
@@ -619,7 +619,7 @@ ewaldErrorTolerance=0.0001):
             )
         else:
             workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-                box_dimensions,solution,lipid,parameter_group=pgroup,
+                box_dimensions,lipid,solution,parameter_group=pgroup,
                 parameter_offset=offset,nonbonded_method,switch_distance,
                 cutoff_distance,ewaldErrorTolerance
             )
