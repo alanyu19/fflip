@@ -617,7 +617,6 @@ ewaldErrorTolerance=0.0001):
                 paragroups=pgroup, paraoffsets=offset,
                 use_new_method=False, use_platform='CUDA'
             )
-        )
         else:
             workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
                 box_dimensions,solution,lipid,parameter_group=pgroup,
