@@ -606,23 +606,18 @@ ewaldErrorTolerance=0.0001):
         pgroup, offset = get_one_group_with_offset(
             index, lipid, perturbation_amount, id_allowed='all'
         )
+        workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
+            box_dimensions,lipid,solution,nonbonded_method,
+            switch_distance, parameter_group=pgroup,
+            parameter_offset=offset, cutoff_distance,ewaldErrorTolerance
+        )
         if pgroup[0].par_type not in ['sigma','epsilon']:
-            workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-                box_dimensions,lipid,solution,parameter_group=pgroup,
-                parameter_offset=offset,nonbonded_method,switch_distance,
-                cutoff_distance,ewaldErrorTolerance
-            )
             return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
                 paragroups=pgroup, paraoffsets=offset,
                 use_new_method=False, use_platform='CUDA'
             )
         else:
-            workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-                box_dimensions,lipid,solution,parameter_group=pgroup,
-                parameter_offset=offset,nonbonded_method,switch_distance,
-                cutoff_distance,ewaldErrorTolerance
-            )
             return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
                 paragroups=[], paraoffsets=[],
