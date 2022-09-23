@@ -564,7 +564,7 @@ def change_charge_param(topology,system,lipid,solution_file=None):
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
 def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,
-solution=None,lipid,parameter_group=None,parameter_offset=None,
+lipid,solution=None,parameter_group=None,parameter_offset=None,
 nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
 cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
     psfworkflow = PsfWorkflow(
