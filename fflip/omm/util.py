@@ -492,9 +492,9 @@ change_14=True,parameter_group=None,parameter_offset=None):
         # include to change specific parameter for energy perturbation,
         # may need to clean up
         if parameter_group is not None:
-            if parameter_group.par_type == 'sigma':
+            if g.par_type == 'sigma':
                 par_type = 'rmin'
-            elif parameter_group.par_type == 'epsilon':
+            elif g.par_type == 'epsilon':
                 par_type = 'epsilon'
             else:
                 raise Exception(
@@ -502,7 +502,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
                         parameter_group.par_type
                     )
                 )
-            for name in parameter_group.center_names:
+            for name in g.center_names:
                 atoms = psfworkflow.select("name {}".format(name)) # was topology.select
                 first_atom_index = int(atoms[0])
                 assert psfworkflow.psf.atom_list[first_atom_index].name == name
