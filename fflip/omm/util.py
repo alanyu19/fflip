@@ -568,7 +568,6 @@ def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,
 lipid,solution=None,nonbonded_method=LJPME,
 switch_distance=8.0 * u.angstrom,cutoff_distance=10.0 * u.angstrom,
 ewaldErrorTolerance=0.0001):
-    print('c')
     psfworkflow = PsfWorkflow(
         toppar=parameter_files,
         psf=psf_file,
@@ -578,7 +577,6 @@ ewaldErrorTolerance=0.0001):
     )
     change_lj_param(psfworkflow,lipid,solution,change_14=True,
         parameter_group=None,parameter_offset=None)
-    print('d')
     psfworkflow.create_system(
         nonbondedMethod=nonbonded_method,
         constraints=HBonds,
@@ -586,7 +584,6 @@ ewaldErrorTolerance=0.0001):
         cutoff_distance=cutoff_distance,
         ewaldErrorTolerance=ewaldErrorTolerance
     )
-    print('e')
     change_charge_param(psfworkflow.psf.topology,psfworkflow.system,
         lipid,solution)
     return psfworkflow
@@ -596,19 +593,18 @@ lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
 switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
 ewaldErrorTolerance=0.0001):
     if index == 0:
-        print('a')
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
             box_dimensions,lipid,solution,
             nonbonded_method,switch_distance,
             cutoff_distance,ewaldErrorTolerance
         )
+
         return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
                 paragroups=[], paraoffsets=[],
                 use_new_method=False, use_platform='CUDA'
                 )
     elif index > 0:
-        print('b')
         pgroup, offset = get_one_group_with_offset(
             index, lipid, perturbation_amount, id_allowed='all'
         )
