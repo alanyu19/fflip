@@ -581,7 +581,7 @@ cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
         constraints=HBonds,
         switch_distance=switch_distance, # idomatic python?
         cutoff_distance=cutoff_distance,
-        ewaldErrorTolerance=0.0001
+        ewaldErrorTolerance=ewaldErrorTolerance
     )
     change_charge_param(psfworkflow.psf.topology,psfworkflow.system,
         lipid,solution)
