@@ -462,7 +462,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
     for i, ps in enumerate(parameter_sets)]
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", CharmmPSFWarning)
-    topology = md.Topology.from_openmm(psfworkflow.psf.topology)
+    #topology = md.Topology.from_openmm(psfworkflow.psf.topology)
     for g, offset in zip(parameter_sets, all_offsets):
         if g.par_type == 'sigma':
             par_type = 'rmin'
@@ -470,7 +470,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
             par_type = 'epsilon'
         atom_type = None
         for name in g.center_names:
-            atoms = topology.select("name {}".format(name))
+            atoms = psfworkflow.select("name {}".format(name)) # was topology.select
             first_atom_index = int(atoms[0])
             assert psfworkflow.psf.atom_list[first_atom_index].name == name
             try:
@@ -503,7 +503,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
                     )
                 )
             for name in parameter_group.center_names:
-                atoms = topology.select("name {}".format(name))
+                atoms = psfworkflow.select("name {}".format(name)) # was topology.select
                 first_atom_index = int(atoms[0])
                 assert psfworkflow.psf.atom_list[first_atom_index].name == name
                 try:
@@ -565,9 +565,9 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
 def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,
-lipid,solution=None,nonbonded_method=LJPME,
-switch_distance=8.0 * u.angstrom,cutoff_distance=10.0 * u.angstrom,
-ewaldErrorTolerance=0.0001):
+lipid,parameter_group=None,parameter_offset=None,solution=None,
+nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
+cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
     psfworkflow = PsfWorkflow(
         toppar=parameter_files,
         psf=psf_file,
@@ -576,7 +576,7 @@ ewaldErrorTolerance=0.0001):
         center_around='not water'
     )
     change_lj_param(psfworkflow,lipid,solution,change_14=True,
-        parameter_group=None,parameter_offset=None)
+        parameter_group=parameter_group,parameter_offset=parameter_offset)
     psfworkflow.create_system(
         nonbondedMethod=nonbonded_method,
         constraints=HBonds,
@@ -593,11 +593,10 @@ switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
 ewaldErrorTolerance=0.0001):
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-            box_dimensions,lipid,solution,
-            nonbonded_method,switch_distance,
+            box_dimensions,lipid,parameter_group=None,parameter_offset=None,
+            solution,nonbonded_method,switch_distance,
             cutoff_distance,ewaldErrorTolerance
         )
-
         return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
                 paragroups=[], paraoffsets=[],
@@ -607,17 +606,25 @@ ewaldErrorTolerance=0.0001):
         pgroup, offset = get_one_group_with_offset(
             index, lipid, perturbation_amount, id_allowed='all'
         )
-        workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-            box_dimensions,lipid,solution,nonbonded_method,
-            switch_distance,cutoff_distance,ewaldErrorTolerance
-        )
         if pgroup[0].par_type not in ['sigma','epsilon']:
+            workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
+                box_dimensions,lipid,parameter_group=pgroup,parameter_offset=offset,
+                solution,nonbonded_method,switch_distance,cutoff_distance,
+                ewaldErrorTolerance
+            )
             return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
-                paragroups=pgroup, paraoffsets=offset,
+                paragroups=[], paraoffsets=[],
                 use_new_method=False, use_platform='CUDA'
             )
         else:
+            # The parameter group and offset is set to None because
+            # the change is done after the psfworkflow is created
+            workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
+                box_dimensions,lipid,parameter_group=None,parameter_offset=None,
+                solution,nonbonded_method,switch_distance,cutoff_distance,
+                ewaldErrorTolerance
+            )
             return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
                 paragroups=pgroup, paraoffsets=offset,
