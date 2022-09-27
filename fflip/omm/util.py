@@ -607,7 +607,7 @@ ewaldErrorTolerance=0.0001):
         )
         if pgroup[0].par_type not in ['sigma','epsilon']:
             workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-                box_dimensions,lipid,pgroup,offset,solution,nonbonded_method,
+                box_dimensions,lipid,solution,nonbonded_method,
                 switch_distance,cutoff_distance,ewaldErrorTolerance,
                 parameter_group=pgroup,parameter_offset=offset
             )
