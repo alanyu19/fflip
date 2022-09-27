@@ -525,14 +525,14 @@ change_14=True,parameter_group=None,parameter_offset=None):
 
 
 # Function to change the charge parameters of the atoms
-def change_charge_param(topology,system,lipid,solution_file=None):
+def change_charge_param(psfworkflow,lipid,solution_file=None):
     if solution_file is None:
         return
     sol = filter_solution(solution_file)
     parameter_sets = lipid.parse_groups()
     all_offsets = [gen_param_offset(ps, amount=sol[i]) \
     for i, ps in enumerate(parameter_sets)]
-    for force in system.getForces():
+    for force in psfworkflow.system.getForces():
         if isinstance(force, NonbondedForce):
             for g, offset in zip(parameter_sets, all_offsets):
                 if g.par_type == 'charge':
@@ -541,11 +541,11 @@ def change_charge_param(topology,system,lipid,solution_file=None):
                     atom_sele_center = []
                     for i in range(len(g.center_names)):
                         atom_sele_center.append(
-                            topology.select("name {}".format(g.center_names[i]))
+                            psfworkflow.select("name {}".format(g.center_names[i]))
                         )
                     for i in range(len(g.neighbors)):
                         atom_sele_neighb.append(
-                            topology.select("name {}".format(g.neighbors[i]))
+                            psfworkflow.select("name {}".format(g.neighbors[i]))
                         )
 
                     # Change parameters for the center atoms.
@@ -584,8 +584,7 @@ ewaldErrorTolerance=0.0001):
         cutoff_distance=cutoff_distance,
         ewaldErrorTolerance=ewaldErrorTolerance
     )
-    change_charge_param(psfworkflow.psf.topology,psfworkflow.system,
-        lipid,solution)
+    change_charge_param(psfworkflow,lipid,solution)
     return psfworkflow
 
 def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
