@@ -594,8 +594,7 @@ ewaldErrorTolerance=0.0001):
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
             box_dimensions,lipid,solution,nonbonded_method,switch_distance,
-            cutoff_distance,ewaldErrorTolerance,parameter_group=None,
-            parameter_offset=None,
+            cutoff_distance,ewaldErrorTolerance
         )
         return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
