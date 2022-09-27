@@ -620,6 +620,6 @@ ewaldErrorTolerance=0.0001):
         else:
             return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
-                paragroups=[], paraoffsets=[],
+                paragroups=pgroup, paraoffsets=offset,
                 use_new_method=False, use_platform='CUDA'
             )
