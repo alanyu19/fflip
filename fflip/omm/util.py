@@ -593,7 +593,8 @@ switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
 ewaldErrorTolerance=0.0001):
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-            box_dimensions,lipid,solution,nonbonded_method,switch_distance,
+            box_dimensions,lipid,solution,parameter_group=[],parameter_offset=[],
+            nonbonded_method,switch_distance,
             cutoff_distance,ewaldErrorTolerance
         )
         return ef.ParameterEnergy(
