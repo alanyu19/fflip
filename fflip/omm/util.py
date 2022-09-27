@@ -22,6 +22,7 @@ import mdtraj as md
 
 from rflow import RickFlow, PsfWorkflow
 
+from fflip.omm import energiesforces as ef
 from fflip.omm import omm_vfswitch  # this should be from omm
 from fflip.omm.playpara import (
     prepare_system, BrutalNonbondedParameter, change_nb_exceptions,
