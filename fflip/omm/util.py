@@ -491,9 +491,10 @@ change_14=True,parameter_group=None,parameter_offset=None):
     # include to change specific parameter for energy perturbation,
     # may need to clean up
     if parameter_group is not None:
-        if parameter_group.par_type == 'sigma':
+        param = parameter_group[0]
+        if param.par_type == 'sigma':
             par_type = 'rmin'
-        elif parameter_group.par_type == 'epsilon':
+        elif param.par_type == 'epsilon':
             par_type = 'epsilon'
         else:
             raise Exception(
@@ -502,7 +503,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
                 )
             )
         atom_type = None
-        for name in parameter_group.center_names:
+        for name in param.center_names:
             atoms = psfworkflow.select("name {}".format(name))
             first_atom_index = int(atoms[0])
             assert psfworkflow.psf.atom_list[first_atom_index].name == name
@@ -512,16 +513,16 @@ change_14=True,parameter_group=None,parameter_offset=None):
                 raise Exception("Psfworkflow does not have attype attribute")
         if par_type == 'rmin':
             psfworkflow.parameters.atom_types_str[atom_type].rmin *= \
-            ( 1 + parameter_offset )
+            ( 1 + parameter_offset[0] )
             if change_14:
                 psfworkflow.parameters.atom_types_str[atom_type].rmin_14 *= \
-                ( 1 + parameter_offset )
+                ( 1 + parameter_offset[0] )
         elif par_type == 'epsilon':
             psfworkflow.parameters.atom_types_str[atom_type].epsilon *= \
-            ( 1 + parameter_offset )
+            ( 1 + parameter_offset[0] )
             if change_14:
                 psfworkflow.parameters.atom_types_str[atom_type].epsilon_14 *= \
-                ( 1 + parameter_offset )
+                ( 1 + parameter_offset[0] )
 
 
 # Function to change the charge parameters of the atoms
@@ -575,7 +576,7 @@ parameter_group=None,parameter_offset=None):
         center_around='not water'
     )
     change_lj_param(psfworkflow,lipid,solution,change_14=True,
-        parameter_group=parameter_group[0],parameter_offset=parameter_offset[0])
+        parameter_group=parameter_group,parameter_offset=parameter_offset)
     psfworkflow.create_system(
         nonbondedMethod=nonbonded_method,
         constraints=HBonds,
