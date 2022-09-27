@@ -499,7 +499,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
         else:
             raise Exception(
                 "Parameter type {} not supported by this function".format(
-                    parameter_group.par_type
+                    param.par_type
                 )
             )
         atom_type = None
