@@ -547,7 +547,6 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
                         atom_sele_neighb.append(
                             psfworkflow.select("name {}".format(g.neighbors[i]))
                         )
-
                     # Change parameters for the center atoms.
                     for i in range(len(g.center_names)):
                         for atom in atom_sele_center[i]:
@@ -555,7 +554,6 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
                             charge, sigma, epsilon = force.getParticleParameters(atom)
                             charge_new = charge + u.Quantity(offset, unit=u.elementary_charge)
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
-
                     # Change parameters for the neighboring atoms.
                     for i in range(len(g.neighbors)):
                         for atom in atom_sele_neighb[i]:
@@ -564,10 +562,11 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
                             charge_new = charge + u.Quantity(offset*g.ron[i], unit=u.elementary_charge)
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
+# Create a psfworkflow that uses new parameters from a solution file and/or LJ perturbations.
 def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,
-lipid,parameter_group=None,parameter_offset=None,solution=None,
-nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
-cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
+lipid,solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
+cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001,
+parameter_group=None,parameter_offset=None):
     psfworkflow = PsfWorkflow(
         toppar=parameter_files,
         psf=psf_file,
@@ -587,14 +586,14 @@ cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
     change_charge_param(psfworkflow,lipid,solution)
     return psfworkflow
 
+# Return an energy evaluator that changes the parameters.
 def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
 lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
 switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
 ewaldErrorTolerance=0.0001):
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-            box_dimensions,lipid,parameter_group=None,parameter_offset=None,
-            solution,nonbonded_method,switch_distance,
+            box_dimensions,lipid,solution,nonbonded_method,switch_distance,
             cutoff_distance,ewaldErrorTolerance
         )
         return ef.ParameterEnergy(
@@ -608,10 +607,11 @@ ewaldErrorTolerance=0.0001):
         )
         if pgroup[0].par_type not in ['sigma','epsilon']:
             workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-                box_dimensions,lipid,parameter_group=pgroup,parameter_offset=offset,
-                solution,nonbonded_method,switch_distance,cutoff_distance,
-                ewaldErrorTolerance
+                box_dimensions,lipid,pgroup,offset,solution,nonbonded_method,
+                switch_distance,cutoff_distance,ewaldErrorTolerance,
+                parameter_group=pgroup,parameter_offset=offset
             )
+            # The parameter group and offset are changed in evaluator function.
             return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
                 paragroups=[], paraoffsets=[],
@@ -619,11 +619,10 @@ ewaldErrorTolerance=0.0001):
             )
         else:
             # The parameter group and offset is set to None because
-            # the change is done after the psfworkflow is created
+            # the change is done after the psfworkflow is created.
             workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-                box_dimensions,lipid,parameter_group=None,parameter_offset=None,
-                solution,nonbonded_method,switch_distance,cutoff_distance,
-                ewaldErrorTolerance
+                box_dimensions,lipid,solution,nonbonded_method,
+                switch_distance,cutoff_distance,ewaldErrorTolerance
             )
             return ef.ParameterEnergy(
                 workflow.system, workflow.psf,
