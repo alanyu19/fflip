@@ -571,7 +571,7 @@ cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
         toppar=parameter_files,
         psf=psf_file,
         crd=crd_file,
-        box_dimensions=unit_cell_lengths,
+        box_dimensions=box_dimensions,
         center_around='not water'
     )
     change_lj_param(psfworkflow,lipid,solution,change_14=True,
