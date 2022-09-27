@@ -564,9 +564,9 @@ def change_charge_param(topology,system,lipid,solution_file=None):
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
 def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,
-lipid,solution=None,parameter_group=None,parameter_offset=None,
-nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
-cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001):
+lipid,solution=None,nonbonded_method=LJPME,
+switch_distance=8.0 * u.angstrom,cutoff_distance=10.0 * u.angstrom,
+ewaldErrorTolerance=0.0001):
     psfworkflow = PsfWorkflow(
         toppar=parameter_files,
         psf=psf_file,
@@ -593,7 +593,7 @@ switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
 ewaldErrorTolerance=0.0001):
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
-            box_dimensions,lipid,solution,parameter_group=[],parameter_offset=[],
+            box_dimensions,lipid,solution,
             nonbonded_method,switch_distance,
             cutoff_distance,ewaldErrorTolerance
         )
@@ -608,8 +608,7 @@ ewaldErrorTolerance=0.0001):
         )
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
             box_dimensions,lipid,solution,nonbonded_method,
-            switch_distance,cutoff_distance,ewaldErrorTolerance,
-            parameter_group=pgroup, parameter_offset=offset
+            switch_distance,cutoff_distance,ewaldErrorTolerance
         )
         if pgroup[0].par_type not in ['sigma','epsilon']:
             return ef.ParameterEnergy(
