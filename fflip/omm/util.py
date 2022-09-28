@@ -606,7 +606,7 @@ ewaldErrorTolerance=0.0001):
         pgroup, offset = get_one_group_with_offset(
             index, lipid, perturbation_amount, id_allowed='all'
         )
-        if pgroup[0].par_type not in ['sigma','epsilon']:
+        if pgroup[0].par_type in ['sigma','epsilon']:
             workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
                 box_dimensions,lipid,solution,nonbonded_method,
                 switch_distance,cutoff_distance,ewaldErrorTolerance,
