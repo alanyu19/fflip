@@ -451,6 +451,7 @@ def create_system_with_lj_offset(
     )
     return system_
 
+# Anthony Pane
 # Function to change the LJ parameters compatible with NBFIX
 def change_lj_param(psfworkflow,lipid,solution_file=None,
 change_14=True,parameter_group=None,parameter_offset=None):
@@ -524,7 +525,7 @@ change_14=True,parameter_group=None,parameter_offset=None):
                 psfworkflow.parameters.atom_types_str[atom_type].epsilon_14 *= \
                 ( 1 + parameter_offset[0] )
 
-
+# Anthony Pane
 # Function to change the charge parameters of the atoms
 def change_charge_param(psfworkflow,lipid,solution_file=None):
     if solution_file is None:
@@ -563,6 +564,7 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
                             charge_new = charge + u.Quantity(offset*g.ron[i], unit=u.elementary_charge)
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
+# Anthony Pane
 # Create a psfworkflow that uses new parameters from a solution file and/or LJ perturbations.
 def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
     solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
@@ -587,6 +589,7 @@ def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
     change_charge_param(psfworkflow,lipid,solution)
     return psfworkflow
 
+# Anthony Pane
 # Return an energy evaluator that changes the parameters.
 def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
     lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
@@ -631,6 +634,7 @@ def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
                 use_new_method=False, use_platform='CUDA'
             )
 
+# Anthony Pane
 # Build rickflow that uses new parameters from a solution file and/or LJ perturbations.
 def build_rickflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
     solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
