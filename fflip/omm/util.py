@@ -564,10 +564,10 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
 # Create a psfworkflow that uses new parameters from a solution file and/or LJ perturbations.
-def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,
-lipid,solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
-cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001,
-parameter_group=None,parameter_offset=None):
+def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
+    solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
+    cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001,
+    parameter_group=None,parameter_offset=None):
     psfworkflow = PsfWorkflow(
         toppar=parameter_files,
         psf=psf_file,
@@ -589,9 +589,9 @@ parameter_group=None,parameter_offset=None):
 
 # Return an energy evaluator that changes the parameters.
 def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
-lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
-switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
-ewaldErrorTolerance=0.0001):
+    lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
+    switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
+    ewaldErrorTolerance=0.0001):
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
             box_dimensions,lipid,solution,nonbonded_method,switch_distance,
@@ -630,3 +630,40 @@ ewaldErrorTolerance=0.0001):
                 paragroups=pgroup, paraoffsets=offset,
                 use_new_method=False, use_platform='CUDA'
             )
+
+# Build rickflow that uses new parameters from a solution file and/or LJ perturbations.
+def build_rickflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
+    solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
+    cutoff_distance=10.0 * u.angstrom,dcd_out_interval=500,
+    table_out_interval=5000,ewaldErrorTolerance=0.0001,gpu_id=0,
+    parameter_group=None,parameter_offset=None):
+    psfworkflow = build_psfworkflow(parameter_files,psf_file,crd_file,
+        box_dimensions,lipid,solution,nonbonded_method,switch_distance,
+        cutoff_distance,ewaldErrorTolerance,parameter_group,parameter_offset)
+    # Create workflow with arguments. It may need to include kwargs.
+    workflow = Rickflow(
+        toppar=psfworkflow.parameters,
+        psf=workflow.psf_file,
+        crd=crd_file,
+        box_dimensions=box_dimensions,
+        gpu_id=0, #
+        nonbonded_method=nonbonded_method,
+        switch_distance=switch_distance,
+        cutoff_distance=cutoff_distance,
+        vdw_switching="openmm", #
+        work_dir=".",
+        tmp_output_dir=None,
+        dcd_output_interval=dcd_out_interval, #
+        table_output_interval=table_out_interval, #
+        steps_per_sequence=steps_per_sequence, #
+        misc_psf_create_system_kwargs={"ewaldErrorTolerance": ewaldErrorTolerance},
+        initialize_velocities=True,
+        center_around='not water',
+        center_relative_position=0.5,
+        center_dcd_at_origin=False,
+        analysis_mode=False,
+        precision="mixed",
+        report_velocities=False,
+        ewald_tolerance=ewaldErrorTolerance
+    )
+    return workflow
