@@ -454,10 +454,10 @@ def create_system_with_lj_offset(
 
 def change_lj_param(psfworkflow,lipid,solution_file=None,
 change_14=True,parameter_group=None,parameter_offset=None):
-"""
-Anthony Pane
-Function to change the LJ parameters compatible with NBFIX
-"""
+    """
+    Anthony Pane
+    Function to change the LJ parameters compatible with NBFIX
+    """
     if solution_file is None:
         return
     sol = filter_solution(solution_file)
@@ -689,7 +689,7 @@ def build_rickflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
     )
     return workflow
 
-def context_energy(workflow):
+def context_energy(workflow,integrator):
     """
     Anthony Pane
     This computes the energy contribution for all of the different force groups.
