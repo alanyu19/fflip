@@ -710,4 +710,4 @@ def context_energy(workflow,integrator):
             f.setReciprocalSpaceForceGroup(i)
     workflow.create_simulation(integrator)
     workflow.initialize_state()
-    return list(map(lambda x: ene(workflow,x),range(workflow.system.getNumForce()))
+    return list(map(lambda x: ene(workflow,x),range(workflow.system.getNumForce())))
