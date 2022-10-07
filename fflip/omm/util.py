@@ -451,10 +451,13 @@ def create_system_with_lj_offset(
     )
     return system_
 
-# Anthony Pane
-# Function to change the LJ parameters compatible with NBFIX
+
 def change_lj_param(psfworkflow,lipid,solution_file=None,
 change_14=True,parameter_group=None,parameter_offset=None):
+"""
+Anthony Pane
+Function to change the LJ parameters compatible with NBFIX
+"""
     if solution_file is None:
         return
     sol = filter_solution(solution_file)
@@ -525,9 +528,12 @@ change_14=True,parameter_group=None,parameter_offset=None):
                 psfworkflow.parameters.atom_types_str[atom_type].epsilon_14 *= \
                 ( 1 + parameter_offset[0] )
 
-# Anthony Pane
-# Function to change the charge parameters of the atoms
+
 def change_charge_param(psfworkflow,lipid,solution_file=None):
+    """
+    Anthony Pane
+    Function to change the charge parameters of the atoms
+    """
     if solution_file is None:
         return
     sol = filter_solution(solution_file)
@@ -564,12 +570,15 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
                             charge_new = charge + u.Quantity(offset*g.ron[i], unit=u.elementary_charge)
                             force.setParticleParameters(atom, charge_new, sigma, epsilon)
 
-# Anthony Pane
-# Create a psfworkflow that uses new parameters from a solution file and/or LJ perturbations.
+
 def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
     solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
     cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001,
     parameter_group=None,parameter_offset=None):
+    """
+    Anthony Pane
+    Return an energy evaluator that changes the parameters.
+    """
     psfworkflow = PsfWorkflow(
         toppar=parameter_files,
         psf=psf_file,
@@ -595,6 +604,10 @@ def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
     lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
     switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
     ewaldErrorTolerance=0.0001):
+    """
+    Anthony Pane
+    Return an energy evaluator that changes the parameters.
+    """
     if index == 0:
         workflow = build_psfworkflow(parameter_files,psf_file,crd_file,
             box_dimensions,lipid,solution,nonbonded_method,switch_distance,
@@ -641,6 +654,10 @@ def build_rickflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
     cutoff_distance=10.0 * u.angstrom,dcd_out_interval=500,
     table_out_interval=5000,ewaldErrorTolerance=0.0001,gpu_id=0,
     parameter_group=None,parameter_offset=None):
+    """
+    Anthony Pane
+    Build rickflow that uses new parameters from a solution file and/or LJ perturbations.
+    """
     psfworkflow = build_psfworkflow(parameter_files,psf_file,crd_file,
         box_dimensions,lipid,solution,nonbonded_method,switch_distance,
         cutoff_distance,ewaldErrorTolerance,parameter_group,parameter_offset)
@@ -671,3 +688,26 @@ def build_rickflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
         ewald_tolerance=ewaldErrorTolerance
     )
     return workflow
+
+def context_energy(workflow):
+    """
+    Anthony Pane
+    This computes the energy contribution for all of the different force groups.
+    Swails, Jason, Carlos Hernandez, David L. Mobley, Hai Nguyen, Lee-Ping Wang,
+    and Pawel Janowski. "ParmEd." URL: https://github. com/ParmEd/ParmEd (2010).
+    """
+    old_groups = [f.getForceGroup() for f in workflow.system.getForces()]
+    old_recip_group = []
+
+    def _ene(wf,grp,nrg=u.kilocalories_per_mole):
+        st = wf.context.getState(getEnergy=True,groups=1<<grp)
+        return(type(wf.system.getForce(grp)).__name__,
+        st.getPotentialEnergy().value_in_unit(nrg))
+
+    for i, f in enumerate(wf.system.getForces()):
+        if isintance(f,NonbondedForce):
+            old_recip_group.append(f.getReciprocalSpaceForceGroup())
+            f.setReciprocalSpaceForceGroup(i)
+    workflow.create_simulation(integrator)
+    workflow.initialize_state()
+    return = list(map(lambda x: ene(workflow,x),range(workflow.system.getNumForce()))
