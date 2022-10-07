@@ -705,7 +705,7 @@ def context_energy(workflow,integrator):
         st.getPotentialEnergy().value_in_unit(nrg))
 
     for i, f in enumerate(workflow.system.getForces()):
-        if isintance(f,NonbondedForce):
+        if isinstance(f,NonbondedForce):
             old_recip_group.append(f.getReciprocalSpaceForceGroup())
             f.setReciprocalSpaceForceGroup(i)
     workflow.create_simulation(integrator)
