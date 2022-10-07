@@ -699,7 +699,7 @@ def context_energy(workflow,integrator):
     old_groups = [f.getForceGroup() for f in workflow.system.getForces()]
     old_recip_group = []
 
-    def _ene(wf,grp,nrg=u.kilocalories_per_mole):
+    def ene(wf,grp,nrg=u.kilocalories_per_mole):
         st = wf.context.getState(getEnergy=True,groups=1<<grp)
         return(type(wf.system.getForce(grp)).__name__,
         st.getPotentialEnergy().value_in_unit(nrg))
