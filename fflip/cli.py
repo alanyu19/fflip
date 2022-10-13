@@ -81,6 +81,7 @@ def scalc(property_indexes, first_trj, last_trj, block_size_potential,
             last = lasts[count]
         properties[i].update_amount_of_perturbation(perturbation)
         properties[i].update_first_last_trj(first, last)
+        """
         if block_size_potential > 0:
             properties[i].update_block_sizes(potential=block_size_potential)
         if block_size_observable > 0:
@@ -96,7 +97,8 @@ def scalc(property_indexes, first_trj, last_trj, block_size_potential,
         )
         thread.start()
         threads.append(thread)
-        # properties[i].get_sensitivity(iteration, force_redo=True)
+        """
+        properties[i].get_sensitivity(iteration, force_redo=True)
 
 
 @main.command()
