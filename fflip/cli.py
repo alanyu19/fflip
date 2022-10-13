@@ -98,7 +98,7 @@ def scalc(property_indexes, first_trj, last_trj, block_size_potential,
         thread.start()
         threads.append(thread)
         """
-        properties[i].get_sensitivity(iteration, force_redo=True)
+        properties[i].get_sensitivity(iteration, force_redo=True, use_cluster=False)
 
 
 @main.command()
