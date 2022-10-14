@@ -178,7 +178,7 @@ def rcalc(property_indexes, first_trj, last_trj, block_size_potential,
         """
         #thread.start()
         #threads.append(thread)
-         properties[i].get_robustness(
+        properties[i].get_robustness(
              iteration=iteration, fromfile=False, partition=partition,
              block_size = int((last - first + 1) / 3)
          )
