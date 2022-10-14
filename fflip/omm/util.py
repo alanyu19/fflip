@@ -572,7 +572,7 @@ def change_charge_param(psfworkflow,lipid,solution_file=None):
 
 
 def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
-    solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
+    solution=[None],nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
     cutoff_distance=10.0 * u.angstrom,ewaldErrorTolerance=0.0001,
     parameter_group=None,parameter_offset=None):
     """
@@ -586,22 +586,23 @@ def build_psfworkflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
         box_dimensions=box_dimensions,
         center_around='not water'
     )
-    change_lj_param(psfworkflow,lipid,solution,change_14=True,
-        parameter_group=parameter_group,parameter_offset=parameter_offset)
-    psfworkflow.create_system(
-        nonbondedMethod=nonbonded_method,
-        constraints=HBonds,
-        switch_distance=switch_distance, # idomatic python?
-        cutoff_distance=cutoff_distance,
-        ewaldErrorTolerance=ewaldErrorTolerance
-    )
-    change_charge_param(psfworkflow,lipid,solution)
+    # Because multiple solutions may exist, iteratively change the parameters.
+    for sol in solution:
+        change_lj_param(psfworkflow,lipid,sol,change_14=True,
+            parameter_group=parameter_group,parameter_offset=parameter_offset)
+        psfworkflow.create_system(
+            nonbondedMethod=nonbonded_method,
+            constraints=HBonds,
+            switch_distance=switch_distance, # idomatic python?
+            cutoff_distance=cutoff_distance,
+            ewaldErrorTolerance=ewaldErrorTolerance
+        )
+        change_charge_param(psfworkflow,lipid,sol)
     return psfworkflow
 
-# Anthony Pane
-# Return an energy evaluator that changes the parameters.
+
 def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
-    lipid,perturbation_amount,solution=None,nonbonded_method=LJPME,
+    lipid,perturbation_amount,solution=[None],nonbonded_method=LJPME,
     switch_distance=8.0*u.angstrom,cutoff_distance=10.0*u.angstrom,
     ewaldErrorTolerance=0.0001):
     """
@@ -647,10 +648,9 @@ def energy_evaluator(index,parameter_files,psf_file,crd_file,box_dimensions,
                 use_new_method=False, use_platform='CUDA'
             )
 
-# Anthony Pane
-# Build rickflow that uses new parameters from a solution file and/or LJ perturbations.
+
 def build_rickflow(parameter_files,psf_file,crd_file,box_dimensions,lipid,
-    solution=None,nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
+    solution=[None],nonbonded_method=LJPME,switch_distance=8.0 * u.angstrom,
     cutoff_distance=10.0 * u.angstrom,dcd_out_interval=500,
     table_out_interval=5000,ewaldErrorTolerance=0.0001,gpu_id=0,
     parameter_group=None,parameter_offset=None):
