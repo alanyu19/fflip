@@ -18,7 +18,7 @@ def find_block_size(ineff_in_step, step_size, block_length_in_ns = 5):
     return i, ineff_in_ns
 
 
-def get_equil_data(data, step_size, nskip, block_size = None):
+def get_equil_data(data, step_size, nskip, block_size=None):
     """
     :param data: the original data, of area/lipid, or other properties
     :param step_size: the step size of simulation in nanoseconds
@@ -50,7 +50,7 @@ def get_equil_data(data, step_size, nskip, block_size = None):
     return data_clean, data_equil, eq_start_at, use_last_steps, block_size
 
 
-def calc_block_avg(data, timestep, blocksize, time_to_skip = 0, verbose = True):
+def calc_block_avg(data, timestep, blocksize, time_to_skip=0, verbose=True):
     """
     all inputs(time-related) are in nanoseconds
     """
@@ -61,6 +61,9 @@ def calc_block_avg(data, timestep, blocksize, time_to_skip = 0, verbose = True):
     block_means=[]
     steps_per_block = int(blocksize/timestep)
     block_number = int(len(data)/steps_per_block)
+    if block_number == 0:
+        raise Exception("No sufficient data. If you have tried forcing" + \
+            " the calculation, that means you need longer simulation!")
     steps = block_number * steps_per_block
     data = data[-steps:]
     if verbose:

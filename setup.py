@@ -26,7 +26,7 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'numpy>=1.6',
-    'docutils<=0.16,>0.12'
+    'docutils>=0.18',
     'Click>=6.0,<8.0',
     'pandas',
     'nbsphinx', # sphinx documentation for jupyter notebooks
@@ -34,10 +34,10 @@ requirements = [
     'alabaster', # alabaster theme for documentation
     'packaging',
     'scipy>=1.0.0',
-    'dask',
+    # 'dask',
     'matplotlib',
     'plumbum',
-    'dask-jobqueue>=0.7.0',
+    # 'dask-jobqueue>=0.7.0',
     # 'openmm>=7.3.0',
     # 'openmmtools',
     # 'mdtraj',
@@ -52,7 +52,7 @@ else:
 setup_requirements = [
     'pytest-runner',
     'numpy>=1.20',
-    'cython>=0.29'
+    # 'cython'
     #  put setup requirements (distutils extensions, etc.) here
 ]
 
