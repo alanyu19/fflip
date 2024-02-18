@@ -1,5 +1,6 @@
 # Note: the dyn{}.dcd format is the standard output from fflip, which uses rickflow/openmm as the backend.
 # Curly brace is the standard formatter for python.
+# UPDATE YOUR PATHs ACCORDINGLY!
 fflip area-per-lipid -p ../sim/dppc_ua.psf -l 36 -t ../sim/trj/dyn{}.dcd -f 1
 
 
