@@ -252,14 +252,16 @@ def find_up_low_from_crd(crd_file):
             resid = int(elements[8])
             if 'GLP' in segname:
                 if segname in upper:
-                    upper_atoms.append(int(atomindex))
+                    # -1 is the offset between our reading of crd (1-based)
+                    # and mdtraj's read of trajectory (0-based)
+                    upper_atoms.append(int(atomindex)-1)
                 elif segname in lower:
-                    lower_atoms.append(int(atomindex))
+                    lower_atoms.append(int(atomindex)-1)
             else:
                 if resname + ' ' + str(resid) in upper:
-                    upper_atoms.append(int(atomindex))
+                    upper_atoms.append(int(atomindex)-1)
                 elif resname + ' ' + str(resid) in lower:
-                    lower_atoms.append(int(atomindex))
+                    lower_atoms.append(int(atomindex)-1)
         if 'EXT' in l:
             reading = True
     return upper_atoms, lower_atoms
