@@ -1,4 +1,4 @@
-There are two mode of the scd calculation:
+There are two modes of the scd calculation:
 
 1. Ignoring the leaflet difference and calculate the averaged Scd for each carbon postion and lipid type.
    This is good for symmetric bilayers.
