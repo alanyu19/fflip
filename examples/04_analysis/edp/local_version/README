@@ -1,3 +1,5 @@
+For slurmq submission (parallization), please refer to `../slurmq_version`.
+
 Step 1. Update system info in 1_edp.py and run it using python
 
 It will automatically generate data per lipid type, per atom name, and per trajectory index

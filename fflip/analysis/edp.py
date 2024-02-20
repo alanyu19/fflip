@@ -5,6 +5,7 @@ import numpy as np
 from rflow.observables import BinEdgeUpdater
 from fflip.analysis.util import select_atoms, manually_select_atoms
 from fflip.analysis.edp_util import *
+from openmm.app import CharmmPsfFile
 from time import sleep
 from random import randint
 
@@ -27,18 +28,11 @@ class ElectronDensityCalculator(BinEdgeUpdater):
     """
     The electrom density calculator for only one atom name / type
     """
-    def __init__(self, atom_selection, coordinate=2, nbins=500,
+    def __init__(self, psf_file, atom_selection, coordinate=2, nbins=500,
                  com_selection=None, use_fixed_box_length=True,
-                 box_length_fixed=10, topology_file=None):
+                 box_length_fixed=10):
         """
         Make Sure that the atom_selection is one element only!!!
-        Args:
-            atom_selection:
-            coordinate:
-            nbins:
-            com_selection: List of atom ids to calculate the com of the
-            membrane, to make the distribution relative to
-            the center of mass.
         """
         super().__init__(num_bins=nbins, coordinate=coordinate)
         self.atom_selection = atom_selection
@@ -52,14 +46,21 @@ class ElectronDensityCalculator(BinEdgeUpdater):
         self.previous_n_frames = 0
         self.use_fixed_box_length = use_fixed_box_length
         self.box_length_fixed = box_length_fixed
-        if "\'" in self.atom_selection:
-            assert topology_file is not None and \
-                isinstance(topology_file, str), \
-                "Please provide a topology_file, it's possible that some " \
-                "atoms can't be selected if you don't have that!"
-        self.topology_file = topology_file
+        self.psf_file = psf_file
+        self.psf = CharmmPsfFile(self.psf_file)
+        self.topology = md.Topology.from_openmm(self.psf.topology)
+        molecules = self.topology.find_molecules()
+        # assume all lipid molecules have at least 50 atoms
+        self.lipid_moles = [mole for mole in molecules if len(mole) > 50]
+        self.other_moles = [mole for mole in molecules if mole not in self.lipid_moles]
+        self.lipid_molecules_atom_indices = [
+            np.fromiter((a.index for a in mole), dtype=np.int32) for \
+            mole in self.lipid_moles]
+        self.other_molecules_atom_indices  = [
+            np.fromiter((a.index for a in mole), dtype=np.int32) for \
+            mole in self.other_moles]
 
-    def __call__(self, trajectory):
+    def __call__(self, trajectory, leaflet=None):
         # get the average box edge and total number of frames
         super().__call__(trajectory)
         # get the average cross section
@@ -80,7 +81,7 @@ class ElectronDensityCalculator(BinEdgeUpdater):
                     atom_names.append(select_words[iw+1])
             atom_ids = []
             for atom_name in atom_names:
-                selection = manually_select_atoms(self.topology_file, atom_name)
+                selection = manually_select_atoms(self.psf_file, atom_name)
                 atom_ids += selection
             atom_ids = np.array(atom_ids)
         else:
@@ -94,6 +95,28 @@ class ElectronDensityCalculator(BinEdgeUpdater):
                     atom_ids = select_atoms(trajectory, "water and mass < 10")[::2]
                 else:
                     atom_ids = select_atoms(trajectory, "water and mass < 10")[1::2]
+
+        # get rid of atom ids that are not from the leaflet we are interested in, lipid only!
+        if leaflet == "upper":
+            use_indices = []
+            system_com_z = trajectory.xyz[0,:,2].mean()
+            for lipmole in self.lipid_molecules_atom_indices:
+                if trajectory.xyz[0, lipmole, 2].mean() > system_com_z:
+                    use_indices += list(lipmole)
+            print(atom_ids)
+            atom_ids = np.array(list(set(use_indices) & set(atom_ids)))
+            print(atom_ids)
+            print("***")
+        elif leaflet == "lower":
+            use_indices = []
+            system_com_z = trajectory.xyz[0,:,2].mean()
+            for lipmole in self.lipid_molecules_atom_indices:
+                if trajectory.xyz[0, lipmole, 2].mean() < system_com_z:
+                    use_indices += list(lipmole)
+            atom_ids = np.array(list(set(use_indices) & set(atom_ids)))
+        else:
+            assert leaflet is None
+                
         # get the element, you can see the reason why we only allow one atom
         # type here
         atom_for_element = trajectory.topology.atom(atom_ids[0])
@@ -266,7 +289,8 @@ class ElectronDensityFactory(object):
     """
     def __init__(self, psf_file, traj_template,
                  com_selection=None, box_size=10,
-                 save_to_folder='.', sep=None, pop_drude=False):
+                 save_to_folder='.', sep_leaflet=False,
+                 pop_drude=False):
         """
         Args:
             psf_file: str, the psf file
@@ -285,8 +309,7 @@ class ElectronDensityFactory(object):
             os.mkdir(save_to_folder)
         self.save_to_folder = save_to_folder
         self.box_size = box_size
-        # this is currently a toy code, only accept
-        self.sep = sep
+        self.sep_leaflet = sep_leaflet
         self.pop_drude = pop_drude
 
     def __call__(self, first, last, skip=[]):
@@ -305,7 +328,7 @@ class ElectronDensityFactory(object):
             atom_selection="all", load_function=md.load_dcd
         )
         for res in self.residues:
-            if self.sep is None:
+            if not self.sep_leaflet:
                 subdir = os.path.join(
                     self.save_to_folder,
                     './atoms_{}'.format(res.lower())
@@ -346,15 +369,15 @@ class ElectronDensityFactory(object):
             else:
                 atoms = atoms_temp
             for atom in atoms:
-                if self.sep is None:
+                if not self.sep_leaflet:
                     edc = ElectronDensityCalculator(
+                        self.psf_file,
                         atom_selection="resname {} and name {}".format(
                             res.upper(), atom.upper()
                         ),
                         nbins=int(500 * (self.box_size / 10)),
                         com_selection=self.com_selection,
                         box_length_fixed=self.box_size,
-                        topology_file=self.psf_file
                     )
                     for traj in trajs:
                         edc(traj)
@@ -372,28 +395,24 @@ class ElectronDensityFactory(object):
                     )
                 else:
                     edc_upper = ElectronDensityCalculator(
+                        self.psf_file,
                         atom_selection=
-                        "resname {} and name {} and resid 0 to {}".format(
-                            res.upper(), atom.upper(), self.sep
-                        ),
+                        "resname {} and name {}".format(res.upper(), atom.upper()),
                         nbins=int(500 * (self.box_size / 10)),
                         com_selection=self.com_selection,
                         box_length_fixed=self.box_size,
-                        topology_file=self.psf_file
                     )
                     edc_lower = ElectronDensityCalculator(
+                        self.psf_file,
                         atom_selection=
-                        "resname {} and name {} and resid > {}".format(
-                            res.upper(), atom.upper(), self.sep
-                        ),
+                        "resname {} and name {}".format(res.upper(), atom.upper()),
                         nbins=int(500 * (self.box_size / 10)),
                         com_selection=self.com_selection,
                         box_length_fixed=self.box_size,
-                        topology_file=self.psf_file
                     )
                     for traj in trajs:
-                        edc_upper(traj)
-                        edc_lower(traj)
+                        edc_upper(traj, leaflet="upper")
+                        edc_lower(traj, leaflet="lower")
                     np.savetxt(
                         os.path.join(
                             blocks_dir_upper, "{}_{}.dat".format(atom, first)),
@@ -421,17 +440,15 @@ class ElectronDensityFactory(object):
                         edc_lower.edp_angstrom
                     )
 
-            if self.sep is None:
+            if not self.sep_leaflet:
                 z_bin_file = os.path.join(subdir, 'z.txt')
                 if not os.path.isfile(z_bin_file):
                     np.savetxt(
-
                         z_bin_file, np.linspace(
                         -edc.box_length_fixed / 2 + edc.box_length_fixed / edc.num_bins / 2,
                         edc.box_length_fixed / 2 - edc.box_length_fixed / edc.num_bins / 2,
                         edc.num_bins
-                    )
-                               )
+                    ))
             else:
                 z_bin_file1 = os.path.join(subdir_upper, 'z.txt')
                 z_bin_file2 = os.path.join(subdir_lower, 'z.txt')
@@ -440,13 +457,11 @@ class ElectronDensityFactory(object):
                     -edc.box_length_fixed / 2 + edc.box_length_fixed / edc.num_bins / 2,
                     edc.box_length_fixed / 2 - edc.box_length_fixed / edc.num_bins / 2,
                     edc.num_bins
-                )
-                           )
+                ))
                 edc = edc_lower
                 np.savetxt(z_bin_file2, np.linspace(
                     -edc.box_length_fixed / 2 + edc.box_length_fixed / edc.num_bins / 2,
                     edc.box_length_fixed / 2 - edc.box_length_fixed / edc.num_bins / 2,
                     edc.num_bins
-                )
-                           )
+                ))
 

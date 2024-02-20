@@ -34,11 +34,11 @@ class TrajectoryRecenter():
         head_atoms = self.topology.select(lipid_head_atoms)
         tail_atoms = self.topology.select(lipid_tail_atoms)
         # xyz np.ndarray, shape=(n_frames, n_atoms, 3)
-        system_com_z = trajectory.xyz[0,:,1].mean()
+        system_com_z = trajectory.xyz[0,:,2].mean()
         head_disp_abs = np.abs(
-            trajectory.xyz[0, head_atoms, 1] - system_com_z)
+            trajectory.xyz[0, head_atoms, 2] - system_com_z)
         tail_disp_abs = np.abs(
-            trajectory.xyz[0, tail_atoms, 1] - system_com_z)
+            trajectory.xyz[0, tail_atoms, 2] - system_com_z)
         if head_disp_abs.mean() > tail_disp_abs.mean():
             return True
         else:
