@@ -1,9 +1,8 @@
 There are two modes of the scd calculation:
 
-1. Ignoring the leaflet difference and calculate the averaged Scd for each carbon postion and lipid type.
-   This is good for symmetric bilayers.
+1. Ignore the leaflet difference and calculate the averaged Scd's. This is good for symmetric bilayers.
 
-2. Distiguishing the two leaflets and calculate the Scd's for each leaflet.
+2. Calculate Scd's for each leaflet separately.
 
 
 For 1. The user only needs to update the "## update system info ##" section in `scd_leaflet_agnostic.py` and run the script

@@ -1,7 +1,7 @@
-Step1. Update system info in 1_edp.py and run it using python
+Step 1. Update system info in 1_edp.py and run it using python
 
-It will automatically generate data per lipid type, atom name, and trajectory index
-(see data file in `atoms_pnpg/blocks`, for example). The files named *_edp.dat are electron density data
+It will automatically generate data per lipid type, per atom name, and per trajectory index
+(see data files in `atoms_pnpg/blocks`, for example). The files named *_edp.dat are for electron density
 while others without the "edp" suffix are for atomic density.
 
 There are also other lipid types (dlipe, dlips, plpc, ...) in the system but I deleted them to save space
@@ -9,7 +9,7 @@ on github.
 
 
 
-Step2. Update PSF_FILE in 2_combine.py and run it using python
+Step 2. Update PSF_FILE in 2_combine.py and run it using python
 
 This step will combine data from all trajectories and write the averaged atomic density and EDP for each
 atom. For example, `atoms_pnpg/c11.dat` is the averaged atomic density for C11 atom in PNPG lipids. The first
