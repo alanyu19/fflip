@@ -49,6 +49,7 @@ class ElectronDensityCalculator(BinEdgeUpdater):
         self.other_coordinates.remove(coordinate)
         self.other_coordinates = list(self.other_coordinates)
         self.average_cross_section = 0.0
+        self.previous_n_frames = 0
         self.use_fixed_box_length = use_fixed_box_length
         self.box_length_fixed = box_length_fixed
         if "\'" in self.atom_selection:
@@ -130,8 +131,10 @@ class ElectronDensityCalculator(BinEdgeUpdater):
         else:
             self.edp = self.edensity * self.num_bins / self.average_box_size
             self.adp = self.density * self.num_bins / self.average_box_size
-        self.edp_angstrom = self.edp / 1000
+        self.edp_angstrom = self.edp / 1000  # unit conversion to angstrom
         self.adp_angstrom = self.adp / 1000
+        self.previous_n_frames += trajectory.n_frames
+        # return the histogram for the current trajectory, usually not used
         return np.array([histogram[0]])
 
 

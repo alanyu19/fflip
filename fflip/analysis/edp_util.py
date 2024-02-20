@@ -286,3 +286,39 @@ def combine_to_average(psf_file, path_to_data='.', z_unit_in_A=True, pop_drude=F
             atom_average = np.mean(np.array(data), axis=0)
             to_save = np.array([zdata, atom_average]).transpose()
             np.savetxt(os.path.join(fn, '{}.dat'.format(atom)), to_save)
+
+def combine_to_average_edp(psf_file, path_to_data='.', z_unit_in_A=True, pop_drude=False):
+    atom_folders = glob.glob(os.path.join(path_to_data, 'atoms_*'))
+    residues = find_resnames_from_psf(psf_file)
+    # compare the residue names got from psf_file
+    # and those appeared in atoms_*_mdtraj folder
+    resf = []
+    for fn in atom_folders:
+        resf.append(fn.split('_')[1])
+    for r in residues:
+        if r.lower() not in resf:
+            print('Warning: density data for residue {} not found'.format(r))
+    # averaging data for each res + atom
+    for fn, resn in zip(atom_folders, resf):
+        atoms_raw = find_atoms_from_psf(psf_file, resn)
+        if pop_drude:
+            atoms = []
+            for _atom in atoms_raw:
+                if _atom[0].upper() != 'D':
+                    atoms.append(_atom)
+                else:
+                   pass
+        else:
+            atoms = atoms_raw
+        zdata = np.loadtxt(os.path.join(fn, 'z.txt'))
+        if z_unit_in_A:
+            zdata = 10 * zdata
+        for atom in atoms:
+            data = []
+            efiles = glob.glob(
+                os.path.join(fn, 'blocks/{}_*_edp.dat'.format(atom)))
+            for ef in efiles:
+                data.append(np.loadtxt(ef))
+            atom_average = np.mean(np.array(data), axis=0)
+            to_save = np.array([zdata, atom_average]).transpose()
+            np.savetxt(os.path.join(fn, '{}_edp.dat'.format(atom)), to_save)
