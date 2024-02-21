@@ -4,7 +4,7 @@ This script works very similarly to the EDP calculation.
 
 2. Run the script using python.
 
-3. The time series data will be reported as "db_?_?.dat", where the first number if the
+3. The time series data will be reported as "db_?_?.dat", where the first number is the
 first trajectory indice and the second number is the last trajectory indice.
 
 4. The overall thickness (DB) can be obtained as the average of the time series.
