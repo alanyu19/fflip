@@ -1,0 +1,25 @@
+There are two modes of the scd calculation:
+
+1. Ignore the leaflet difference and calculate the averaged Scd's. This is good for symmetric bilayers.
+
+2. Calculate Scd's for each leaflet separately.
+
+
+For 1. The user only needs to update the "## update system info ##" section in `scd_leaflet_agnostic.py` and run the script
+using python (with fflip and its dependencies installed). A folder named `scd_leaflet_agnostic` will be created and Scd's
+will be reported for each carbon position individually. For carbon postions where a splitting is expected (such as C22 in
+G-lipids), the order parameters for each deuterium will be reported separately.
+
+
+For 2, there are two ways to tell the program how to identify lipids/atoms belonging to the upper or lower leaflet.
+(1) In the example `leaflet_scd1.py`, a hard coded index (7233) is given by the user as the last atom index in the upper leaflet.
+    This only works when all the atom indexes in one leaflet is smaller than all the atom indexes in the other leaflet (which is
+    typical for structures prepared by CHARMM-GUI).
+(2) In the example `leaflet_scd2.py`, a *crd file with membrane placed at the center of the box is given and the program will 
+    figure out which atoms are from the upper/lower leaflet.
+In both `leaflet_scd1.py` and `leaflet_scd2.py`, the user only needs to update the "## update system info ##" section and run
+the script using python (with fflip and its dependencies installed). Two folders called `scd_up` and `scd_low` will be craeted
+and the Scd's will be reported for each carbon postition individually for each leaflet. Carbons with splitting wil be reported
+separately.
+
+

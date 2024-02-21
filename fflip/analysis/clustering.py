@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import numpy as np
 import mdtraj as md
 from sklearn.cluster import DBSCAN
@@ -31,7 +32,7 @@ def rpatom(head):
     if head.lower() == 'cer':
         return ['C2S']
     elif head.lower() == 'sito':
-        return ["O3", "H3\'"]
+        return ["O3"]
     elif head.lower() == 'pe':
         return phos + ['C11', 'C12', 'N']
     elif head.lower() == 'pc':
@@ -116,7 +117,7 @@ def idatom(liptype):
 
 class ClusterLip(object):
     def __init__(self, psf_file, top_res_info, bot_res_info, leaflet_recipe,
-                 radius, min_lipids=3, skip_every_n_frames=10,
+                 radii, min_lipids=3, skip_every_n_frames=10,
                  do_top=True, do_bot=True, clfix=dict()):
         self.min_lipids = min_lipids
         self.skip = skip_every_n_frames
@@ -124,7 +125,7 @@ class ClusterLip(object):
         self.do_bot = do_bot
         self.clfix = clfix
         self.psf_file = psf_file
-        self.radius = radius
+        self.radii = radii
         psf = CharmmPsfFile(psf_file)
         self.topology = md.Topology.from_openmm(psf.topology)
         self.top_reslib = []
@@ -204,7 +205,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(self.radius[res1_head] + self.radius[res2_head])
+                d_list.append(self.radii[res1_head] + self.radii[res2_head])
         return np.array(d_list)
 
     @property
@@ -221,7 +222,7 @@ class ClusterLip(object):
             elif res2_head + '-' + res1_head in self.clfix:
                 d_list.append(self.clfix[res2_head + '-' + res1_head])
             else:
-                d_list.append(self.radius[res1_head] + self.radius[res2_head])
+                d_list.append(self.radii[res1_head] + self.radii[res2_head])
         return np.array(d_list)
 
     @property
@@ -267,7 +268,7 @@ class ClusterLip(object):
     def box_edges(traj):
         return traj.unitcell_lengths[:, :]
 
-    def write_xy(self, traj, itraj, frame, xy_file='{}_{}.xy'):
+    def write_xy(self, traj, itraj, frame, xy_file='traj{}_frame{}.xy'):
         # abc, xyz here are for a single frame
         frame = frame - 1
         topstring = ""
@@ -295,7 +296,7 @@ class ClusterLip(object):
             f.write(botstring)
 
     def plot_use_xy(
-            self, itraj, frame, leaflet, xy_file='{}_{}_{}.xy',
+            self, itraj, frame, leaflet, xy_file='{}_traj{}_frame{}.xy',
             plot=True, edge=1.5, addlabel=True, highcontrast=False
     ):
         with open(xy_file.format(leaflet, itraj, frame), 'r') as fr:
@@ -305,7 +306,7 @@ class ClusterLip(object):
         data_ = np.loadtxt(
             xy_file.format(leaflet, itraj, frame), dtype=str, skiprows=1
         )
-        xy_ = data_[:, 3:].astype(np.float)
+        xy_ = data_[:, 3:].astype(float)
         assert data_.shape[0] % 9 == 0
         x_ = xy_[:, 0]
         xmax = x_.max()
@@ -334,7 +335,7 @@ class ClusterLip(object):
                     cutoff[a_].append(self.clfix[res2_head + '-' + res1_head])
                 else:
                     cutoff[a_].append(
-                        self.radius[res1_head] + self.radius[res2_head]
+                        self.radii[res1_head] + self.radii[res2_head]
                     )
         dbstop = DBSCAN(
             eps=1.0, min_samples=self.min_lipids, metric='precomputed'
@@ -352,18 +353,18 @@ class ClusterLip(object):
             res_head = self.top_res[indexc][1].split('.')[1].lower()
             if dbstop.labels_[c_] != -1:
                 circle = plt.Circle(
-                    (x_[c_], y_[c_]), self.radius[res_head],
+                    (x_[c_], y_[c_]), self.radii[res_head],
                     color=color_(res_head)
                 )
             else:
                 if highcontrast:
                     circle = plt.Circle(
-                        (x_[c_], y_[c_]), self.radius[res_head],
+                        (x_[c_], y_[c_]), self.radii[res_head],
                         color='grey', fill=None
                     )
                 else:
                     circle = plt.Circle(
-                        (x_[c_], y_[c_]), self.radius[res_head],
+                        (x_[c_], y_[c_]), self.radii[res_head],
                         color=color_(res_head), linewidth=0.8, fill=None
                     )
             ax.add_artist(circle)
@@ -377,7 +378,7 @@ class ClusterLip(object):
             plt.xlabel('x [nm]', fontsize=11, labelpad=2)
             plt.ylabel('y [nm]', fontsize=11, labelpad=2)
         plt.savefig(
-            'visualize_{}_{}_{}.png'.format(leaflet, itraj, frame),
+            'visualize_{}_traj{}_frame{}.png'.format(leaflet, itraj, frame),
             dpi=300, bbox_inches='tight'
         )
 
@@ -530,6 +531,8 @@ class ClusterLip(object):
         return top_res_info, bot_res_info
 
     def __call__(self, traj, save_labels=True, first_traj_index=1):
+        if not os.path.isdir("labels"):
+            os.mkdir("labels")
         self.count_traj += 1
         self.count_frame += int(traj.xyz.shape[0] / self.skip)
         if self.count_traj == 1:
@@ -572,7 +575,7 @@ class ClusterLip(object):
         if self.do_top:
             # First plot the distribution of the cluster sizes
             h, b = np.histogram(
-                self.tcs, bins=max_size, range=(0, max_size), normed=True
+                self.tcs, bins=max_size, range=(0, max_size), density=True
             )
             np.savetxt(
                 "topsize.txt", np.array([b[:-1], h]).swapaxes(0, 1), fmt='%.5f',
@@ -651,7 +654,7 @@ class ClusterLip(object):
         if self.do_bot:
             # First plot the distribution of the cluster sizes
             h, b = np.histogram(
-                self.bcs, bins=max_size, range=(0, max_size), normed=True
+                self.bcs, bins=max_size, range=(0, max_size), density=True
             )
             np.savetxt(
                 "botsize.txt", np.array([b[:-1], h]).swapaxes(0, 1), fmt='%.5f',

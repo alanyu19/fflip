@@ -1,0 +1,9 @@
+FFLiP: A Python Package for CHARMM/Drude Lipid FF Parameterization
+Equilibrium reached after 0.5 ns
+Block size is 10.0 ns
+
+Skipping 10 ns of useful data ...
+Using 2 blocks (last 20 ns) for SA calculation ...
+Using last 39.5 ns data for compressibility calculation ...
+Final A_lip and standard error: 63.33 +- 0.00
+Compressibility modulus: 0.12

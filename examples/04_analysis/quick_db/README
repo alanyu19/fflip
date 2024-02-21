@@ -1,0 +1,20 @@
+This script works very similarly to the EDP calculation.
+
+1. First update the "## update system info ##" block.
+
+2. Run the script using python.
+
+3. The time series data will be reported as "db_?_?.dat", where the first number if the
+first trajectory indice and the second number is the last trajectory indice.
+
+4. The overall thickness (DB) can be obtained as the average of the time series.
+
+In principle, you can submit many jobs at once to slurm and each job only needs to calculate
+one particular trajectory or a trajectory range. 
+
+There is an important parameter called "EDGE_BINS". This is needed because DB is calculated based on
+the water density profile, which will drop to zero beyond the periodic box boundary (in z), and this
+"EDGE_BINS" parameter controls the number of edge bins (each end of the box) to dispose before an
+autodection code can be applied to identify the plateau of the water density profile. For DPPC and
+lipids of similar length, EDGE_BINS=130 works fine. When it doesn't work, you will see totally
+unreasonable numbers in the DB data and then you will need to test increasing/decreasing this number.

@@ -13,6 +13,12 @@ if os.path.isfile('models.py'):
     from models import *
 import fflip
 from fflip.ljpme.util import construct_indexes, parse_first_last, dict_to_str
+# analysis related:
+import mdtraj as md
+import rflow.observables as obs
+from rflow.trajectory import TrajectoryIterator
+from fflip.plot.area_plot import plot_area
+import fflip.analysis.area_analysis as aa
 
 
 @click.group()
@@ -256,12 +262,12 @@ def simulate_mc(location, change_parameters, sfile, tfile, iteration, toppar, st
               help="interation id, can be 0, 1, 2 ... or any string")
 def dihedral_mc(location, iteration):
     """
-    Initiate the simulations 
+    Dihedral Distribution
     """
     for mcp in mcps:
         mcp.generate_model_compound()
         trj_folder = os.path.join(location, 'iter{}'.format(iteration), 'model_compound', mcp.name.lower())
-        mcp.dihedral_distribution(trj_folder )
+        mcp.dihedral_distribution(trj_folder)
 
 
 @main.command()
@@ -483,6 +489,59 @@ def linearopt(iteration, perturbation, sigrst, epsrst, chrgrst, tlrst, aprst, un
                 fw.write("{0:5s} {1:10s} {2:>9.4f}\n".format(param.center_names[0], param.par_type, s))
 
 
+@main.command()
+@click.option('-p', '--psf_file', type=str, help='PSF file used to run the simulation')
+@click.option('-l', '--nlip', default=36, help='Number of lipids. Default is 36.')
+@click.option('-t', '--traj_template', default='trj/dyn{}.dcd',
+    help='Trajetory file template, use curly brace for index, default is "trj/dyn{}.dcd"')
+# @click.option('-b', '--block_size', default=10, type=float)
+@click.option('-f', '--first_seqno', default=1, type=int, help='first seqno to calculate the area')
+@click.option('-e', '--last_seqno', default=None, type=int, help='last seqno to calculate the area (optional)')
+def area_per_lipid(psf_file, nlip, traj_template, first_seqno, last_seqno=None):
+    """ Area per Lipid """
+    root_dir = os.path.dirname(os.path.realpath(psf_file))
+    print(root_dir)
+    if last_seqno is None:
+        next_seqno_file = os.path.join(root_dir, "next.seqno")
+        print(next_seqno_file)
+        assert os.path.isfile(next_seqno_file), "No `next.seqno` file detected, provide last_seqno instead!"
+        with open(next_seqno_file) as f:
+            next_seqno = int(f.readline())
+            last_seqno = int(next_seqno - 1)
+    trajs = TrajectoryIterator(
+        first_sequence=first_seqno,
+        last_sequence=last_seqno,
+        filename_template=traj_template,
+        topology_file=psf_file,
+        atom_selection="all",
+        load_function=md.load_dcd
+    )
+
+    sa_evaluator = obs.AreaPerLipid(int(nlip))
+    to_calc = obs.TimeSeries(
+        evaluator=sa_evaluator, filename="area.dat"
+    )
+
+    for traj in trajs:
+        to_calc(traj)
+
+
+@main.command()
+@click.option("-i", "--input_file", type=str, help='Input area data file')
+@click.option("-l", "--nlip", type=int, help='Number of lipids per leaflet')
+@click.option("-t", "--temperature", type=float, help='Temperature of the simulation (Kelvin)')
+@click.option("-b", "--block_size", type=float, default=10, help='Block size to use for statistical analysis,\
+    for phospholipids 10 ns is recommended (also is default)')
+@click.option("-s", "--interval", type=float, help='Time interval (ns) between data points')
+@click.option("-f", "--force", is_flag=True, help='If this flag provided, force the calculation even if not sufficient equlibrium data')
+@click.option("-ff", "--force_fraction", type=float, default=0.6, help='Proportion of data forced to use (ignoring the equilibrium starting point)')
+def analyze_area_per_lipid(input_file, nlip, temperature, block_size, interval, force, force_fraction):
+    """
+    Equilibrium detection and area per lipid plot using area per lipid time series data
+    """
+    aa.get_area_and_ka(nlipid=nlip, temperature=temperature, block_size=block_size, step_size=interval,
+                       force_calc=force, force_fraction=force_fraction, file_to_read=input_file)
+
+
 def entrypoint():
     sys.exit(main(obj={}))
-

@@ -1,0 +1,11 @@
+Please also refer to README in `local_version`.
+
+The difference between this (`slurmq_version`) and `local_version` is that you can submit the first step
+to SLURM by using "sbatch 1_edp.py" to parallelize the calculations for all trajectories at the same time.
+
+In addition to the changes in the "## update system info ##" section, you also need to change the trajectory
+indices in line "#SBATCH --array=101-105" (101 is the first trajectory and 105 is the last).
+
+For info about slurm array jobs, please refer to https://slurm.schedmd.com/job_array.html
+
+
