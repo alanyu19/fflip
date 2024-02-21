@@ -1,0 +1,17 @@
+Please refer to https://user.eng.umd.edu/~jbklauda/wiki/doku.php?id=pairwise_2d-rdf_and_clustering
+for a more detailed instruction (pay attention to small code changes, though).
+
+In short, rdf's should be calculated first since the pairwise minimum energy distances based on the
+rdf's can be used as parameters in clustering analysis.
+
+I. To run the rdf calculation:
+1) Update system info in `rdf/run.py`
+2) Run `rdf/run.py` with python
+
+II. To run the clustering calculation:
+1) Update all blocks with keyword "UPDATE" in `clustering/1_calc.py` and run it using python
+2) Update all blocks with keyword "UPDATE" in `clustering/2_visualize.py` and run it using python
+Instructions for updating the parameters in `clustering/1_calc.py` are included as comments in that file.
+
+
+You can parallalize the code yourself and submit using slurm as needed.
