@@ -59,6 +59,10 @@ class ElectronDensityCalculator(BinEdgeUpdater):
         self.other_molecules_atom_indices  = [
             np.fromiter((a.index for a in mole), dtype=np.int32) for \
             mole in self.other_moles]
+    
+    def clean_density_cache(self):
+        self.density = 0.0
+        self.edensity = 0.0
 
     def __call__(self, trajectory, leaflet=None):
         # get the average box edge and total number of frames

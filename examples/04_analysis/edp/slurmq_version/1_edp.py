@@ -12,6 +12,7 @@
 
 import os
 import time
+import warnings
 import mdtraj as md
 import numpy as np
 import os
@@ -31,8 +32,9 @@ FIRST = int(os.environ['SLURM_ARRAY_TASK_ID'])
 LAST = FIRST
 recentered_trajs_dir = "recenter"
 if os.path.isdir(recentered_trajs_dir):
-    raise Exception(f"Directory {recentered_trajs_dir} exists, please check and delete/rename it to continue.")
-os.mkdir(recentered_trajs_dir)
+    warnings.warn(f"Directory {recentered_trajs_dir} exists, overwriting it...")
+else:
+    os.mkdir(recentered_trajs_dir)
 output_template = os.path.join(recentered_trajs_dir, "dyn{}-recenter.dcd")
 traj_recenter = TrajectoryRecenter(psf_file=PSF_FILE, input_template=TRAJ_TEMPLATE, first=FIRST, last=LAST)
 traj_recenter.recenter_all_trajectories(output_format=output_template, lipid_head_atoms='name C2', lipid_tail_atoms='name C212')
