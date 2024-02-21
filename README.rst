@@ -50,10 +50,10 @@ Other comments here.
 Getting Started
 ------------------
 
-1) conda create -n fflip python=3.7 (then: conda activate fflip)
+1) conda create -n fflip python=3.11 (then "conda activate fflip")
 2) conda install dask distributed -c conda-forge  
 3) conda install dask-jobqueue -c conda-forge  
-4) conda install -c omnia openmm=7.4.0
+4) conda install -c conda-forge openmm
 5) conda install -c conda-forge openmmtools
 6) conda install -c conda-forge mdtraj
 7) Install rickflow (https://gitlab.com/Olllom/rickflow/tree/master)
